@@ -369,9 +369,10 @@ def test_mobile_shell_paints_viewport_tail_for_home_and_preview():
     assert "html.pv-open body { background:#0d0c0b; }" in shell_rules
 
 
-def test_mobile_app_keeps_tabs_inside_first_paint_viewport():
+def test_mobile_app_paints_large_tail_without_clipping_tabs():
     css = read("app/web/mobile.css")
     app_rules = css.split("#app {", 1)[1].split("}", 1)[0]
-    assert "height:100svh;" in app_rules
-    assert "height:100lvh;" not in app_rules
+    assert "height:100lvh;" in app_rules
+    assert "padding-bottom:calc(100lvh - 100svh);" in app_rules
+    assert "box-sizing:border-box;" in app_rules
     assert "height:100dvh;" not in app_rules

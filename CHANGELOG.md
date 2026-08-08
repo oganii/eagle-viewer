@@ -2,6 +2,12 @@
 
 ---
 
+## 4.3.10 - 2026-08-09
+
+### Fixed
+- Fixed iOS standalone pages showing a large tail below the mobile navigation after keeping tab labels inside the first-paint viewport; the shell now fills the large viewport while reserving the large-to-small viewport difference inside the flex layout, and the change was verified in ego-browser at 390x844.
+**中文**：修复 iOS 主屏模式导航文字可见后，导航栏下方重新出现大片空白的问题；外壳填满 large viewport，同时在 Flex 布局内扣除 large/small viewport 高度差；已通过 ego-browser 的 390x844 本地验证。
+
 ## 4.3.9 - 2026-08-09
 
 ### Fixed

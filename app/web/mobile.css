@@ -83,16 +83,19 @@ button { font-family:inherit; color:inherit; cursor:pointer; }
 a { color:var(--accent-text); }
 
 /* ===== App 容器 =====
-   使用 small viewport 让固定壳层始终落在 iOS 首屏可见的布局视口内，避免
-   100lvh 把底部 Tab 的文字推出首屏裁剪线；视口外尾部由 html/body 画布填充。
-   100vh 仅作旧浏览器回退。底栏本身仍通过 safe-area 避开 Home Indicator。 */
+   外层使用 large viewport 填满 iOS standalone 的物理屏幕，内层通过 bottom
+   padding 收回 small viewport 的布局高度，避免底部 Tab 文字被裁剪；外层
+   背景负责填充两者之间的尾部。100vh 仅作旧浏览器回退。 */
 #app {
   position:fixed;
   top:0; left:0; right:0;
   display:flex;
   flex-direction:column;
   height:100vh;
-  height:100svh;
+  height:100lvh;
+  box-sizing:border-box;
+  padding-bottom:calc(100lvh - 100svh);
+  background:var(--bg2);
 }
 
 /* iOS 主屏启动（standalone）下 WebKit 的布局视口比物理屏幕矮（实测矮一个
