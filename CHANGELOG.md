@@ -2,6 +2,12 @@
 
 ---
 
+## 4.3.9 - 2026-08-09
+
+### Fixed
+- Fixed iOS standalone first-paint clipping the mobile tab labels by keeping the fixed shell inside the small viewport instead of sizing it to the large viewport; refreshed static assets and Service Worker cache.
+**中文**：修复 iOS 主屏模式首屏将移动端导航文字裁掉的问题；固定外壳改用 small viewport，避免大视口把底部 Tab 推出首屏；同步更新静态资源和 Service Worker 缓存。
+
 ## 4.3.8 - 2026-08-09
 
 ### Fixed

@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#f2f2f7" />
   <script>
     // 首帧前写入 data-theme，避免主题闪烁。
-    // 底栏高度改由 CSS 100lvh 处理，避免 iOS standalone 首帧动态视口偏小。
+    // 底栏高度改由 CSS 100svh 处理，保证 iOS 首屏文字不被布局视口裁掉。
     (function () {
       try {
         var map = {
@@ -49,7 +49,7 @@
   <link rel="icon" href="/static/icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="/static/icon-192.png" />
   <title>Eagle Vault Viewer</title>
-  <link rel="stylesheet" href="/static/mobile.css?v=1.149" />
+  <link rel="stylesheet" href="/static/mobile.css?v=1.150" />
 </head>
 <body>
   <div id="app">
@@ -112,6 +112,6 @@
     </div>
   </div>
 
-  <script src="/static/mobile.js?v=1.149"></script>
+  <script src="/static/mobile.js?v=1.150"></script>
 </body>
 </html>
