@@ -2,6 +2,12 @@
 
 ---
 
+## 4.3.7 - 2026-08-09
+
+### Fixed
+- Fixed iOS standalone pages exposing the page background below the mobile tab bar and full-screen preview when WebKit does not match the standalone-mode detection path. The html canvas now always paints the tab-bar surface, switching to the preview surface while an item is open; refreshed the static asset revision and Service Worker cache.
+**中文**：修复 iOS 主屏模式下部分 WebKit 未命中独立模式检测时，移动端导航栏和全屏预览下方露出页面背景的问题；html 画布现在始终填充与底栏一致的表面，打开预览时切换为预览背景；同步更新静态资源版本和 Service Worker 缓存。
+
 ## 4.3.6 - 2026-08-08
 
 ### Fixed

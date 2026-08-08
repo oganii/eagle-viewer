@@ -359,3 +359,10 @@ def test_pwa_tabbar_applies_home_indicator_inset_once():
         f"the bottom blank band and squeezes the tab content into the divider line. "
         f"Offending block(s): {leaking}"
     )
+
+
+def test_mobile_shell_paints_viewport_tail_for_home_and_preview():
+    css = read("app/web/mobile.css")
+    shell_rules = css.split("@media (display-mode: standalone)", 1)[0]
+    assert "html { background:var(--bg2); }" in shell_rules
+    assert "html.pv-open { background:#0d0c0b; }" in shell_rules

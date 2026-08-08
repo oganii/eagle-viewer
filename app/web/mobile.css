@@ -108,15 +108,16 @@ a { color:var(--accent-text); }
 /* 个别 iOS 版本独立模式下 env(safe-area-inset-bottom) 可能报 0，给 home indicator 留兜底 */
 .pwa-standalone .tabs { padding-bottom:max(env(safe-area-inset-bottom), 20px); }
 .pwa-standalone .pv-bottom { padding-bottom:calc(max(env(safe-area-inset-bottom), 20px) + 16px); }
-/* display-mode 兜底：bootstrap JS 若未给 <html> 打上 .pwa-standalone（如检测
-   提前抛错），媒体查询仍能命中独立模式，复用同一套底部规则与画布配色。 */
+/* 固定 shell 的布局视口可能短于 iOS standalone 的物理屏幕；视口外的尾部
+   由 html 画布填充。规则必须放在 display-mode 查询外，因为部分 WebKit 版本
+   不会稳定命中 display-mode / navigator.standalone 检测。 */
+html { background:var(--bg2); }
+html.pv-open { background:#0d0c0b; }
+
+/* display-mode 兜底：独立模式下给底部控件保留 Home Indicator 安全区。 */
 @media (display-mode: standalone), (display-mode: fullscreen) {
   .tabs { padding-bottom:max(env(safe-area-inset-bottom), 20px); }
   .pv-bottom { padding-bottom:calc(max(env(safe-area-inset-bottom), 20px) + 16px); }
-  /* 独立模式视口比物理屏短时，屏幕底部安全区之外只能画到 html 画布；
-     把画布涂成底栏同色，避免悬空一条页面背景色空白。 */
-  html { background:var(--bg2); }
-  html.pv-open { background:#0d0c0b; }
 }
 html.pwa-standalone { background:var(--bg2); }
 html.pwa-standalone.pv-open { background:#0d0c0b; }
