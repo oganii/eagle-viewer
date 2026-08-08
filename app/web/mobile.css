@@ -83,18 +83,18 @@ button { font-family:inherit; color:inherit; cursor:pointer; }
 a { color:var(--accent-text); }
 
 /* ===== App 容器 =====
-   外层使用 large viewport 填满 iOS standalone 的物理屏幕，内层通过 bottom
-   padding 收回 small viewport 的布局高度，避免底部 Tab 文字被裁剪；外层
-   背景负责填充两者之间的尾部。100vh 仅作旧浏览器回退。 */
+   PWA 外层优先使用物理屏幕高度，内层通过 bottom padding 收回 small viewport
+   的布局高度，避免底部 Tab 文字被裁剪；Safari 普通页面回退到 large viewport，
+   让浏览器自己的底部工具栏占用那段空间。外层背景负责填充两者之间的尾部。 */
 #app {
   position:fixed;
   top:0; left:0; right:0;
   display:flex;
   flex-direction:column;
   height:100vh;
-  height:100lvh;
+  height:var(--pwa-outer-h,100lvh);
   box-sizing:border-box;
-  padding-bottom:calc(100lvh - 100svh);
+  padding-bottom:max(0px,calc(var(--pwa-outer-h,100lvh) - 100svh));
   background:var(--bg2);
 }
 

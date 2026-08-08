@@ -2,6 +2,12 @@
 
 ---
 
+## 4.3.11 - 2026-08-09
+
+### Fixed
+- Fixed iOS PWA standalone pages not stretching into the physical screen area after Safari's bottom browser controls disappear; the standalone bootstrap now supplies the physical shell height while the flex content remains inside the small viewport, preserving visible tab labels and filling the tail.
+**中文**：修复 Safari 页面进入 PWA 主屏模式后，浏览器底部栏消失但页面没有自动拉伸的问题；独立模式启动脚本提供物理屏幕高度，Flex 内容仍限制在 small viewport 内，同时填充下方尾部，保证导航文字可见。
+
 ## 4.3.10 - 2026-08-09
 
 ### Fixed

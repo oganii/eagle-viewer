@@ -372,7 +372,14 @@ def test_mobile_shell_paints_viewport_tail_for_home_and_preview():
 def test_mobile_app_paints_large_tail_without_clipping_tabs():
     css = read("app/web/mobile.css")
     app_rules = css.split("#app {", 1)[1].split("}", 1)[0]
-    assert "height:100lvh;" in app_rules
-    assert "padding-bottom:calc(100lvh - 100svh);" in app_rules
+    assert "height:var(--pwa-outer-h,100lvh);" in app_rules
+    assert "padding-bottom:max(0px,calc(var(--pwa-outer-h,100lvh) - 100svh));" in app_rules
     assert "box-sizing:border-box;" in app_rules
     assert "height:100dvh;" not in app_rules
+
+
+def test_pwa_bootstrap_uses_physical_height_only_for_standalone_shell():
+    html = read("app/web/mobile.html")
+    assert "window.screen.height" in html
+    assert "--pwa-outer-h" in html
+    assert "setPwaOuterHeight();" in html

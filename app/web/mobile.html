@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#f2f2f7" />
   <script>
     // 首帧前写入 data-theme，避免主题闪烁。
-    // 外层由 CSS 100lvh 填满屏幕，底部 padding 收回 small viewport 的布局高度，
+    // PWA 外层按物理屏幕高度填满屏幕，CSS 再收回 small viewport 的布局高度，
     // 保证 iOS 首屏导航文字可见且尾部背景连续。
     (function () {
       try {
@@ -39,6 +39,14 @@
                                  window.matchMedia('(display-mode: fullscreen)').matches));
         if (isStandalone) {
           document.documentElement.classList.add('pwa-standalone');
+          var setPwaOuterHeight = function () {
+            var land = window.matchMedia('(orientation: landscape)').matches;
+            var h = land ? window.screen.width : window.screen.height;
+            document.documentElement.style.setProperty('--pwa-outer-h', h + 'px');
+          };
+          setPwaOuterHeight();
+          window.addEventListener('orientationchange', setPwaOuterHeight);
+          window.addEventListener('resize', setPwaOuterHeight);
         }
       } catch (e) {}
     })();
@@ -50,7 +58,7 @@
   <link rel="icon" href="/static/icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="/static/icon-192.png" />
   <title>Eagle Vault Viewer</title>
-  <link rel="stylesheet" href="/static/mobile.css?v=1.151" />
+  <link rel="stylesheet" href="/static/mobile.css?v=1.152" />
 </head>
 <body>
   <div id="app">
@@ -113,6 +121,6 @@
     </div>
   </div>
 
-  <script src="/static/mobile.js?v=1.151"></script>
+  <script src="/static/mobile.js?v=1.152"></script>
 </body>
 </html>
