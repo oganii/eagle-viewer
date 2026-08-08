@@ -73,7 +73,9 @@ body {
   line-height:1.45;
   letter-spacing:-.01em;
   color:var(--text);
-  background:var(--bg);
+  /* The fixed app may end before the iOS standalone physical canvas. Keep
+     the body tail aligned with the tab bar; .bd paints the content surface. */
+  background:var(--bg2);
   -webkit-font-smoothing:antialiased;
   overscroll-behavior-y:none;
 }
@@ -81,18 +83,16 @@ button { font-family:inherit; color:inherit; cursor:pointer; }
 a { color:var(--accent-text); }
 
 /* ===== App 容器 =====
-   首屏使用 small viewport，避免 iOS Safari 首次绘制时把浏览器工具栏
-   尚未稳定的动态高度算进来，导致底栏下方出现空白。它在工具栏收起后
-   不会再把整个应用重新撑高；底栏本身仍通过 safe-area 避开 Home Indicator。
-   100vh 仅作旧浏览器回退；不依赖 JS 设置 --app-h。 */
+   首屏使用 large viewport，避免 iOS standalone 首帧的 dynamic viewport
+   偏小导致底栏下方出现空白；100vh 仅作旧浏览器回退。底栏本身仍通过
+   safe-area 避开 Home Indicator。 */
 #app {
   position:fixed;
   top:0; left:0; right:0;
   display:flex;
   flex-direction:column;
   height:100vh;
-  min-height:100svh;
-  height:100dvh;
+  height:100lvh;
 }
 
 /* iOS 主屏启动（standalone）下 WebKit 的布局视口比物理屏幕矮（实测矮一个
@@ -113,6 +113,7 @@ a { color:var(--accent-text); }
    不会稳定命中 display-mode / navigator.standalone 检测。 */
 html { background:var(--bg2); }
 html.pv-open { background:#0d0c0b; }
+html.pv-open body { background:#0d0c0b; }
 
 /* display-mode 兜底：独立模式下给底部控件保留 Home Indicator 安全区。 */
 @media (display-mode: standalone), (display-mode: fullscreen) {
@@ -700,7 +701,7 @@ body { letter-spacing:0; }
   z-index:20;
   min-height:0;
   padding:calc(env(safe-area-inset-top) + 5px) 14px 5px;
-  background:transparent;
+  background:var(--bg);
   border-bottom:0;
   backdrop-filter:none;
   -webkit-backdrop-filter:none;

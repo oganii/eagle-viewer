@@ -2,6 +2,12 @@
 
 ---
 
+## 4.3.8 - 2026-08-09
+
+### Fixed
+- Fixed the iOS first-paint viewport tail below the mobile navigation and full-screen preview by sizing the mobile shell with the large viewport and aligning the body canvas with each surface; added regression coverage for the home and preview surfaces.
+**中文**：修复 iOS 首屏动态视口偏小时，移动端导航栏和全屏预览下方出现空白的问题；移动端外壳改用大视口高度，body 画布与主页、预览页表面保持一致，并增加回归测试。
+
 ## 4.3.7 - 2026-08-09
 
 ### Fixed

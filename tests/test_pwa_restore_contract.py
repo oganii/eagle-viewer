@@ -366,3 +366,11 @@ def test_mobile_shell_paints_viewport_tail_for_home_and_preview():
     shell_rules = css.split("@media (display-mode: standalone)", 1)[0]
     assert "html { background:var(--bg2); }" in shell_rules
     assert "html.pv-open { background:#0d0c0b; }" in shell_rules
+    assert "html.pv-open body { background:#0d0c0b; }" in shell_rules
+
+
+def test_mobile_app_uses_large_viewport_for_first_paint():
+    css = read("app/web/mobile.css")
+    app_rules = css.split("#app {", 1)[1].split("}", 1)[0]
+    assert "height:100lvh;" in app_rules
+    assert "height:100dvh;" not in app_rules
