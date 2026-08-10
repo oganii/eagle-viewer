@@ -77,6 +77,27 @@ function addImagePreviewTools(overlay, img) {
     img.classList.add('is-zoomed');
     resetPan();
   }
+  function loadOriginalPreviewImage(after) {
+    var originalSrc = img.dataset && img.dataset.previewOriginalSrc;
+    if (!originalSrc || img.dataset.previewOriginalLoaded === '1') {
+      if (after) after();
+      return;
+    }
+    if (img.dataset.previewOriginalLoading === '1') return;
+    img.dataset.previewOriginalLoading = '1';
+    var original = new Image();
+    original.onload = function() {
+      img.dataset.previewOriginalLoading = '0';
+      img.dataset.previewOriginalLoaded = '1';
+      img.src = originalSrc;
+      if (after) after();
+    };
+    original.onerror = function() {
+      img.dataset.previewOriginalLoading = '0';
+      if (after) after();
+    };
+    original.src = originalSrc;
+  }
   function toggleTapZoom(e) {
     if (window.innerWidth > 768) return;
     e.preventDefault();
@@ -100,7 +121,7 @@ function addImagePreviewTools(overlay, img) {
   }
   buttons[0].onclick = function(e) { e.stopPropagation(); scale = Math.max(0.2, scale - 0.2); applyScale(); };
   buttons[1].onclick = function(e) { e.stopPropagation(); fitImage(); };
-  buttons[2].onclick = function(e) { e.stopPropagation(); showActualSize(); };
+  buttons[2].onclick = function(e) { e.stopPropagation(); loadOriginalPreviewImage(showActualSize); };
   buttons[3].onclick = function(e) {
     e.stopPropagation();
     flipped = !flipped;

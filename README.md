@@ -10,7 +10,7 @@
 
 Vault is always mounted **read-only**. It never modifies files inside the library.
 
-**Current version**: v4.3.11 (2026-08-09) · [Changelog](CHANGELOG.md) · [中文版](README.zh.md)
+**Current version**: v4.3.12 (2026-08-10) · [Changelog](CHANGELOG.md) · [中文版](README.zh.md)
 
 ---
 
@@ -41,7 +41,7 @@ Vault is always mounted **read-only**. It never modifies files inside the librar
 - **Incremental loading**: All Items, Recent, Folders, Tags and Search views load in batches as you scroll — no giant renders.
 - **Gallery layout**: Compact three-column shell with library tree, density-adjustable asset canvas, and Inspector.
 - **View modes**: Waterfall masonry and list layout; thumbnail density is adjustable and persists across sessions.
-- **Inspector**: Click any asset to open its detailed card — large preview, dimensions, format, folder path, tags, source URL, Eagle notes, asset ID. Copy share link or download from within the Inspector.
+- **Inspector**: Use the details action to open a detailed card — dimensions, format, folder path, tags, source URL, Eagle notes, and asset ID. Copy share link or download from within the Inspector.
 - **Left navigation**: Folder tree with expand/collapse, draggable sidebar width, folder counts (including children), hide/show toggle — all persisted locally.
 - **Sort & filter**: Sort by modified/created date, name, size, or format. Filter by image, video, document, audio, or other.
 - **Password-protected folders**: Eagle password-protected folders (and their descendants) are excluded from indexing, search, thumbnails, and file endpoints.
@@ -72,7 +72,7 @@ The web viewer focuses on **remote read-only browsing**, **not** replicating Eag
 
 iPhone / iPad use the same web app. Open the remote URL in Safari, then tap **Share → Add to Home Screen** for a standalone window. The three bottom tabs are Library, Folders, and Search.
 
-Browser-cached PWA shell + IndexedDB thumbnail cache means previously viewed images rehydrate instantly on weak or offline networks. Asset lists, originals, and unseen thumbnails still require a live Vault connection.
+Browser-cached PWA shell + a bounded IndexedDB thumbnail cache means previously viewed images rehydrate instantly on weak or offline networks. Asset lists, originals, and unseen thumbnails still require a live Vault connection; the mobile status screen can clear the thumbnail cache.
 
 ## Privacy
 

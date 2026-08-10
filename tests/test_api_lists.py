@@ -24,6 +24,9 @@ def test_all_items_pagination_and_type_filter(sample_library):
         "item-pdf",
         "item-notes",
     }
+    assert "annotation" not in first_page["items"][0]
+    assert "bpm" in first_page["items"][0]
+    assert "annotation" in items_api.api_item_detail(first_page["items"][0]["id"])
 
 
 def test_folder_tag_search_and_recent_lists(sample_library):

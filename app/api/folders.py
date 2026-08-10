@@ -13,7 +13,7 @@ from app.vault import (
     get_recent_items,
     get_subfolders,
     is_folder_locked,
-    item_to_dict,
+    item_to_list_dict,
     search_items,
     sort_items,
 )
@@ -41,7 +41,7 @@ def _list_items(
     total = len(ordered)
     sliced = ordered[offset:offset + limit]
     result = {
-        "items": [item_to_dict(item, include_folder_paths=True) for item in sliced],
+        "items": [item_to_list_dict(item, include_folder_paths=True) for item in sliced],
         "total": total,
         "offset": offset,
         "limit": limit,

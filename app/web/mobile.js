@@ -41,6 +41,7 @@
       remoteChangedBody: '资源库自上次索引后有改动，重新加载以同步。',
       reload: '重新加载索引', loading: '加载中…', reloadFailed: '重新加载失败',
       downloaded: '已下载到「文件」，可在相册中查看', saveFailed: '保存失败', unsupportedPreview: '此格式不支持在线预览，请下载后打开', videoUnavailable: '当前视频无法在此设备上播放，请下载查看',
+      thumbnailCache: '缩略图缓存', thumbnailCacheClear: '清理缩略图缓存', thumbnailCacheCleared: '缩略图缓存已清理',
       previous: '上一个', next: '下一个',
       copied: '链接已复制', shareUnavailable: '分享不可用', language: 'English',
       lightTheme: '切换到浅色', darkTheme: '切换到深色'
@@ -62,6 +63,7 @@
       remoteChangedBody: 'The Vault changed after the last index. Reload to sync it.',
       reload: 'Reload index', loading: 'Loading…', reloadFailed: 'Reload failed',
       downloaded: 'Downloaded to Files. You can open it in Photos.', unsupportedPreview: 'This format cannot be previewed here. Download it to open.', videoUnavailable: 'This video cannot play on this device. Download it to view.',
+      thumbnailCache: 'Thumbnail cache', thumbnailCacheClear: 'Clear thumbnail cache', thumbnailCacheCleared: 'Thumbnail cache cleared',
       previous: 'Previous', next: 'Next',
       saveFailed: 'Could not save', copied: 'Link copied',
       shareUnavailable: 'Sharing is unavailable', language: '中文',
@@ -69,6 +71,7 @@
     }
   };
   let lang = 'zh';
+  let searchAbortController = null;
   try {
     const saved = localStorage.getItem('eagle-viewer-lang');
     lang = saved === 'en' || saved === 'zh' ? saved : (/^en\b/i.test(navigator.language || '') ? 'en' : 'zh');
@@ -130,14 +133,15 @@
   }
 
   // ---------- 缩略图 IndexedDB 缓存（弱网 / 离线复用已浏览缩略图）----------
-  // 仅作应用层缓存，绕开 SW 的 /api 不缓存契约；原生支持 Blob，失效以全局
-  // status.revision flush，配合有界 LRU 与 indexedDB 不可用时的网络回退。
+  // 只缓存 Eagle 已生成的缩略图，不缓存原文件。容量同时受条目数和总字节数限制。
   const Thumbs = (function () {
     const DB = 'eagle-viewer-thumbs';
     const STORE = 'blobs';
-    const MAX = 500;
+    const MAX_ENTRIES = 500;
+    const MAX_BYTES = 100 * 1024 * 1024;
     let dbp = null;
     let evictTimer = null;
+    let cacheGeneration = 0;
     function ok() { return typeof indexedDB !== 'undefined' && indexedDB; }
     function open() {
       if (!ok()) return Promise.resolve(null);
@@ -157,27 +161,39 @@
       return open().then((db) => {
         if (!db) return null;
         return new Promise((resolve) => {
-          const tx = db.transaction(STORE, 'readonly');
+          const tx = db.transaction(STORE, 'readwrite');
           const r = tx.objectStore(STORE).get(id);
-          r.onsuccess = () => { const v = r.result; resolve(v && v.blob ? v.blob : null); };
+          r.onsuccess = () => {
+            const v = r.result;
+            if (v && v.blob) {
+              v.ts = Date.now();
+              v.bytes = Number(v.bytes || v.blob.size || 0);
+              tx.objectStore(STORE).put(v, id);
+            }
+            resolve(v && v.blob ? v.blob : null);
+          };
           r.onerror = () => resolve(null);
         });
       });
     }
     function put(id, blob) {
+      const generation = cacheGeneration;
       return open().then((db) => {
-        if (!db) return;
+        if (!db || generation !== cacheGeneration) return;
         return new Promise((resolve) => {
           const tx = db.transaction(STORE, 'readwrite');
-          tx.objectStore(STORE).put({ blob: blob, ts: Date.now() }, id);
+          tx.objectStore(STORE).put({ blob: blob, bytes: Number(blob.size || 0), ts: Date.now() }, id);
           tx.oncomplete = resolve; tx.onerror = resolve;
         });
       }).then(() => {
+        if (generation !== cacheGeneration) return;
         if (evictTimer) return;
         evictTimer = setTimeout(() => { evictTimer = null; evict(); }, 750);
       });
     }
     function clear() {
+      cacheGeneration += 1;
+      if (evictTimer) { clearTimeout(evictTimer); evictTimer = null; }
       return open().then((db) => {
         if (!db) return;
         return new Promise((resolve) => {
@@ -190,34 +206,56 @@
     function evict() {
       return open().then((db) => {
         if (!db) return;
-        try {
-          if (navigator.storage && navigator.storage.estimate) {
-            return navigator.storage.estimate().then((e) => {
-              if (e.quota && e.usage / e.quota > 0.85) return clear();
-            });
-          }
-        } catch (e) {}
         return new Promise((resolve) => {
           const out = [];
           const tx = db.transaction(STORE, 'readonly');
           const cur = tx.objectStore(STORE).openCursor();
           cur.onsuccess = () => {
             const c = cur.result;
-            if (c) { out.push({ id: c.key, ts: (c.value && c.value.ts) || 0 }); c.continue(); }
+            if (c) {
+              const value = c.value || {};
+              out.push({ id: c.key, ts: value.ts || 0, bytes: Number(value.bytes || (value.blob && value.blob.size) || 0) });
+              c.continue();
+            }
             else resolve(out);
           };
           cur.onerror = () => resolve(out);
         }).then((entries) => {
-          if (entries.length <= MAX) return;
+          let totalBytes = entries.reduce((sum, entry) => sum + entry.bytes, 0);
+          if (entries.length <= MAX_ENTRIES && totalBytes <= MAX_BYTES) return;
           entries.sort((a, b) => a.ts - b.ts);
-          const del = entries.slice(0, entries.length - MAX).map((e) => e.id);
+          const del = [];
+          while (entries.length - del.length > MAX_ENTRIES || totalBytes > MAX_BYTES) {
+            const entry = entries[del.length];
+            if (!entry) break;
+            del.push(entry.id);
+            totalBytes -= entry.bytes;
+          }
           const tx = db.transaction(STORE, 'readwrite');
           del.forEach((id) => tx.objectStore(STORE).delete(id));
           return new Promise((res) => { tx.oncomplete = res; tx.onerror = res; });
         });
       });
     }
-    return { ok: ok, get: get, put: put, clear: clear };
+    function stats() {
+      return open().then((db) => new Promise((resolve) => {
+        if (!db) { resolve({ entries: 0, bytes: 0 }); return; }
+        const tx = db.transaction(STORE, 'readonly');
+        const cur = tx.objectStore(STORE).openCursor();
+        const out = { entries: 0, bytes: 0 };
+        cur.onsuccess = () => {
+          const c = cur.result;
+          if (c) {
+            const value = c.value || {};
+            out.entries += 1;
+            out.bytes += Number(value.bytes || (value.blob && value.blob.size) || 0);
+            c.continue();
+          } else resolve(out);
+        };
+        cur.onerror = () => resolve(out);
+      }));
+    }
+    return { ok: ok, get: get, put: put, clear: clear, stats: stats };
   })();
 
   function hydrateOne(img) {
@@ -274,13 +312,14 @@
     viewGeneration: 0, folderRequest: 0, searchRequest: 0,
     status: null,
     currentGallery: [],
-    preview: { list: [], index: 0, open: false, pushed: false },
+    preview: { list: [], index: 0, open: false, pushed: false, token: 0, thumbObjectUrl: '' },
   };
 
   // ---------- 数据层 ----------
   const API = {
     async json(path) {
-      const res = await fetch(path, { credentials: 'same-origin' });
+      const options = arguments[1] || {};
+      const res = await fetch(path, Object.assign({ credentials: 'same-origin' }, options));
       if (res.status === 401) { location.href = '/login'; throw new Error('unauthorized'); }
       if (!res.ok) throw new Error('HTTP ' + res.status);
       return res.json();
@@ -289,7 +328,7 @@
     tree() { return API.json('/api/tree'); },
     folderItems(id, offset) { return API.json('/api/folders/' + encodeURIComponent(id) + '/items?offset=' + (offset || 0) + '&limit=120'); },
     recent() { return API.json('/api/items?sort=mtime&dir=desc&limit=24'); },
-    search(q, offset) { return API.json('/api/search?q=' + encodeURIComponent(q) + '&offset=' + (offset || 0) + '&limit=120'); },
+    search(q, offset, signal) { return API.json('/api/search?q=' + encodeURIComponent(q) + '&offset=' + (offset || 0) + '&limit=120', signal ? { signal: signal } : undefined); },
     async reload() {
       const res = await fetch('/api/library/reload', { method: 'POST', credentials: 'same-origin' });
       if (res.status === 401) { location.href = '/login'; throw new Error('unauthorized'); }
@@ -611,19 +650,23 @@
     const q = S.searchQuery;
     const head = document.getElementById('srHead');
     const mas = document.getElementById('searchMas');
+    if (searchAbortController) searchAbortController.abort();
+    searchAbortController = typeof AbortController !== 'undefined' ? new AbortController() : null;
     if (!q) { if (head) head.textContent = tr('searchStart'); if (mas) { releaseThumbObjectUrls(mas); mas.classList.remove('mas'); mas.innerHTML = ''; } renderPopularTags(); return; }
     if (mas) mas.classList.add('mas');
     if (reset && mas) mas.innerHTML = '<div class="spinner"></div>';
     const t0 = performance.now();
     let data;
     const offset = S.searchOffset;
-    try { data = await API.search(q, offset); }
+    try { data = await API.search(q, offset, searchAbortController && searchAbortController.signal); }
     catch (e) {
+      if (e && e.name === 'AbortError') return;
       if (requestId !== S.searchRequest || q !== S.searchQuery || S.view !== 'search') return;
       if (e.message === 'unauthorized') return;
       if (head) head.textContent = tr('searchFailed', { error: e.message });
       return;
     }
+    if (searchAbortController && requestId === S.searchRequest) searchAbortController = null;
     if (requestId !== S.searchRequest || q !== S.searchQuery || S.view !== 'search' || (!reset && offset !== S.searchOffset)) return;
     const previousLength = S.searchItems.length;
     if (reset) S.searchItems = [];
@@ -697,13 +740,28 @@
       '<div class="kv"><span class="k">' + tr('tags') + '</span><span class="v">' + (stats.tags || 0) + '</span></div>' +
       '</div>' +
       (st.changed ? '<div class="warnrow"><b>' + tr('remoteChangedTitle') + '</b><br>' + tr('remoteChangedBody') + '</div>' : '') +
-      '<button class="actbtn" id="reloadBtn">' + refreshSVG + ' ' + tr('reload') + '</button>';
+      '<button class="actbtn" id="reloadBtn">' + refreshSVG + ' ' + tr('reload') + '</button>' +
+      '<button class="actbtn ghost" id="clearThumbCacheBtn">' + tr('thumbnailCacheClear') + '</button>' +
+      '<div class="status-cache" id="thumbCacheMeta">' + tr('thumbnailCache') + ' · …</div>';
     const btn = document.getElementById('reloadBtn');
     btn.onclick = async () => {
       btn.disabled = true; btn.textContent = tr('loading');
       try { await API.reload(); goStatus(); }
       catch (e) { if (e.message !== 'unauthorized') { btn.disabled = false; btn.textContent = tr('reload'); toast(tr('reloadFailed')); } }
     };
+    const clearThumbCacheBtn = document.getElementById('clearThumbCacheBtn');
+    const thumbCacheMeta = document.getElementById('thumbCacheMeta');
+    const refreshThumbCacheMeta = () => Thumbs.stats().then((cache) => {
+      if (thumbCacheMeta) thumbCacheMeta.textContent = tr('thumbnailCache') + ' · ' + cache.entries + ' · ' + fmtSize(cache.bytes);
+    });
+    if (clearThumbCacheBtn) clearThumbCacheBtn.onclick = async () => {
+      clearThumbCacheBtn.disabled = true;
+      await Thumbs.clear();
+      clearThumbCacheBtn.disabled = false;
+      toast(tr('thumbnailCacheCleared'));
+      refreshThumbCacheMeta();
+    };
+    refreshThumbCacheMeta();
   }
 
   // ---------- 缩略图点击 → 预览 ----------
@@ -729,6 +787,7 @@
     if (!S.preview.pushed) { history.pushState({ pv: 1 }, ''); S.preview.pushed = true; }
   }
   function closePreviewVisual() {
+    S.preview.token++;
     S.preview.open = false;
     S.preview.pushed = false;
     overlay.classList.remove('show', 'immersive');
@@ -738,6 +797,8 @@
     clearPreviewMedia();
     pvImg.onerror = null;
     pvImg.src = '';
+    if (S.preview.thumbObjectUrl) URL.revokeObjectURL(S.preview.thumbObjectUrl);
+    S.preview.thumbObjectUrl = '';
     pvImg.style.display = '';
     pvImg.style.transform = '';
     overlay.style.background = '#000';
@@ -751,6 +812,7 @@
   function showPreviewItem() {
     const list = S.preview.list, i = S.preview.index, it = list[i];
     if (!it) return;
+    const token = ++S.preview.token;
     g.scale = 1;
     pvIndex.textContent = (i + 1) + ' / ' + list.length;
     const ext = normExt(it.ext);
@@ -763,8 +825,19 @@
     if (!image && !video && !pdf) {
       showPreviewUnavailable(tr('unsupportedPreview'));
     } else if (image) {
-      pvImg.src = mediaUrl;
+      const thumbUrl = '/api/items/' + it.id + '/thumbnail';
       pvImg.onerror = () => showPreviewUnavailable(tr('unsupportedPreview'));
+      Thumbs.get(it.id).then((blob) => {
+        if (blob && S.preview.open && token === S.preview.token && S.preview.list[S.preview.index] === it) {
+          if (S.preview.thumbObjectUrl) URL.revokeObjectURL(S.preview.thumbObjectUrl);
+          S.preview.thumbObjectUrl = URL.createObjectURL(blob);
+          pvImg.src = S.preview.thumbObjectUrl;
+        } else if (S.preview.open && token === S.preview.token) {
+          pvImg.src = thumbUrl;
+        }
+      }).catch(() => {
+        if (S.preview.open && token === S.preview.token) pvImg.src = thumbUrl;
+      });
     } else if (video) {
       const player = document.createElement('video');
       player.className = 'pv-media pv-video';
@@ -778,6 +851,7 @@
       const frame = document.createElement('iframe');
       frame.className = 'pv-media pv-pdf';
       frame.src = mediaUrl;
+      frame.loading = 'lazy';
       frame.title = it.name || 'PDF Preview';
       pvStage.appendChild(frame);
     }
@@ -833,13 +907,7 @@
     }
   }
   function preloadAdjacent() {
-    // 预载相邻图（前 1 + 后 2），让左右切换时目标图已在浏览器缓存中，消除滑完后的网络等待卡顿。
-    const list = S.preview.list, i = S.preview.index;
-    if (!list || !list.length) return;
-    for (const j of [i - 1, i + 1, i + 2]) {
-      const it = list[j];
-      if (it && isImageExt(it.ext)) { const im = new Image(); im.decoding = 'async'; im.src = '/api/items/' + it.id + '/file'; }
-    }
+    // 预览优先显示当前图的缩略图，避免热点网络同时下载相邻原图。
   }
   function showPreviewItemAnimated(dir) {
     pvImg.style.transition = 'transform .18s ease';

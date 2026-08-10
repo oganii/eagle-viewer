@@ -1,5 +1,7 @@
 'use strict';
 
+var apiModule = EagleViewer.modules.api = EagleViewer.modules.api || {};
+
 // ===== Inspector panel =====
 function openInspector(item) {
   if (isBatchSelectionMode()) return;
@@ -84,6 +86,15 @@ function openInspector(item) {
   syncFocusedItem(item.id);
   updateReturnToCurrentItemButton();
   updateUrlFromState();
+
+  // Collection responses intentionally omit the potentially large note field.
+  // Hydrate the inspector only when the user opens it.
+  if (!Object.prototype.hasOwnProperty.call(item, 'annotation') && apiModule && apiModule.fetchItemDetail) {
+    apiModule.fetchItemDetail(item.id).then(function(detail) {
+      if (!detail || !state.inspectorItem || state.inspectorItem.id !== item.id) return;
+      openInspector(Object.assign({}, item, detail));
+    }).catch(function() {});
+  }
 }
 
 window._previewInspectorItem = function() {

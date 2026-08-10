@@ -143,6 +143,27 @@ function addImagePreviewTools(overlay, img) {
     img.style.height = Math.max(1, img.naturalHeight * scale) + 'px';
     img.classList.add('is-zoomed');
   }
+  function loadOriginalPreviewImage(after) {
+    var originalSrc = img.dataset && img.dataset.previewOriginalSrc;
+    if (!originalSrc || img.dataset.previewOriginalLoaded === '1') {
+      if (after) after();
+      return;
+    }
+    if (img.dataset.previewOriginalLoading === '1') return;
+    img.dataset.previewOriginalLoading = '1';
+    var original = new Image();
+    original.onload = function() {
+      img.dataset.previewOriginalLoading = '0';
+      img.dataset.previewOriginalLoaded = '1';
+      img.src = originalSrc;
+      if (after) after();
+    };
+    original.onerror = function() {
+      img.dataset.previewOriginalLoading = '0';
+      if (after) after();
+    };
+    original.src = originalSrc;
+  }
 
   toolbar.querySelector('[data-preview-tool="zoom-out"]').onclick = function(event) {
     event.stopPropagation();
@@ -156,8 +177,10 @@ function addImagePreviewTools(overlay, img) {
   };
   toolbar.querySelector('[data-preview-tool="zoom-in"]').onclick = function(event) {
     event.stopPropagation();
-    scale = Math.min(4, scale + 0.25);
-    applyScale();
+    loadOriginalPreviewImage(function() {
+      scale = Math.min(4, scale + 0.25);
+      applyScale();
+    });
   };
   overlay.appendChild(toolbar);
 }
@@ -184,6 +207,7 @@ async function previewItem(item, fileUrl) {
     setPreviewStatus(overlay, '视频加载中…');
     el = document.createElement('video');
     el.controls = true;
+    el.preload = 'metadata';
     el.autoplay = true;
     el.src = fileUrl;
     el.onloadeddata = function() { clearPreviewStatus(overlay); };
@@ -206,18 +230,18 @@ async function previewItem(item, fileUrl) {
     el = document.createElement('img');
     var thumbnailUrl = API + '/api/items/' + encodeURIComponent(item.id || '') + '/thumbnail';
     var usingThumbnailFallback = false;
-    el.dataset.previewSource = 'original';
-    el.src = fileUrl;
+    el.dataset.previewSource = 'thumbnail';
+    el.dataset.previewOriginalSrc = fileUrl;
+    el.src = thumbnailUrl;
     el.onload = function() {
       clearPreviewStatus(overlay);
-      if (usingThumbnailFallback) setPreviewQualityNotice(overlay, isRemoteAccessUnavailableForRender());
     };
     el.onerror = function() {
       if (!usingThumbnailFallback && item.id) {
         usingThumbnailFallback = true;
-        el.dataset.previewSource = 'thumbnail';
+        el.dataset.previewSource = 'original';
         setPreviewStatus(overlay, '正在打开缓存预览…');
-        el.src = thumbnailUrl;
+        el.src = fileUrl;
         return;
       }
       setPreviewStatus(overlay, '图片预览不可用；请重连远程 Vault 后重试');
@@ -232,6 +256,7 @@ async function previewItem(item, fileUrl) {
     setPreviewStatus(overlay, 'PDF 加载中…');
     el = document.createElement('iframe');
     el.src = fileUrl;
+    el.loading = 'lazy';
     el.title = item.name || 'PDF Preview';
     el.onload = function() { clearPreviewStatus(overlay); };
   } else if (isText) {

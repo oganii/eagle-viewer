@@ -39,7 +39,7 @@
 - Waterfall and list views switch without overlap or horizontal overflow.
 - Thumbnail density and fill/fit display settings take effect immediately.
 - Desktop hover shows preview and detail actions only.
-- Single-click opens Inspector; double-click or preview button opens fullscreen.
+- Single-click opens floating preview; the Details action opens Inspector without changing the preview default.
 - Images, video, audio, PDF, and plain text preview inline; other formats show a download prompt.
 - Failed thumbnails show a placeholder or fallback without breaking the grid.
 
@@ -80,7 +80,7 @@
 - Manifest quick links only include: All Items and Search Vault.
 - Service Worker upgrade fetches the latest static assets without blocking current sheets.
 - Only the static shell is cached; no offline data management or snapshot UI is shown.
-- Cache does **not** include any `/api` requests, thumbnails, or originals.
+- Service Worker cache does **not** include any `/api` requests. Mobile IndexedDB may retain only bounded Eagle thumbnails; originals are never stored there and the status screen can clear the thumbnail cache.
 - When the remote Vault reconnects, the current view refreshes gracefully.
 
 ## Refresh & Cache

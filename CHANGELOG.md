@@ -2,6 +2,16 @@
 
 ---
 
+## 4.3.12 - 2026-08-10
+
+### Fixed
+- Changed collection card and filename clicks to open the floating preview by default; the Inspector remains available through the details action.
+- Made mobile image previews load Eagle's existing thumbnails first, with a bounded, user-clearable IndexedDB thumbnail cache and no original-file preloading.
+- Reduced collection payloads by deferring large Eagle notes to Inspector detail loading, while retaining lightweight metadata needed by copy actions.
+- Added request cancellation, adjacent-original preload removal, lazy media metadata loading, and parser/list sorting optimizations for remote hotspot use.
+- Fixed duplicate preview requests on double-click and prevented in-flight thumbnail writes from repopulating a cache after it is cleared.
+**中文**：资料库卡片和文件名点击默认改为打开悬浮预览，详情面板保留为“详情”操作；手机端优先加载 Eagle 已有缩略图，使用有界且可手动清理的 IndexedDB 缩略图缓存，不预加载原文件；列表接口延迟加载较大的 Eagle 备注但保留复制操作所需的轻量元数据；同时加入请求取消、移除相邻原图预加载、媒体懒加载和解析/排序优化，并修复双击重复预览与清理缓存后异步写入回填的问题。
+
 ## 4.3.11 - 2026-08-09
 
 ### Fixed

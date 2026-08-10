@@ -3,6 +3,7 @@
 var state = EagleViewer.state;
 var render = EagleViewer.modules.render;
 var apiModule = EagleViewer.modules.api = EagleViewer.modules.api || {};
+var activeListAbortController = null;
 
 async function fetchJson(path, options) {
   var response = await fetch(API + path, options);
@@ -30,6 +31,11 @@ async function resolveItems(itemIds) {
     body: JSON.stringify(itemIds || [])
   });
   return data ? (data.items || []) : [];
+}
+
+async function fetchItemDetail(itemId) {
+  var data = await fetchJson('/api/items/' + encodeURIComponent(itemId));
+  return data || null;
 }
 
 async function reloadLibrary() {
@@ -117,13 +123,15 @@ async function loadIncrementalView(options) {
   if (options.days) state.recentDays = options.days;
   closeMobileSidebarIfNeeded();
   state.incrementalLoading = true;
+  if (reset && activeListAbortController) activeListAbortController.abort();
+  if (reset && typeof AbortController !== 'undefined') activeListAbortController = new AbortController();
   if (reset) {
     document.getElementById('contentBody').innerHTML = '<div class="loading-spinner">加载中…</div>';
     document.getElementById('contentToolbar').style.display = 'flex';
   }
   try {
     var separator = options.apiPath.indexOf('?') >= 0 ? '&' : '?';
-    var data = await fetchJson(options.apiPath + separator + buildBasicListQuery());
+    var data = await fetchJson(options.apiPath + separator + buildBasicListQuery(), activeListAbortController ? { signal: activeListAbortController.signal } : undefined);
     if (!data || requestId !== state.activeListRequest) return;
     var newItems = data.items || [];
     state.currentTitle = options.title;
@@ -143,12 +151,15 @@ async function loadIncrementalView(options) {
     render.renderContent();
     updateUrlFromState();
   } catch (error) {
+    if (error && error.name === 'AbortError') return;
     if (requestId !== state.activeListRequest) return;
     state.incrementalLoading = false;
     if (reset) {
       var title = error && error.message === 'offline' ? '远程 Vault 暂不可达' : '加载失败';
       document.getElementById('contentBody').innerHTML = '<div class="empty-state offline-state">' + iconFolderOutline() + '<strong>' + title + '</strong><span>请检查网络连接、VPN 或远程挂载状态。</span></div>';
     }
+  } finally {
+    if (reset && requestId === state.activeListRequest) activeListAbortController = null;
   }
 }
 
@@ -212,6 +223,7 @@ Object.assign(apiModule, {
   fetchTree: fetchTree,
   fetchTags: fetchTags,
   resolveItems: resolveItems,
+  fetchItemDetail: fetchItemDetail,
   reloadLibrary: reloadLibrary,
   fetchLibraryStatus: fetchLibraryStatus,
   refreshCurrentView: refreshCurrentView,

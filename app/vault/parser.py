@@ -37,6 +37,8 @@ _items_by_folder: dict[str, list[ItemInfo]] = {}  # folder_id -> items
 _items_by_tag: dict[str, list[ItemInfo]] = {}
 _tag_summary: list[dict] = []
 _folder_counts: dict[str, int] = {}
+_folder_path_cache: dict[str, str] = {}
+_sort_cache: dict[tuple[tuple[str, ...], str, str], list[ItemInfo]] = {}
 _locked_folder_ids: set[str] = set()
 _last_load_stats: dict[str, Any] = {}
 _loaded = False
@@ -411,6 +413,8 @@ def _get_folder_path(folder_id: str) -> str:
     fid = str(folder_id).strip() if folder_id is not None else ""
     if not fid:
         return ""
+    if fid in _folder_path_cache:
+        return _folder_path_cache[fid]
     node = _folder_by_id.get(fid)
     if not node:
         # Try int key in case library/item use numeric id
@@ -424,8 +428,11 @@ def _get_folder_path(folder_id: str) -> str:
         if node and fid and fid not in _folder_by_id:
             _folder_by_id[fid] = node
     if not node:
+        _folder_path_cache[fid] = ""
         return ""
-    return _path_from_node(node)
+    path = _path_from_node(node)
+    _folder_path_cache[fid] = path
+    return path
 
 
 def get_folder_path(folder_id: str) -> str:
@@ -474,7 +481,7 @@ def _compute_folder_counts(
 
 def load_vault() -> None:
     """Load vault from disk and populate global cache."""
-    global _folder_tree, _folder_by_id, _items_by_id, _items_by_folder, _items_by_tag, _tag_summary, _folder_counts, _locked_folder_ids, _last_load_stats, _loaded
+    global _folder_tree, _folder_by_id, _items_by_id, _items_by_folder, _items_by_tag, _tag_summary, _folder_counts, _folder_path_cache, _sort_cache, _locked_folder_ids, _last_load_stats, _loaded
     started = time.time()
     lib = _load_library_metadata()
     folders_data = _normalize_folders_data(lib)
@@ -510,6 +517,8 @@ def load_vault() -> None:
         _items_by_tag = items_by_tag
         _tag_summary = tag_summary
         _folder_counts = folder_counts
+        _folder_path_cache = {}
+        _sort_cache = {}
         _locked_folder_ids = locked_folder_ids
         _last_load_stats = {
             **cache_stats,
@@ -676,7 +685,15 @@ def sort_items(
         return (it.ext or "").lower()
 
     key_fn = {"mtime": key_mtime, "btime": key_btime, "name": key_name, "size": key_size, "ext": key_ext}[ob]
-    return sorted(items, key=key_fn, reverse=reverse)
+    cache_key = (tuple(str(item.id) for item in items), ob, od)
+    cached = _sort_cache.get(cache_key)
+    if cached is not None:
+        return list(cached)
+    ordered = sorted(items, key=key_fn, reverse=reverse)
+    if len(_sort_cache) >= 128:
+        _sort_cache.pop(next(iter(_sort_cache)))
+    _sort_cache[cache_key] = ordered
+    return list(ordered)
 
 
 def get_recent_items(days: int = 7) -> list[ItemInfo]:
@@ -726,3 +743,27 @@ def item_to_dict(item: ItemInfo, include_folder_paths: bool = False) -> dict:
     if include_folder_paths:
         d["folderPaths"] = get_folder_paths_for_item(item)
     return d
+
+
+def item_to_list_dict(item: ItemInfo, include_folder_paths: bool = False) -> dict:
+    """Return the collection payload without the potentially large note field."""
+    result = {
+        "id": item.id,
+        "name": item.name,
+        "ext": item.ext,
+        "folders": item.folders or [],
+        "width": item.width,
+        "height": item.height,
+        "size": item.size,
+        "tags": item.tags or [],
+        "url": item.url or "",
+        "sourceDomain": _normalize_source_domain(item.url),
+        "duration": item.duration or 0,
+        "bpm": item.bpm or 0,
+        "btime": item.btime,
+        "mtime": item.mtime,
+        "hasThumbnail": bool(item.thumbnail_path),
+    }
+    if include_folder_paths:
+        result["folderPaths"] = get_folder_paths_for_item(item)
+    return result

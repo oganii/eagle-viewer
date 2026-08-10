@@ -99,15 +99,9 @@ function renderItemCard(item, container) {
       toggleSelect(item.id);
       return;
     }
-    renderModule.openInspector(item);
-  };
-
-  card.addEventListener('dblclick', function(e) {
-    if (e.target.closest('.card-checkbox, [data-item-folder], [data-item-ext], [data-item-tag], [data-source-domain], .card-quick-action')) return;
-    if (isBatchSelectionMode()) return;
     if (isItemPreviewable(item)) renderModule.previewItem(item, fileUrl);
     else window.open(fileUrl, '_blank');
-  });
+  };
 
   // Hover preview setup
   if ((item.hasThumbnail && isImageExt(item.ext)) || (item.ext || '').toLowerCase() === 'pdf') {
@@ -214,7 +208,8 @@ function renderListRow(item, tbody) {
       toggleSelect(item.id);
       return;
     }
-    renderModule.openInspector(item);
+    if (isItemPreviewable(item)) renderModule.previewItem(item, fileUrl);
+    else window.open(fileUrl, '_blank');
   };
   tr.appendChild(nameCell);
 

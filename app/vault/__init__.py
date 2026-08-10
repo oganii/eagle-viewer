@@ -20,6 +20,7 @@ from app.vault.parser import (
     sort_items,
     folder_tree_to_dict,
     item_to_dict,
+    item_to_list_dict,
 )
 
 __all__ = [
@@ -44,4 +45,5 @@ __all__ = [
     "sort_items",
     "folder_tree_to_dict",
     "item_to_dict",
+    "item_to_list_dict",
 ]

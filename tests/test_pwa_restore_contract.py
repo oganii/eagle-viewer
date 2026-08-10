@@ -129,6 +129,38 @@ def test_mobile_preview_and_async_navigation_contracts():
     assert ".catch(function() {})" not in service_worker
 
 
+def test_mobile_preview_uses_existing_thumbnail_and_bounded_cache():
+    mobile = read("app/web/mobile.js")
+
+    assert "Thumbs.get(it.id)" in mobile
+    assert "const thumbUrl = '/api/items/' + it.id + '/thumbnail';" in mobile
+    assert "const MAX_BYTES = 100 * 1024 * 1024;" in mobile
+    assert "thumbnailCacheClear" in mobile
+    assert "showOriginalWhenReady" not in mobile
+    assert "original.src = mediaUrl" not in mobile
+
+
+def test_collection_payload_omits_notes_until_detail_is_opened():
+    folders = read("app/api/folders.py")
+    parser = read("app/vault/parser.py")
+    api = read("app/web/api.js")
+    inspector = read("app/web/render-inspector.js")
+
+    assert "item_to_list_dict(item, include_folder_paths=True)" in folders
+    assert '"annotation"' not in parser.split("def item_to_list_dict", 1)[1]
+    assert "fetchItemDetail" in api
+    assert "fetchItemDetail(item.id)" in inspector
+
+
+def test_collection_file_click_defaults_to_floating_preview():
+    collection = read("app/web/render-collection.js")
+
+    assert "if (isItemPreviewable(item)) renderModule.previewItem(item, fileUrl);" in collection
+    assert "else window.open(fileUrl, '_blank');" in collection
+    assert collection.count("renderModule.openInspector(item);") == 0
+    assert "card.addEventListener('dblclick'" not in collection
+
+
 def test_service_worker_only_caches_the_app_shell():
     service_worker = read("app/web/sw.js")
     assert "url.pathname.startsWith('/api/')" in service_worker
