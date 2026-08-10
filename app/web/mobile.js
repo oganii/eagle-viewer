@@ -15,6 +15,7 @@
   const pvName = document.getElementById('pvName');
   const pvMeta = document.getElementById('pvMeta');
   const pvDownload = document.getElementById('pvDownload');
+  const pvOriginal = document.getElementById('pvOriginal');
   const pvSave = document.getElementById('pvSave');
   const pvClose = document.getElementById('pvClose');
   const pvPrev = document.getElementById('pvPrev');
@@ -27,7 +28,7 @@
     zh: {
       library: '资源库', folders: '目录', search: '搜索', status: '连接状态',
       tabLibrary: '资料库', tabFolders: '文件夹', tabSearch: '搜索',
-      close: '关闭', share: '分享', back: '返回', download: '下载', saveAlbum: '保存相册',
+      close: '关闭', share: '分享', back: '返回', download: '下载', showOriginal: '显示原图', loadingOriginal: '原图加载中…', saveAlbum: '保存相册',
       loadFailed: '加载失败：{error}', connectedChanged: '已连接 · 远程有变更',
       connected: '已连接', disconnected: '未连接', statusUnknown: '连接状态未知', vault: 'Eagle 资源库',
       items: '素材', foldersLabel: '文件夹', tags: '标签',
@@ -62,7 +63,7 @@
       remoteChangedTitle: 'Remote changes detected',
       remoteChangedBody: 'The Vault changed after the last index. Reload to sync it.',
       reload: 'Reload index', loading: 'Loading…', reloadFailed: 'Reload failed',
-      downloaded: 'Downloaded to Files. You can open it in Photos.', unsupportedPreview: 'This format cannot be previewed here. Download it to open.', videoUnavailable: 'This video cannot play on this device. Download it to view.',
+      downloaded: 'Downloaded to Files. You can open it in Photos.', showOriginal: 'View original', loadingOriginal: 'Loading original…', unsupportedPreview: 'This format cannot be previewed here. Download it to open.', videoUnavailable: 'This video cannot play on this device. Download it to view.',
       thumbnailCache: 'Thumbnail cache', thumbnailCacheClear: 'Clear thumbnail cache', thumbnailCacheCleared: 'Thumbnail cache cleared',
       previous: 'Previous', next: 'Next',
       saveFailed: 'Could not save', copied: 'Link copied',
@@ -89,6 +90,7 @@
     document.getElementById('tabFolders').textContent = tr('tabFolders');
     document.getElementById('tabSearch').textContent = tr('tabSearch');
     document.getElementById('pvDownloadLabel').textContent = tr('download');
+    document.getElementById('pvOriginalLabel').textContent = tr('showOriginal');
     document.getElementById('pvSaveLabel').textContent = tr('saveAlbum');
     pvClose.setAttribute('aria-label', tr('close'));
     pvShare.setAttribute('aria-label', tr('share'));
@@ -862,6 +864,9 @@
     const sz = fmtSize(it.size);
     pvMeta.textContent = dims + (it.ext || '').toUpperCase() + (sz ? ' · ' + sz : '');
     pvDownload.href = '/api/items/' + it.id + '/file?download=true';
+    pvOriginal.style.display = image ? '' : 'none';
+    pvOriginal.disabled = false;
+    document.getElementById('pvOriginalLabel').textContent = tr('showOriginal');
     // 图片/视频才显示「保存到相册」（iOS 只能通过分享面板「存储到照片」写入相册）。
     pvSave.style.display = (image || video) ? '' : 'none';
     pvPrev.disabled = i <= 0;
@@ -884,6 +889,28 @@
     box.textContent = message;
     pvStage.appendChild(box);
     pvSave.style.display = 'none';
+  }
+  async function showOriginal() {
+    const it = S.preview.list[S.preview.index];
+    if (!it || !isImageExt(it.ext)) return;
+    const token = S.preview.token;
+    const originalUrl = '/api/items/' + it.id + '/file';
+    pvOriginal.disabled = true;
+    document.getElementById('pvOriginalLabel').textContent = tr('loadingOriginal');
+    try {
+      const original = new Image();
+      await new Promise((resolve, reject) => {
+        original.onload = resolve;
+        original.onerror = reject;
+        original.src = originalUrl;
+      });
+      if (S.preview.open && token === S.preview.token && S.preview.list[S.preview.index] === it) pvImg.src = originalUrl;
+    } catch (e) {
+      toast(tr('unsupportedPreview'));
+    } finally {
+      pvOriginal.disabled = false;
+      document.getElementById('pvOriginalLabel').textContent = tr('showOriginal');
+    }
   }
   function normExt(ext) { return (ext || '').toLowerCase().replace(/^\./, ''); }
   function isImageExt(ext) { return ['bmp', 'gif', 'heic', 'heif', 'ico', 'jpeg', 'jpg', 'png', 'svg', 'tif', 'tiff', 'webp', 'avif', 'jfif', 'jxl'].includes(normExt(ext)); }
@@ -1013,6 +1040,7 @@
       setTimeout(() => URL.revokeObjectURL(bUrl), 5000);
     }).catch(() => { window.location.href = url; });
   };
+  pvOriginal.onclick = showOriginal;
   pvSave.onclick = async () => {
     const it = S.preview.list[S.preview.index];
     if (!it) return;

@@ -177,10 +177,8 @@ function addImagePreviewTools(overlay, img) {
   };
   toolbar.querySelector('[data-preview-tool="zoom-in"]').onclick = function(event) {
     event.stopPropagation();
-    loadOriginalPreviewImage(function() {
-      scale = Math.min(4, scale + 0.25);
-      applyScale();
-    });
+    scale = Math.min(4, scale + 0.25);
+    applyScale();
   };
   overlay.appendChild(toolbar);
 }
@@ -230,18 +228,19 @@ async function previewItem(item, fileUrl) {
     el = document.createElement('img');
     var thumbnailUrl = API + '/api/items/' + encodeURIComponent(item.id || '') + '/thumbnail';
     var usingThumbnailFallback = false;
-    el.dataset.previewSource = 'thumbnail';
-    el.dataset.previewOriginalSrc = fileUrl;
-    el.src = thumbnailUrl;
+    var imageScroll = document.createElement('div');
+    imageScroll.className = 'preview-image-scroll';
+    el.dataset.previewSource = 'original';
+    el.src = fileUrl;
     el.onload = function() {
       clearPreviewStatus(overlay);
     };
     el.onerror = function() {
       if (!usingThumbnailFallback && item.id) {
         usingThumbnailFallback = true;
-        el.dataset.previewSource = 'original';
-        setPreviewStatus(overlay, '正在打开缓存预览…');
-        el.src = fileUrl;
+        el.dataset.previewSource = 'thumbnail';
+        setPreviewStatus(overlay, '原图不可用，正在打开缩略图…');
+        el.src = thumbnailUrl;
         return;
       }
       setPreviewStatus(overlay, '图片预览不可用；请重连远程 Vault 后重试');
@@ -284,5 +283,10 @@ async function previewItem(item, fileUrl) {
     window.open(fileUrl, '_blank');
     return;
   }
-  overlay.appendChild(el);
+  if (isImage) {
+    imageScroll.appendChild(el);
+    overlay.appendChild(imageScroll);
+  } else {
+    overlay.appendChild(el);
+  }
 }

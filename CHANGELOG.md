@@ -2,6 +2,14 @@
 
 ---
 
+## 4.3.13 - 2026-08-10
+
+### Fixed
+- Made desktop image previews load the original Eagle file by default and added a scrollable preview canvas for enlarged images; mouse wheel input stays within the current image instead of changing files.
+- Kept mobile previews on Eagle's existing thumbnails until the user explicitly taps “显示原图”, avoiding unnecessary original-file requests on hotspot connections.
+- Added regression coverage for the desktop original-first preview contract, scrollable image canvas, mobile original-file action, and synchronized PWA asset revisions.
+**中文**：桌面端图片预览默认加载 Eagle 原图，放大后可在独立滚动画布中查看，鼠标滚轮只滚动当前图片而不切换文件；手机端继续只加载 Eagle 已有缩略图，用户点击“显示原图”后才请求原图，避免热点网络下产生不必要的原图请求；同时增加桌面端原图优先、滚动画布、手机端原图按钮和 PWA 静态资源版本同步的回归覆盖。
+
 ## 4.3.12 - 2026-08-10
 
 ### Fixed

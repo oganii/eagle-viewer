@@ -138,6 +138,20 @@ def test_mobile_preview_uses_existing_thumbnail_and_bounded_cache():
     assert "thumbnailCacheClear" in mobile
     assert "showOriginalWhenReady" not in mobile
     assert "original.src = mediaUrl" not in mobile
+    assert 'id="pvOriginal"' in read("app/web/mobile.html")
+    assert "function showOriginal()" in mobile
+
+
+def test_desktop_preview_uses_original_and_scrollable_image_canvas():
+    documents = read("app/web/render-preview-documents.js")
+    navigation = read("app/web/render-preview-navigation.js")
+    styles = read("app/web/styles-detail.css")
+
+    assert "el.dataset.previewSource = 'original';" in documents
+    assert "el.src = fileUrl;" in documents
+    assert "className = 'preview-image-scroll'" in documents
+    assert ".preview-image-scroll" in styles
+    assert "overlay.addEventListener('wheel', onWheel" not in navigation
 
 
 def test_collection_payload_omits_notes_until_detail_is_opened():

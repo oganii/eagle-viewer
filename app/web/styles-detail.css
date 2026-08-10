@@ -474,6 +474,15 @@ body.preview-open {
       object-fit:contain;border-radius:4px;
       transition:transform .18s ease;
     }
+.preview-image-scroll {
+      width:min(1100px,calc(100vw - 40px));
+      height:min(900px,calc(100vh - 40px));
+      min-width:0;min-height:0;
+      display:flex;align-items:center;justify-content:center;
+      overflow:auto;overscroll-behavior:contain;
+      scrollbar-color:rgba(255,255,255,.35) transparent;
+    }
+.preview-image-scroll img { flex:0 0 auto; }
 .preview-overlay img {
       cursor:zoom-in;
       touch-action:none;
