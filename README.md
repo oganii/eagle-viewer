@@ -10,7 +10,7 @@
 
 Vault is always mounted **read-only**. It never modifies files inside the library.
 
-**Current version**: v4.3.13 (2026-08-10) · [Changelog](CHANGELOG.md) · [中文版](README.zh.md)
+**Current version**: v4.3.14 (2026-08-14) · [Changelog](CHANGELOG.md) · [中文版](README.zh.md)
 
 ---
 
@@ -98,12 +98,12 @@ The only network activity is between your browser and the server you control (LA
 ```bash
 # Edit docker-compose.yml to point volumes at your library, e.g.:
 # volumes:
-#   - /volume1/eagle/Design.library:/vault:ro
+#   - /path/to/your/Design.library:/vault:ro
 
 docker compose up -d --build
 ```
 
-3. Open `http://<NAS-or-host-IP>:8000` in your browser.
+3. Open `http://127.0.0.1:8000` on the host running Docker. For LAN, VPN, or HTTPS access, use the authenticated remote example below.
 
 #### Remote access (LAN / VPN / HTTPS)
 
@@ -151,7 +151,7 @@ The frontend uses vanilla HTML/CSS/JS — no framework. The backend is FastAPI. 
 |--------------|-------------|---------|
 | `EAGLE_VAULT_ROOT` | Path to the Eagle library inside the container (must be mounted) | `/vault` |
 | `VIEWER_PASSWORD` | Access password — set to require login; leave empty for no auth | _(empty)_ |
-| `VIEWER_SECRET_KEY` | Session signing key — use a random string (e.g. `openssl rand -hex 32`) | Falls back to `VIEWER_PASSWORD` |
+| `VIEWER_SECRET_KEY` | Required session signing key — use a random string (e.g. `openssl rand -hex 32`) when `VIEWER_PASSWORD` is set | _(empty; required with password)_ |
 | `VIEWER_API_TOKEN` | Bearer token for API clients — when set, API calls need this token or a web session | _(empty)_ |
 
 ---

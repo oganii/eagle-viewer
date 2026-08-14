@@ -53,7 +53,11 @@ function openInspector(item) {
   var contextHtml = '';
   var sourceHtml = '<span class="inspector-muted">未记录来源</span>';
   if (item.url) {
-    sourceHtml = '<a class="inspector-source-link" href="' + escapeHtml(item.url) + '" target="_blank" rel="noopener">' + escapeHtml(item.url.length > 80 ? item.url.substring(0, 80) + '…' : item.url) + ' ' + iconExternalLink() + '</a>';
+    var safeUrl = safeExternalUrl(item.url);
+    var sourceLabel = escapeHtml(item.url.length > 80 ? item.url.substring(0, 80) + '…' : item.url);
+    sourceHtml = safeUrl
+      ? '<a class="inspector-source-link" href="' + escapeHtml(safeUrl) + '" target="_blank" rel="noopener">' + sourceLabel + ' ' + iconExternalLink() + '</a>'
+      : '<span class="inspector-source-link inspector-source-plain">' + sourceLabel + '</span>';
   }
   contextHtml += renderInspectorField('来源', sourceHtml);
   contextHtml += renderInspectorField('Eagle 备注', item.annotation ? '<div class="inspector-note">' + escapeHtml(item.annotation) + '</div>' : '<span class="inspector-muted">暂无 Eagle 备注</span>');

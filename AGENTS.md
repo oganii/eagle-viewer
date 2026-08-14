@@ -30,27 +30,23 @@ Automated tests live in `tests/`. Treat `docs/regression-checklist.md` as the ma
 - `uv run python -m compileall app`: quick backend syntax check.
 - `node --check app/web/*.js`: quick frontend syntax check (all files in `app/web/`; glob covers new modules automatically).
 
-## Deploy: build the image and publish to the NAS
+## Deploy: build and publish the image
 
-There is no CI for deployment — images are built on the dev box and shipped to a NAS share as a `.tar`, then `docker load`ed where they run.
+There is no CI for deployment — images are built on a separately managed build host and published to an operator-configured container registry.
 
-- `sdev` is a local shell alias for `ssh -p 18422 guoyin@dev.local`. The build checkout on that host is `~/docker-build/eagle-viewer` (a clone of the GitHub origin), **not** the dev home root.
-- Release first (so the tag exists on the GitHub origin), then on the dev box:
+- Release first (so the tag exists on the GitHub origin), then on the build host:
 
   ```bash
-  sdev
-  cd ~/docker-build/eagle-viewer
-  bash scripts/deploy.sh
+  cd /path/to/eagle-viewer
+  REGISTRY_IMAGE=registry.example/eagle-viewer bash scripts/deploy.sh
   ```
 
-  The script automates the full ritual: read TAG from `docker-compose.yml`, run `make version-check`, `git pull --ff-only`, `sudo docker build`, `sudo docker save`, `chown`, copy to `/nas/`, and prune old tars (keeping the 3 newest).
+  The script reads the tag from `docker-compose.yml`, runs `make version-check`, pulls fast-forward-only, builds version and `latest` tags, and pushes both to `REGISTRY_IMAGE`. It does not create or copy a host-specific artifact.
 
-- **Image tag = compose tag.** `docker-compose.yml` pins `image: eagle-viewer:<version>`; build/save/`/nas` tar must all use that exact tag or the running compose won't pick the new image up. `scripts/check_versions.py` (run by `make check` / CI) keeps the compose tag in lockstep with `pyproject.toml`, so the version you release is the tag you build.
-- **`sudo` is required**: `guoyin` is not in the `docker` group on the dev box (sudo is passwordless for docker there).
+- **Registry images = version + latest.** The deployment pushes both `${REGISTRY_IMAGE}:vX.Y.Z` and `${REGISTRY_IMAGE}:latest`. `scripts/check_versions.py` (run by `make check` / CI) keeps the version in lockstep with `pyproject.toml`.
+- **Docker privileges and registry authentication are host-local concerns.** Configure them on the build host; never commit credentials or host-specific paths.
 - **Build context is lean** (`.dockerignore`); the `Dockerfile` pins a multi-platform `python:3.12-slim-bookworm` base by digest. Build is normally fast (most layers cached).
-- **`/nas/` is a world-writable NAS mount.** The `chown` restores the tar to `guoyin:guoyin` after `docker save` writes it as root.
-- **Old `.tar`s are pruned by `scripts/deploy.sh`** — retention standard: keep the three latest versions. The script scopes the prune to this project's files only (`eagle-viewer-*.tar` and `eagle-viewer-image-*.tar`), never touching other projects' tars in the shared `/nas/`.
-- **Consumer side** (not observed in `history`): `docker load -i /nas/eagle-viewer-$TAG.tar` then `docker compose up -d`.
+- **Consumer side**: the deployment host pulls `${REGISTRY_IMAGE}:latest` and then runs `docker compose up -d`.
 
 ## Coding Style & Naming Conventions
 

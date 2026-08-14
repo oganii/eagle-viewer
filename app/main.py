@@ -14,6 +14,9 @@ from app.api.folders import router as folders_router
 from app.api.items import router as items_router
 from app.vault import APP_VERSION, load_vault, get_cache_stats, get_library_status
 
+if VIEWER_PASSWORD and not VIEWER_SECRET_KEY:
+    raise RuntimeError("VIEWER_SECRET_KEY must be set when VIEWER_PASSWORD is enabled")
+
 # uvicorn 默认不配置 root logger（app.* 的 effective level 为 WARNING），
 # 导致 parser 等模块的 INFO 日志在默认部署下不可见。这里显式给 root
 # 配置 INFO + StreamHandler；uvicorn 自身的 loggers 经 dictConfig 后

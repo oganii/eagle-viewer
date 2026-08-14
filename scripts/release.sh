@@ -2,27 +2,26 @@
 # release.sh — Minimal release automation for eagle-viewer.
 #
 # USAGE:
-#   bash scripts/release.sh          # pre-flight checks + build + save + transfer + prune
-#   REMOTE=1 bash scripts/release.sh # also SSH to dev box and run deploy.sh there
+#   bash scripts/release.sh          # pre-flight checks + build + registry push
+#   REMOTE=1 REGISTRY_IMAGE=... DEPLOY_HOST=... bash scripts/release.sh
+#                                      # also SSH to the build host
 #
 # What it does:
 #   1. Reads TAG from docker-compose.yml.
 #   2. Runs version-check (pyproject ↔ README ↔ core.js ↔ compose alignment).
 #   3. Runs deploy-check (Dockerfile digest-pinned + HEALTHCHECK).
-#   4. Builds Docker image.
-#   5. Saves tar to ./images/.
-#   6. Copies tar to /nas/ (with ownership fix).
-#   7. Prunes old tars, keeping the 3 newest.
+#   4. Builds Docker image with both registry version and latest tags.
+#   5. Pushes both registry tags.
+#   6. Finishes after the registry push; no NAS tar is created or copied.
 #
 # Environment:
-#   REMOTE  — if "1", SSH to dev box and run deploy.sh after local steps.
+#   REMOTE  — if "1", SSH to the configured build host after local steps.
 #   DRY_RUN — if "1", print commands without executing.
 
 set -euo pipefail
 
 REMOTE="${REMOTE:-0}"
 DRY_RUN="${DRY_RUN:-0}"
-KEEP_COUNT=3
 
 run() {
   if [ "$DRY_RUN" = "1" ]; then
@@ -33,12 +32,15 @@ run() {
 }
 
 # ── 1. Read TAG ──────────────────────────────────────────────────────────────
-TAG=$(sed -n 's/.*image:\s*eagle-viewer:v\([^\s]*\).*/\1/p' docker-compose.yml | head -1)
+TAG=$(sed -n 's/.*image:[[:space:]]*eagle-viewer:v\([^[:space:]]*\).*/\1/p' docker-compose.yml | head -1)
 if [ -z "$TAG" ]; then
   echo "ERROR: could not extract tag from docker-compose.yml" >&2
   exit 1
 fi
 echo "==> Release eagle-viewer:v${TAG}"
+REGISTRY_IMAGE="${REGISTRY_IMAGE:?Set REGISTRY_IMAGE to the target container registry image}"
+REGISTRY_VERSION_TAG="${REGISTRY_IMAGE}:v${TAG}"
+REGISTRY_TAG="${REGISTRY_IMAGE}:latest"
 
 # ── 2. Version alignment check ───────────────────────────────────────────────
 echo "==> [1/4] Version alignment check..."
@@ -50,52 +52,31 @@ make deploy-check
 
 # ── 4. Build image ───────────────────────────────────────────────────────────
 IMAGE_TAG="eagle-viewer:v${TAG}"
-echo "==> [3/4] Building ${IMAGE_TAG}..."
-run sudo docker build -t "${IMAGE_TAG}" .
+echo "==> [3/6] Building ${REGISTRY_VERSION_TAG} and ${REGISTRY_TAG}..."
+run sudo docker build \
+  -t "${IMAGE_TAG}" \
+  -t "${REGISTRY_VERSION_TAG}" \
+  -t "${REGISTRY_TAG}" \
+  .
 
-# ── 5. Save tar ──────────────────────────────────────────────────────────────
-mkdir -p ./images
-TAR_NAME="eagle-viewer-v${TAG}.tar"
-echo "==> Saving to ./images/${TAR_NAME}..."
-run sudo docker save "${IMAGE_TAG}" -o "./images/${TAR_NAME}"
+echo "==> [4/6] Pushing ${REGISTRY_VERSION_TAG}..."
+run sudo docker push "${REGISTRY_VERSION_TAG}"
 
-# ── 6. Transfer to NAS ──────────────────────────────────────────────────────
-echo "==> [4/4] Transferring to /nas/..."
-run sudo chown "$(id -u):$(id -g)" "./images/${TAR_NAME}"
-run cp "./images/${TAR_NAME}" /nas/
+echo "==> [5/6] Pushing ${REGISTRY_TAG}..."
+run sudo docker push "${REGISTRY_TAG}"
 
-# ── 7. Prune old tars (keep N newest) ────────────────────────────────────────
-echo "==> Pruning old images (keeping ${KEEP_COUNT} newest)..."
-
-KEEP_SET=""
-for t in $(git tag --sort=-v:refname | head -"${KEEP_COUNT}"); do
-  KEEP_SET="$KEEP_SET eagle-viewer-$t.tar"
-done
-echo "    keeping:${KEEP_SET}"
-
-prune_dir() {
-  local dir="$1"
-  [ -d "$dir" ] || return 0
-  for f in "$dir"/eagle-viewer-*.tar "$dir"/eagle-viewer-image-*.tar; do
-    [ -e "$f" ] || continue
-    local base
-    base=$(basename "$f")
-    case " $KEEP_SET " in
-      *" $base "*) ;;
-      *) echo "    removing $dir/$base"; run rm -f -- "$f" ;;
-    esac
-  done
-}
-
-prune_dir "./images"
-prune_dir "/nas"
-
-echo "==> Released eagle-viewer:v${TAG}"
+echo "==> Released ${REGISTRY_VERSION_TAG} and ${REGISTRY_TAG}"
 
 # ── 8. Optional remote deploy ────────────────────────────────────────────────
 if [ "$REMOTE" = "1" ]; then
-  echo "==> Deploying on dev box..."
-  run ssh -p 18422 guoyin@dev.local \
-    "cd ~/docker-build/eagle-viewer && bash scripts/deploy.sh"
+  echo "==> Deploying on build host..."
+  DEPLOY_HOST="${DEPLOY_HOST:?Set DEPLOY_HOST when REMOTE=1}"
+  DEPLOY_USER="${DEPLOY_USER:-$USER}"
+  DEPLOY_PORT="${DEPLOY_PORT:-22}"
+  DEPLOY_PATH="${DEPLOY_PATH:?Set DEPLOY_PATH when REMOTE=1}"
+  REMOTE_DEPLOY_PATH=$(printf '%q' "$DEPLOY_PATH")
+  REMOTE_REGISTRY_IMAGE=$(printf '%q' "$REGISTRY_IMAGE")
+  run ssh -p "$DEPLOY_PORT" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+    "cd ${REMOTE_DEPLOY_PATH} && REGISTRY_IMAGE=${REMOTE_REGISTRY_IMAGE} bash scripts/deploy.sh"
   echo "==> Remote deploy complete."
 fi

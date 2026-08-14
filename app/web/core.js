@@ -3,8 +3,8 @@
 var EagleViewer = window.EagleViewer = window.EagleViewer || {};
 
 var API = '';
-var VERSION = '4.3.13';
-var VERSION_DATE = '2026-08-08';
+var VERSION = '4.3.14';
+var VERSION_DATE = '2026-08-14';
 var PREVIEW_IMAGE_EXTS = ['jpg','jpeg','png','gif','webp','svg','bmp'];
 var PREVIEW_VIDEO_EXTS = ['mp4','webm','mov','m4v'];
 var PREVIEW_AUDIO_EXTS = ['mp3','wav','m4a','aac','flac','ogg'];
@@ -101,6 +101,17 @@ function iconInfo() {
 }
 function iconCompare() {
   return '<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="5" height="12" rx="1.5"/><rect x="11" y="3" width="5" height="12" rx="1.5"/><path d="M7 6h4M7 12h4"/></svg>';
+}
+
+function safeExternalUrl(value) {
+  var raw = String(value || '').trim();
+  if (!raw) return '';
+  try {
+    var parsed = new URL(raw);
+    return ['http:', 'https:', 'mailto:'].indexOf(parsed.protocol.toLowerCase()) >= 0 ? parsed.href : '';
+  } catch (e) {
+    return '';
+  }
 }
 
 // ===== Inject icons into DOM =====
@@ -810,6 +821,7 @@ if (typeof module !== 'undefined' && module.exports) {
     isVideoExt: isVideoExt,
     canCopyImage: canCopyImage,
     escapeHtml: escapeHtml,
+    safeExternalUrl: safeExternalUrl,
     getLang: getLang,
     setLang: setLang,
     t: t,

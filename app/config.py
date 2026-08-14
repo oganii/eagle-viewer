@@ -8,5 +8,5 @@ PORT = int(os.environ.get("PORT", "8000"))
 VIEWER_PASSWORD = os.environ.get("VIEWER_PASSWORD", "").strip()
 # Automation tools and API clients can use this optional token instead of a browser session.
 VIEWER_API_TOKEN = os.environ.get("VIEWER_API_TOKEN", "").strip()
-# Session 签名密钥，建议随机字符串（如 openssl rand -hex 32）
-VIEWER_SECRET_KEY = os.environ.get("VIEWER_SECRET_KEY", os.environ.get("VIEWER_PASSWORD", "change-me")).strip()
+# Session signing key. Never reuse the access password as the signing key.
+VIEWER_SECRET_KEY = os.environ.get("VIEWER_SECRET_KEY", "").strip()

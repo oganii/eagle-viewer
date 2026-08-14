@@ -24,8 +24,9 @@ version-check:
 	uv run python scripts/check_versions.py
 
 deploy:
-	@echo "Run this on the dev box after SSH:"
-	@echo "  sdev && cd ~/docker-build/eagle-viewer && bash scripts/deploy.sh"
+	@echo "Run scripts/deploy.sh on your build host with REGISTRY_IMAGE set (no local artifact transfer):"
+	@echo "  REGISTRY_IMAGE=registry.example/eagle-viewer bash scripts/deploy.sh"
+	@test -n "$$REGISTRY_IMAGE" || (echo "ERROR: set REGISTRY_IMAGE before running make deploy" >&2; exit 1)
 	bash scripts/deploy.sh
 
 release:

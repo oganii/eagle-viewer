@@ -1,4 +1,6 @@
 import os
+import json
+import shutil
 from pathlib import Path
 
 from app.vault import (
@@ -58,6 +60,26 @@ def test_proprietary_asset_keeps_original_and_eagle_thumbnail_separate(sample_li
     assert item is not None
     assert item.main_file_path.endswith("remote-review-workflow.graffle")
     assert item.thumbnail_path.endswith("remote-review-workflow_thumbnail.svg")
+
+
+def test_symlinked_vault_files_cannot_escape_vault_root(sample_library, tmp_path):
+    outside = tmp_path / "outside.txt"
+    outside.write_text("must not be served", encoding="utf-8")
+    info_dir = sample_library / "images" / "item-outside.info"
+    info_dir.mkdir()
+    (info_dir / "metadata.json").write_text(
+        json.dumps({"id": "item-outside", "name": "Outside", "ext": "txt", "folders": ["root"]}),
+        encoding="utf-8",
+    )
+    link = info_dir / "outside.txt"
+    link.symlink_to(outside)
+    try:
+        import app.vault.parser as parser
+
+        parser.load_vault()
+        assert get_item("item-outside") is None
+    finally:
+        shutil.rmtree(info_dir)
 
 
 def test_font_assets_are_available_through_document_filter():

@@ -16,7 +16,7 @@
 
 services:
   eagle-viewer:
-    image: eagle-viewer:v4.3.13
+    image: eagle-viewer:v4.3.14
     # build: .
     container_name: eagle-viewer
     restart: always
@@ -28,14 +28,14 @@ services:
       - EAGLE_VAULT_ROOT=/vault
       # Production: always set a password + a random secret key.
       #   openssl rand -hex 32
-      - VIEWER_PASSWORD=change-me
-      - VIEWER_SECRET_KEY=replace-with-openssl-rand-hex-32
+      - VIEWER_PASSWORD=${VIEWER_PASSWORD:?Set VIEWER_PASSWORD in .env}
+      - VIEWER_SECRET_KEY=${VIEWER_SECRET_KEY:?Set VIEWER_SECRET_KEY in .env}
       # State file path should be outside the read-only vault mount to
       # preserve state across library updates.
     volumes:
       # ===== Server-side vault mount (choose one, adapt to your setup) =====
       # 1) Host already mounts .library via SMB/WebDAV/NFS — bind it directly
-      - /volume1/eagle/Design.library:/vault:ro
+      - /path/to/your/Design.library:/vault:ro
       # 2) Pre-built docker volume (e.g. NFS-backed)
       # - eagle-vault:/vault:ro
       # 3) Local development — relative path
@@ -73,7 +73,7 @@ services:
 # To use a docker volume for the vault, create it first. Example (NFS):
 #   docker volume create --driver local \
 #     --opt type=nfs --opt o=addr=192.168.1.10,rw,nolock,soft \
-#     --opt device=:/volume1/eagle eagle-vault
+#     --opt device=:/path/to/your/eagle eagle-vault
 # volumes:
 #   eagle-vault:
 #     external: true

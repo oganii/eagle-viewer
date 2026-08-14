@@ -6,7 +6,7 @@
 
 > 把 Eagle 素材库挂到服务器上，浏览器远程浏览、搜索、预览和下载 —— 手机和平板也能用。
 
-[English README](README.md) · **当前版本**：v4.3.13 (2026-08-10) · [更新日志](CHANGELOG.md)
+[English README](README.md) · **当前版本**：v4.3.14 (2026-08-14) · [更新日志](CHANGELOG.md)
 
 ---
 
@@ -85,12 +85,12 @@ Eagle Vault Viewer **完全不联网**：
 ```bash
 # 在 docker-compose.yml 里修改 volumes 指向你的库，例如：
 # volumes:
-#   - /volume1/eagle/Design.library:/vault:ro
+#   - /path/to/your/Design.library:/vault:ro
 
 docker compose up -d --build
 ```
 
-3. 打开 `http://<NAS-或主机IP>:8000`。
+3. 在运行 Docker 的主机上打开 `http://127.0.0.1:8000`。如需局域网、VPN 或 HTTPS 访问，请使用下面的远程访问示例。
 
 #### 远程访问（局域网 / VPN / HTTPS）
 
@@ -138,7 +138,7 @@ make test     # 仅运行 pytest
 |----------|------|--------|
 | `EAGLE_VAULT_ROOT` | Eagle 库目录路径（容器内需挂载） | `/vault` |
 | `VIEWER_PASSWORD` | 访问密码——设置后需要登录才能查看 | _(空)_ |
-| `VIEWER_SECRET_KEY` | Session 签名密钥——建议用 `openssl rand -hex 32` 生成 | 回退到 `VIEWER_PASSWORD` |
+| `VIEWER_SECRET_KEY` | Session 签名密钥——设置 `VIEWER_PASSWORD` 时必须提供，并用 `openssl rand -hex 32` 生成 | _(空；设置密码时必填)_ |
 | `VIEWER_API_TOKEN` | API 客户端的 Bearer Token——设置后 API 调用需此 Token 或网页会话 | _(空)_ |
 
 ---

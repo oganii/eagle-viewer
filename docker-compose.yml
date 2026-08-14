@@ -1,11 +1,13 @@
 services:
   eagle-viewer:
-    image: eagle-viewer:v4.3.13
+    image: eagle-viewer:v4.3.14
     build: .
     container_name: eagle-viewer
     restart: always
     ports:
-      - "8000:8000"
+      # Local-only by default. For remote access, use the authenticated
+      # remote example behind a VPN or HTTPS reverse proxy.
+      - "127.0.0.1:8000:8000"
     environment:
       - EAGLE_VAULT_ROOT=/vault
       - VIEWER_PASSWORD=""
@@ -14,6 +16,6 @@ services:
     network_mode: bridge
     volumes:
       # Mount your Eagle library directory into the container at /vault.
-      # Example: point to the actual path on your NAS, e.g. /volume1/eagle/Design.library
+      # Replace ./vault with the local or server-side Eagle library path.
       - ./vault:/vault:ro
       - ./data:/data

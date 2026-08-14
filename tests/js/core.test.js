@@ -205,6 +205,14 @@ test('escapeHtml escapes markup', () => {
   assert.strictEqual(core.escapeHtml('plain'), 'plain');
 });
 
+test('safeExternalUrl rejects executable and malformed source schemes', () => {
+  assert.strictEqual(core.safeExternalUrl('https://example.com/a'), 'https://example.com/a');
+  assert.strictEqual(core.safeExternalUrl('mailto:test@example.com'), 'mailto:test@example.com');
+  assert.strictEqual(core.safeExternalUrl('javascript:alert(1)'), '');
+  assert.strictEqual(core.safeExternalUrl('data:text/html,<script>alert(1)</script>'), '');
+  assert.strictEqual(core.safeExternalUrl('not a URL'), '');
+});
+
 test('i18n: t and tFmt resolve translations and placeholders', () => {
   core.setLang('zh'); // Node's platform navigator.language may default the module to en
   assert.strictEqual(core.t('sidebar_all'), '全部');

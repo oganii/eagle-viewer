@@ -215,6 +215,7 @@ def _build_folder_tree(folders_data: list[dict], locked_folder_ids: set[str]) ->
 
 def _find_main_file(info_dir: Path, meta: dict) -> tuple[str, str]:
     """Return (main_file_path, thumbnail_path). Any file except metadata/thumbnail is valid as main."""
+    vault_root = Path(VAULT_ROOT).resolve()
     main_path = ""
     main_candidate_media = ""  # prefer image/video for "main" if multiple
     thumb_path = ""
@@ -225,9 +226,23 @@ def _find_main_file(info_dir: Path, meta: dict) -> tuple[str, str]:
         if name_lower == "metadata.json":
             continue
         if "thumbnail" in name_lower:
-            thumb_path = str(f.resolve())
+            try:
+                resolved_thumb = f.resolve(strict=True)
+            except OSError:
+                continue
+            if not resolved_thumb.is_relative_to(vault_root):
+                logger.warning("Skipping Vault thumbnail outside root: %s", f)
+                continue
+            thumb_path = str(resolved_thumb)
             continue
-        resolved = str(f.resolve())
+        try:
+            resolved_path = f.resolve(strict=True)
+        except OSError:
+            continue
+        if not resolved_path.is_relative_to(vault_root):
+            logger.warning("Skipping Vault file outside root: %s", f)
+            continue
+        resolved = str(resolved_path)
         if not main_path:
             main_path = resolved
         if f.suffix.lower() in PREFERRED_MEDIA_EXTENSIONS and not main_candidate_media:
@@ -270,6 +285,7 @@ def _nonnegative_float(value: Any) -> float:
 
 def _load_items(locked_folder_ids: set[str]) -> tuple[dict[str, ItemInfo], dict[str, list[ItemInfo]], dict[str, int]]:
     images_dir = Path(VAULT_ROOT) / "images"
+    vault_root = Path(VAULT_ROOT).resolve()
     by_id: dict[str, ItemInfo] = {}
     by_folder: dict[str, list[ItemInfo]] = {}
     stats = {
@@ -295,6 +311,15 @@ def _load_items(locked_folder_ids: set[str]) -> tuple[dict[str, ItemInfo], dict[
         if not meta_path.exists():
             stats["skipped_missing_metadata"] += 1
             logger.warning("Skipping item %s: metadata.json missing", subdir.name)
+            continue
+        try:
+            if not meta_path.resolve(strict=True).is_relative_to(vault_root):
+                stats["skipped_bad_metadata"] += 1
+                logger.warning("Skipping metadata outside Vault root: %s", meta_path)
+                continue
+        except OSError:
+            stats["skipped_bad_metadata"] += 1
+            logger.warning("Skipping unresolved metadata: %s", meta_path)
             continue
         try:
             with open(meta_path, "r", encoding="utf-8") as f:

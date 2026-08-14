@@ -2,6 +2,17 @@
 
 ---
 
+## 4.3.14 - 2026-08-14
+
+### Fixed
+- Hardened default deployment binding and remote authentication configuration.
+- Rejected unsafe source URL schemes and Vault symlink paths outside the mounted library root.
+- Parameterized registry and build-host release settings, removing host-specific deployment details from public documentation.
+- Added regression coverage for authentication, source URL validation, and Vault path boundaries.
+**中文**：收紧默认部署监听地址与远程认证配置；拒绝不安全的来源 URL 协议和逃逸出挂载库根目录的 symlink 路径；将 registry 与构建主机发布配置参数化，移除公共文档中的主机专属部署信息；增加认证、来源 URL 校验和 Vault 路径边界回归覆盖。
+
+---
+
 ## 4.3.13 - 2026-08-10
 
 ### Fixed
@@ -208,9 +219,9 @@
 ## 4.1.4 - 2026-08-03
 
 ### Infrastructure
-- Added `scripts/release.sh` and `scripts/deploy.sh` to automate the release ritual: read the tag from `docker-compose.yml`, run version/deploy artifact checks, `git pull --ff-only`, build and save the Docker image, copy to `/nas/`, and prune old tars keeping the three newest. `make release` and `make deploy` wrap the scripts; the documented `AGENTS.md` deploy procedure now points at the scripts.
+- Added `scripts/release.sh` and `scripts/deploy.sh` to automate the release ritual: read the tag from `docker-compose.yml`, run version/deploy artifact checks, `git pull --ff-only`, build and publish version/latest images, and leave artifact retention to the deployment environment. `make release` and `make deploy` wrap the scripts; the documented `AGENTS.md` deploy procedure now points at the scripts.
 
-**中文**：新增 `scripts/release.sh` 与 `scripts/deploy.sh` 自动化发布流程——从 `docker-compose.yml` 读取标签、运行版本与部署产物校验、`git pull --ff-only`、构建并保存 Docker 镜像、拷贝到 `/nas/`，并清理旧 tar 仅保留最近三个版本；`make release` 与 `make deploy` 封装脚本，`AGENTS.md` 中的部署流程已改为引用脚本。
+**中文**：新增 `scripts/release.sh` 与 `scripts/deploy.sh` 自动化发布流程——从 `docker-compose.yml` 读取标签、运行版本与部署产物校验、`git pull --ff-only`，并发布版本与 latest 镜像；产物保留策略交由部署环境管理。
 
 ### Maintenance
 - Synced the `uv.lock` project version to `4.1.3` so the lockfile matches the released tag.

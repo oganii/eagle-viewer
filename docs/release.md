@@ -37,13 +37,41 @@ rotate it after use.
 
 - Confirm the GitHub Release exists.
 - Confirm the remote tag points at the intended commit.
-- Keep `requirements.txt` in sync while Docker builds still use it.
+- On the build host, confirm both `${REGISTRY_IMAGE}:vX.Y.Z` and
+  `${REGISTRY_IMAGE}:latest` were pushed.
 
 ## Docker Image Build
 
-Tag convention: `eagle-viewer:vX.Y.Z` (do **not** use `:latest`).
+The deployment publishes the stable registry image as
+`${REGISTRY_IMAGE}:latest`. The version tag remains available for rollback;
+no host-specific archive is required.
+
+Before the first deployment, authenticate the same Docker CLI used by the
+script (the script uses `sudo docker`):
 
 ```bash
-docker build -t eagle-viewer:vX.Y.Z .
-docker save eagle-viewer:vX.Y.Z -o images/eagle-viewer-vX.Y.Z.tar
+export REGISTRY_HOST=registry.example
+export REGISTRY_IMAGE="$REGISTRY_HOST/eagle-viewer"
+sudo docker login "$REGISTRY_HOST"
+```
+
+Run the deployment on your build host, from the build checkout:
+
+```bash
+cd /path/to/eagle-viewer
+bash scripts/deploy.sh
+```
+
+The script builds both registry tags in one command and pushes both the version
+tag and the `latest` tag. The consumer host should pull the image from the
+configured registry.
+
+```bash
+docker build \
+  -t eagle-viewer:vX.Y.Z \
+  -t "$REGISTRY_IMAGE:vX.Y.Z" \
+  -t "$REGISTRY_IMAGE:latest" \
+  .
+docker push "$REGISTRY_IMAGE:vX.Y.Z"
+docker push "$REGISTRY_IMAGE:latest"
 ```
