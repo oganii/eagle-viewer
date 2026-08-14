@@ -34,14 +34,17 @@ Automated tests live in `tests/`. Treat `docs/regression-checklist.md` as the ma
 
 There is no CI for deployment — images are built on a separately managed build host and published to an operator-configured container registry.
 
-- Release first (so the tag exists on the GitHub origin), then on the build host:
+- Release first (so the commit exists on the GitHub origin), then run the release orchestrator from the clean checkout:
 
   ```bash
   cd /path/to/eagle-viewer
-  REGISTRY_IMAGE=registry.example/eagle-viewer bash scripts/deploy.sh
+  REGISTRY_IMAGE=registry.example/eagle-viewer \
+  DEPLOY_HOST=dev.local \
+  DEPLOY_PATH=/path/to/eagle-viewer \
+  bash scripts/release.sh
   ```
 
-  The script reads the tag from `docker-compose.yml`, runs `make version-check`, pulls fast-forward-only, builds version and `latest` tags, and pushes both to `REGISTRY_IMAGE`. It does not create or copy a host-specific artifact.
+  The release script requires a clean checkout with its commit already pushed, runs `make check`, then invokes `deploy.sh` on the build host. `deploy.sh` pulls fast-forward-only, reads the tag from `docker-compose.yml`, validates the version, builds version and `latest` tags, and pushes both to `REGISTRY_IMAGE`. It does not create or copy a host-specific artifact.
 
 - **Registry images = version + latest.** The deployment pushes both `${REGISTRY_IMAGE}:vX.Y.Z` and `${REGISTRY_IMAGE}:latest`. `scripts/check_versions.py` (run by `make check` / CI) keeps the version in lockstep with `pyproject.toml`.
 - **Docker privileges and registry authentication are host-local concerns.** Configure them on the build host; never commit credentials or host-specific paths.

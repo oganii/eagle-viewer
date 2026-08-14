@@ -1,80 +1,90 @@
 #!/usr/bin/env bash
-# release.sh — Minimal release automation for eagle-viewer.
+# release.sh — Enforce the release preflight and build-host deployment order.
 #
 # USAGE:
-#   bash scripts/release.sh          # pre-flight checks + build + registry push
-#   REMOTE=1 REGISTRY_IMAGE=... DEPLOY_HOST=... bash scripts/release.sh
-#                                      # also SSH to the build host
+#   REGISTRY_IMAGE=registry.example/eagle-viewer \
+#   DEPLOY_HOST=dev.local \
+#   DEPLOY_PATH=/path/to/eagle-viewer \
+#   bash scripts/release.sh
 #
-# What it does:
-#   1. Reads TAG from docker-compose.yml.
-#   2. Runs version-check (pyproject ↔ README ↔ core.js ↔ compose alignment).
-#   3. Runs deploy-check (Dockerfile digest-pinned + HEALTHCHECK).
-#   4. Builds Docker image with both registry version and latest tags.
-#   5. Pushes both registry tags.
-#   6. Finishes after the registry push; no NAS tar is created or copied.
+# Order:
+#   1. Commit only release-flow files and push the current Git branch.
+#   2. Run the full local project checks.
+#   3. On the build host, pull fast-forward-only and run deploy.sh.
+#   4. deploy.sh validates the version, builds both registry tags, then pushes
+#      the version tag followed by latest.
 #
-# Environment:
-#   REMOTE  — if "1", SSH to the configured build host after local steps.
-#   DRY_RUN — if "1", print commands without executing.
+# The release script never builds or pushes Docker images from the initiating
+# workstation. It does push the release commit to the current Git upstream.
+# Set REMOTE=0 only when this script is intentionally run on the build host.
 
 set -euo pipefail
 
-REMOTE="${REMOTE:-0}"
-DRY_RUN="${DRY_RUN:-0}"
+REMOTE="${REMOTE:-1}"
+REGISTRY_IMAGE="${REGISTRY_IMAGE:?Set REGISTRY_IMAGE to the target registry image}"
 
-run() {
-  if [ "$DRY_RUN" = "1" ]; then
-    echo "  [dry-run] $*"
-  else
-    "$@"
-  fi
+RELEASE_FILES=(
+  AGENTS.md
+  Makefile
+  docs/release.md
+  scripts/release.sh
+  scripts/verify_deploy.py
+)
+
+is_release_file() {
+  local candidate="$1"
+  local allowed
+  for allowed in "${RELEASE_FILES[@]}"; do
+    [ "$candidate" = "$allowed" ] && return 0
+  done
+  return 1
 }
 
-# ── 1. Read TAG ──────────────────────────────────────────────────────────────
-TAG=$(sed -n 's/.*image:[[:space:]]*eagle-viewer:v\([^[:space:]]*\).*/\1/p' docker-compose.yml | head -1)
-if [ -z "$TAG" ]; then
-  echo "ERROR: could not extract tag from docker-compose.yml" >&2
-  exit 1
+DIRTY_FILES=$(git status --porcelain | sed -E 's/^.. //; s/^"(.*)"$/\1/')
+while IFS= read -r dirty_file; do
+  [ -z "$dirty_file" ] && continue
+  if ! is_release_file "$dirty_file"; then
+    echo "ERROR: refusing to auto-commit unrelated change: ${dirty_file}" >&2
+    exit 1
+  fi
+done <<< "$DIRTY_FILES"
+
+if [ -n "$DIRTY_FILES" ]; then
+  echo "==> [1/4] Committing release-flow changes..."
+  git add -- "${RELEASE_FILES[@]}"
+  git commit -m "build: enforce ordered release workflow"
+else
+  echo "==> [1/4] No release-flow changes to commit"
 fi
-echo "==> Release eagle-viewer:v${TAG}"
-REGISTRY_IMAGE="${REGISTRY_IMAGE:?Set REGISTRY_IMAGE to the target container registry image}"
-REGISTRY_VERSION_TAG="${REGISTRY_IMAGE}:v${TAG}"
-REGISTRY_TAG="${REGISTRY_IMAGE}:latest"
 
-# ── 2. Version alignment check ───────────────────────────────────────────────
-echo "==> [1/4] Version alignment check..."
-make version-check
+LOCAL_HEAD=$(git rev-parse HEAD)
+UPSTREAM_HEAD=$(git rev-parse '@{upstream}')
+if [ "$LOCAL_HEAD" != "$UPSTREAM_HEAD" ]; then
+  echo "==> Pushing ${LOCAL_HEAD} to the upstream branch..."
+  git push
+fi
 
-# ── 3. Deploy artifact check ─────────────────────────────────────────────────
-echo "==> [2/4] Deploy artifact check..."
-make deploy-check
+echo "==> [2/4] Running full project checks..."
+make check
 
-# ── 4. Build image ───────────────────────────────────────────────────────────
-echo "==> [3/6] Building ${REGISTRY_VERSION_TAG} and ${REGISTRY_TAG}..."
-run sudo docker build \
-  -t "${REGISTRY_VERSION_TAG}" \
-  -t "${REGISTRY_TAG}" \
-  .
+run_deploy() {
+  if [ "$REMOTE" = "0" ]; then
+    echo "==> [3/4] Running deploy.sh on the current build host..."
+    REGISTRY_IMAGE="$REGISTRY_IMAGE" bash scripts/deploy.sh
+    return
+  fi
 
-echo "==> [4/6] Pushing ${REGISTRY_VERSION_TAG}..."
-run sudo docker push "${REGISTRY_VERSION_TAG}"
-
-echo "==> [5/6] Pushing ${REGISTRY_TAG}..."
-run sudo docker push "${REGISTRY_TAG}"
-
-echo "==> Released ${REGISTRY_VERSION_TAG} and ${REGISTRY_TAG}"
-
-# ── 8. Optional remote deploy ────────────────────────────────────────────────
-if [ "$REMOTE" = "1" ]; then
-  echo "==> Deploying on build host..."
   DEPLOY_HOST="${DEPLOY_HOST:?Set DEPLOY_HOST when REMOTE=1}"
   DEPLOY_USER="${DEPLOY_USER:-$USER}"
   DEPLOY_PORT="${DEPLOY_PORT:-22}"
   DEPLOY_PATH="${DEPLOY_PATH:?Set DEPLOY_PATH when REMOTE=1}"
   REMOTE_DEPLOY_PATH=$(printf '%q' "$DEPLOY_PATH")
   REMOTE_REGISTRY_IMAGE=$(printf '%q' "$REGISTRY_IMAGE")
-  run ssh -p "$DEPLOY_PORT" "${DEPLOY_USER}@${DEPLOY_HOST}" \
-    "cd ${REMOTE_DEPLOY_PATH} && REGISTRY_IMAGE=${REMOTE_REGISTRY_IMAGE} bash scripts/deploy.sh"
-  echo "==> Remote deploy complete."
-fi
+
+  echo "==> [3/4] Pulling and deploying on ${DEPLOY_USER}@${DEPLOY_HOST}..."
+  ssh -p "$DEPLOY_PORT" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+    "cd ${REMOTE_DEPLOY_PATH} && git pull --ff-only && REGISTRY_IMAGE=${REMOTE_REGISTRY_IMAGE} bash scripts/deploy.sh"
+}
+
+run_deploy
+echo "==> [4/4] Release complete: ${REGISTRY_IMAGE}:v<version> and ${REGISTRY_IMAGE}:latest"

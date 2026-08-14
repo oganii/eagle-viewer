@@ -29,6 +29,7 @@ def main() -> None:
         raise SystemExit("Dockerfile has no HEALTHCHECK")
 
     deploy_script = (ROOT / "scripts/deploy.sh").read_text(encoding="utf-8")
+    release_script = (ROOT / "scripts/release.sh").read_text(encoding="utf-8")
     required_deploy_fragments = (
         'REGISTRY_IMAGE="${REGISTRY_IMAGE:?Set REGISTRY_IMAGE to the target container registry image}"',
         'REGISTRY_VERSION_TAG="${REGISTRY_IMAGE}:v${TAG}"',
@@ -45,8 +46,15 @@ def main() -> None:
             )
     if '-t "eagle-viewer:v${TAG}"' in deploy_script:
         raise SystemExit("scripts/deploy.sh creates an unnecessary unqualified local version tag")
+    for fragment in (
+        "make check",
+        "git pull --ff-only",
+        "REGISTRY_IMAGE=${REMOTE_REGISTRY_IMAGE} bash scripts/deploy.sh",
+    ):
+        if fragment not in release_script:
+            raise SystemExit(f"scripts/release.sh is missing the required release step: {fragment}")
 
-    print("Deploy check ok: FROM digest-pinned, HEALTHCHECK present, registry version/latest pushes configured")
+    print("Deploy check ok: release preflight and build-host registry deployment configured")
 
 
 if __name__ == "__main__":

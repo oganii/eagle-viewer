@@ -55,16 +55,21 @@ export REGISTRY_IMAGE="$REGISTRY_HOST/eagle-viewer"
 sudo docker login "$REGISTRY_HOST"
 ```
 
-Run the deployment on your build host, from the build checkout:
+Run the release orchestrator from a clean, pushed checkout. It performs local
+checks first, then runs the actual Docker build and push on the build host:
 
 ```bash
-cd /path/to/eagle-viewer
-bash scripts/deploy.sh
+REGISTRY_IMAGE=registry.example/eagle-viewer \
+DEPLOY_HOST=dev.local \
+DEPLOY_PATH=/path/to/eagle-viewer \
+bash scripts/release.sh
 ```
 
-The script builds both registry tags in one command and pushes both the version
-tag and the `latest` tag. The consumer host should pull the image from the
-configured registry.
+`release.sh` requires a clean checkout whose `HEAD` is already pushed to its
+upstream branch. It runs `make check`, then the build-host `deploy.sh` pulls
+fast-forward-only, validates the version, builds both registry tags in one
+command, and pushes the version tag before `latest`. The consumer host should
+pull the image from the configured registry.
 
 ```bash
 docker build \

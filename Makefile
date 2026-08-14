@@ -30,4 +30,5 @@ deploy:
 	bash scripts/deploy.sh
 
 release:
+	@echo "Run scripts/release.sh with REGISTRY_IMAGE, DEPLOY_HOST, and DEPLOY_PATH set."
 	bash scripts/release.sh
