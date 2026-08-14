@@ -50,7 +50,6 @@ fi
 # ── 4. Build image ───────────────────────────────────────────────────────────
 echo "==> Building ${REGISTRY_VERSION_TAG} and ${REGISTRY_TAG}..."
 sudo docker build \
-  -t "eagle-viewer:v${TAG}" \
   -t "${REGISTRY_VERSION_TAG}" \
   -t "${REGISTRY_TAG}" \
   .

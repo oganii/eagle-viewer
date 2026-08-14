@@ -68,7 +68,6 @@ configured registry.
 
 ```bash
 docker build \
-  -t eagle-viewer:vX.Y.Z \
   -t "$REGISTRY_IMAGE:vX.Y.Z" \
   -t "$REGISTRY_IMAGE:latest" \
   .

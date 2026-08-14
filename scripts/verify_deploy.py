@@ -33,6 +33,8 @@ def main() -> None:
         'REGISTRY_IMAGE="${REGISTRY_IMAGE:?Set REGISTRY_IMAGE to the target container registry image}"',
         'REGISTRY_VERSION_TAG="${REGISTRY_IMAGE}:v${TAG}"',
         'REGISTRY_TAG="${REGISTRY_IMAGE}:latest"',
+        '-t "${REGISTRY_VERSION_TAG}"',
+        '-t "${REGISTRY_TAG}"',
         'sudo docker push "${REGISTRY_VERSION_TAG}"',
         'sudo docker push "${REGISTRY_TAG}"',
     )
@@ -41,6 +43,8 @@ def main() -> None:
             raise SystemExit(
                 f"scripts/deploy.sh does not publish the required registry latest image: {fragment}"
             )
+    if '-t "eagle-viewer:v${TAG}"' in deploy_script:
+        raise SystemExit("scripts/deploy.sh creates an unnecessary unqualified local version tag")
 
     print("Deploy check ok: FROM digest-pinned, HEALTHCHECK present, registry version/latest pushes configured")
 

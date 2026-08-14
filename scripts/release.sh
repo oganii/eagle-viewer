@@ -51,10 +51,8 @@ echo "==> [2/4] Deploy artifact check..."
 make deploy-check
 
 # ── 4. Build image ───────────────────────────────────────────────────────────
-IMAGE_TAG="eagle-viewer:v${TAG}"
 echo "==> [3/6] Building ${REGISTRY_VERSION_TAG} and ${REGISTRY_TAG}..."
 run sudo docker build \
-  -t "${IMAGE_TAG}" \
   -t "${REGISTRY_VERSION_TAG}" \
   -t "${REGISTRY_TAG}" \
   .
