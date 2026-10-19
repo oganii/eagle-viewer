@@ -295,7 +295,7 @@ def test_removed_backend_endpoints_are_not_registered():
 def test_manifest_keeps_only_basic_shortcuts():
     manifest = json.loads(read("app/web/manifest.json"))
     names = [shortcut["name"] for shortcut in manifest.get("shortcuts", [])]
-    assert names == ["全部素材", "搜索 Vault"]
+    assert names == ["All assets", "Search Vault"]
 
 
 def test_theme_and_mobile_navigation_remain_available():

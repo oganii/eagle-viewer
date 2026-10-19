@@ -1,7 +1,7 @@
 {
   "name": "Eagle Vault Viewer",
   "short_name": "Eagle Vault",
-  "description": "远程浏览已挂载的 Eagle 资源库",
+  "description": "Browse a mounted Eagle library remotely",
   "id": "/",
   "start_url": "/",
   "scope": "/",
@@ -26,7 +26,7 @@
     }
   ],
   "shortcuts": [
-    {"name": "全部素材", "url": "/#view=all", "icons": [{"src": "/static/icon-192.png", "sizes": "192x192", "type": "image/png"}]},
-    {"name": "搜索 Vault", "short_name": "搜索", "description": "直接打开远程 Vault 搜索", "url": "/#view=all&action=search", "icons": [{"src": "/static/icon-192.png", "sizes": "192x192", "type": "image/png"}]}
+    {"name": "All assets", "url": "/#view=all", "icons": [{"src": "/static/icon-192.png", "sizes": "192x192", "type": "image/png"}]},
+    {"name": "Search Vault", "short_name": "Search", "description": "Open remote Vault search", "url": "/#view=all&action=search", "icons": [{"src": "/static/icon-192.png", "sizes": "192x192", "type": "image/png"}]}
   ]
 }
