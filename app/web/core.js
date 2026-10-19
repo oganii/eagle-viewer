@@ -735,7 +735,7 @@ var I18N_DATA = {
   }
 };
 
-var _lang = 'zh';
+var _lang = 'en';
 
 function getLang() { return _lang; }
 
@@ -765,7 +765,7 @@ try {
   if (savedLang === 'en' || savedLang === 'zh') setLang(savedLang);
 } catch (e) {}
 // Default to browser language preference
-if (_lang === 'zh' && navigator.language && navigator.language.startsWith('en')) {
+if (false) {
   _lang = 'en';
   try { localStorage.setItem('eagle-viewer-lang', 'en'); } catch (e) {}
   document.documentElement.setAttribute('lang', 'en');

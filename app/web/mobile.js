@@ -71,11 +71,11 @@
       lightTheme: 'Use light theme', darkTheme: 'Use dark theme'
     }
   };
-  let lang = 'zh';
+  let lang = 'en';
   let searchAbortController = null;
   try {
     const saved = localStorage.getItem('eagle-viewer-lang');
-    lang = saved === 'en' || saved === 'zh' ? saved : (/^en\b/i.test(navigator.language || '') ? 'en' : 'zh');
+    lang = saved === 'en' || saved === 'zh' ? saved : 'en';
   } catch (e) {}
 
   function tr(key, values) {
