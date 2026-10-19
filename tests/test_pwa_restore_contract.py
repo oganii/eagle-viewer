@@ -235,8 +235,8 @@ def test_search_is_plain_keyword_search():
     index = read("app/web/index.html")
     api = read("app/web/api.js")
     interactions = read_web_assets(INTERACTION_ASSETS)
-    assert 'placeholder="搜索名称、标签或备注"' in index
-    assert "搜索名称、标签或备注" in interactions
+    assert 'placeholder="Search name, tag or notes…"' in index
+    assert "Search name, tag or notes" in interactions
     assert "q.charAt(0) === '#'" not in interactions
     assert "q.charAt(0) === '/'" not in interactions
     assert "'/api/search?q=' + encodeURIComponent(query)" in api

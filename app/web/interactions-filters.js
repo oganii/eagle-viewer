@@ -2,8 +2,8 @@
 
 // ===== Theme (Apple: light/dark + system blue) =====
 var THEMES = {
-  light: { theme: 'light', accent: 'blue', meta: '#f5f5f7', label: '浅色' },
-  dark:  { theme: 'dark',  accent: 'blue', meta: '#000000', label: '深色' }
+  light: { theme: 'light', accent: 'blue', meta: '#f5f5f7', label: 'Light' },
+  dark:  { theme: 'dark',  accent: 'blue', meta: '#000000', label: 'Dark' }
 };
 // Migrate legacy theme keys to the new light/dark system.
 function _migrateThemeName(name) {
@@ -123,20 +123,20 @@ function getFilterChipSpecs(filters) {
     if (value === null || value === undefined || value === '') return;
     specs.push({ key: key, label: label, value: value });
   }
-  add('min_width', '宽', f.min_width ? '≥ ' + f.min_width + 'px' : '');
-  add('min_height', '高', f.min_height ? '≥ ' + f.min_height + 'px' : '');
-  add('min_size', '大小', f.min_size ? '≥ ' + Math.round(f.min_size / mb) + 'MB' : '');
-  add('max_size', '大小', f.max_size ? '≤ ' + Math.round(f.max_size / mb) + 'MB' : '');
-  var shapeLabels = { landscape: '横图', portrait: '竖图', square: '方图' };
-  add('shape', '形状', shapeLabels[f.shape] || f.shape || '');
-  var tagLabels = { tagged: '有标签', untagged: '无标签' };
-  add('tag_state', '标签', tagLabels[f.tag_state] || f.tag_state || '');
-  var annotationLabels = { annotated: '有备注', unannotated: '无备注' };
-  add('annotation_state', '备注', annotationLabels[f.annotation_state] || f.annotation_state || '');
-  var sourceLabels = { sourced: '有来源', unsourced: '无来源' };
-  add('source_state', '来源', sourceLabels[f.source_state] || f.source_state || '');
-  add('source_domain', '来源站点', f.source_domain || '');
-  add('ext', '格式', f.ext ? '.' + f.ext : '');
+  add('min_width', 'Width', f.min_width ? '≥ ' + f.min_width + 'px' : '');
+  add('min_height', 'Height', f.min_height ? '≥ ' + f.min_height + 'px' : '');
+  add('min_size', 'Size', f.min_size ? '≥ ' + Math.round(f.min_size / mb) + 'MB' : '');
+  add('max_size', 'Size', f.max_size ? '≤ ' + Math.round(f.max_size / mb) + 'MB' : '');
+  var shapeLabels = { landscape: 'Landscape', portrait: 'Portrait', square: 'Square' };
+  add('shape', 'Shape', shapeLabels[f.shape] || f.shape || '');
+  var tagLabels = { tagged: 'Tagged', untagged: 'Untagged' };
+  add('tag_state', 'Tags', tagLabels[f.tag_state] || f.tag_state || '');
+  var annotationLabels = { annotated: 'Has notes', unannotated: 'No notes' };
+  add('annotation_state', 'Notes', annotationLabels[f.annotation_state] || f.annotation_state || '');
+  var sourceLabels = { sourced: 'Has source', unsourced: 'No source' };
+  add('source_state', 'Source', sourceLabels[f.source_state] || f.source_state || '');
+  add('source_domain', 'Source site', f.source_domain || '');
+  add('ext', 'Format', f.ext ? '.' + f.ext : '');
   return specs;
 }
 
@@ -149,7 +149,7 @@ function renderActiveFilterChips() {
     return '<button type="button" class="active-filter-chip" data-clear-filter="' + escapeHtml(spec.key) + '">' +
       '<span>' + escapeHtml(spec.label) + '</span><strong>' + escapeHtml(String(spec.value)) + '</strong>' + iconClose() +
     '</button>';
-  }).join('') + (specs.length > 1 ? '<button type="button" class="active-filter-clear" data-clear-all-filters>清空</button>' : '');
+  }).join('') + (specs.length > 1 ? '<button type="button" class="active-filter-clear" data-clear-all-filters>Clear</button>' : '');
 }
 
 function renderAdvancedFilterSummary(filters, pending) {
@@ -158,13 +158,13 @@ function renderAdvancedFilterSummary(filters, pending) {
   var specs = getFilterChipSpecs(filters || {});
   box.dataset.state = specs.length ? (pending ? 'pending' : 'active') : 'empty';
   if (!specs.length) {
-    box.innerHTML = '<span>规则</span><strong>未启用高级筛选</strong><small>设置尺寸、状态、来源或主色后，可保存成智能视图。</small>';
+    box.innerHTML = '<span>Rules</span><strong>No advanced filters</strong><small>Set size, status, source, or color, then save as a smart view.</small>';
     return;
   }
   box.innerHTML =
-    '<span>' + (pending ? '待应用规则' : '已应用规则') + ' · ' + specs.length + '</span>' +
+    '<span>' + (pending ? 'Pending rules' : 'Applied rules') + ' · ' + specs.length + '</span>' +
     '<strong>' + specs.slice(0, 3).map(function(spec) { return escapeHtml(spec.label + ' ' + spec.value); }).join(' · ') + (specs.length > 3 ? ' · +' + (specs.length - 3) : '') + '</strong>' +
-    '<small>' + (pending ? '点击“应用筛选”后刷新当前视图。' : '当前视图正在按这些规则过滤，可保存为智能视图。') + '</small>';
+    '<small>' + (pending ? 'Click “Apply Filters” to refresh the current view.' : 'The current view is filtered by these rules; you can save it as a smart view.') + '</small>';
 }
 
 function clearAdvancedFilter(key) {
@@ -224,7 +224,7 @@ function buildCurrentViewUrl() {
 }
 
 function copyCurrentViewLink(button) {
-  copyTextToClipboard(buildCurrentViewUrl(), '当前视图链接', button);
+  copyTextToClipboard(buildCurrentViewUrl(), 'Current view link', button);
 }
 
 async function shareCurrentViewLink(button) {
@@ -233,7 +233,7 @@ async function shareCurrentViewLink(button) {
   try {
     if (navigator.share && window.innerWidth <= 768) {
       await navigator.share({ title: title, text: title, url: url });
-      showToast('已打开系统分享', 'success');
+      showToast('Opened system share', 'success');
       return;
     }
   } catch (err) {
@@ -253,7 +253,7 @@ async function runPendingLaunchAction() {
       var searchInput = document.getElementById('searchInput');
       if (searchInput) searchInput.focus();
     }
-    if (window.showToast) window.showToast('已打开 Vault 搜索');
+    if (window.showToast) window.showToast('Opened Vault search');
     return true;
   }
   return false;
@@ -319,9 +319,9 @@ function syncMobileTabbar() {
 function getSearchSuggestItems(query) {
   var q = String(query || '').trim();
   if (!q) {
-    return [{ title: '输入关键词', hint: '搜索名称、标签或备注', type: 'hint' }];
+    return [{ title: 'Type a keyword', hint: 'Search name, tag or notes', type: 'hint' }];
   }
-  return [{ title: q, hint: '搜索关键词', type: 'search', value: q }];
+  return [{ title: q, hint: 'Search keyword', type: 'search', value: q }];
 }
 
 function closeSearchSuggest() {

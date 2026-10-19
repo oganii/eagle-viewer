@@ -417,10 +417,10 @@ function renderFilePlaceholder(item, large) {
   var meta = [];
   if (item.width && item.height) meta.push(item.width + ' × ' + item.height);
   if (item.size) meta.push(formatSize(item.size));
-  if (!meta.length) meta.push(kind === 'pdf' ? 'PDF 文档' : kind === 'text' ? '文本文件' : kind === 'document' ? '下载后查看' : '文件');
+  if (!meta.length) meta.push(kind === 'pdf' ? 'PDF document' : kind === 'text' ? 'Text file' : kind === 'document' ? 'Download to view' : 'File');
   var icon = large ? iconFileLarge() : iconFile();
   var excerptHtml = kind === 'text'
-    ? '<div class="file-cover-excerpt" data-snippet-for="' + escapeHtml(item.id) + '">正在加载摘要…</div>'
+    ? '<div class="file-cover-excerpt" data-snippet-for="' + escapeHtml(item.id) + '">Loading excerpt…</div>'
     : '';
   return (
     '<div class="placeholder"><div class="file-cover ' + kindClass + '">' +
@@ -429,7 +429,7 @@ function renderFilePlaceholder(item, large) {
         '<span class="file-cover-icon">' + icon + '</span>' +
       '</div>' +
       '<div class="file-cover-body">' +
-        '<div class="file-cover-name">' + escapeHtml(item.name || '未命名文件') + '</div>' +
+        '<div class="file-cover-name">' + escapeHtml(item.name || 'Untitled file') + '</div>' +
         '<div class="file-cover-meta">' + escapeHtml(meta.join(' · ')) + '</div>' +
         excerptHtml +
       '</div>' +
@@ -451,11 +451,11 @@ function loadTextSnippet(item, container) {
     })
     .then(function(data) {
       if (!target.isConnected) return;
-      target.textContent = (data && data.snippet) ? data.snippet : '暂无摘要';
+      target.textContent = (data && data.snippet) ? data.snippet : 'No excerpt';
     })
     .catch(function() {
       if (!target.isConnected) return;
-      target.textContent = '暂无摘要';
+      target.textContent = 'No excerpt';
     });
 }
 
@@ -477,7 +477,7 @@ function renderInspectorPreview(container, item, thumbUrl, fileUrl) {
   if (itemPreviewable) {
     container.setAttribute('role', 'button');
     container.setAttribute('tabindex', '0');
-    container.setAttribute('aria-label', '预览 ' + (item.name || '素材'));
+    container.setAttribute('aria-label', 'Preview ' + (item.name || 'asset'));
   } else {
     container.removeAttribute('role');
     container.removeAttribute('tabindex');
@@ -485,7 +485,7 @@ function renderInspectorPreview(container, item, thumbUrl, fileUrl) {
   }
   if (!(item.hasThumbnail || isImageExt(item.ext))) {
     container.innerHTML = renderFilePlaceholder(item, true);
-    if (itemPreviewable) container.insertAdjacentHTML('beforeend', '<span class="inspector-preview-hint">' + iconEye() + ' 点按预览</span>');
+    if (itemPreviewable) container.insertAdjacentHTML('beforeend', '<span class="inspector-preview-hint">' + iconEye() + ' Tap to preview</span>');
     return;
   }
   var img = document.createElement('img');
@@ -496,7 +496,7 @@ function renderInspectorPreview(container, item, thumbUrl, fileUrl) {
   img.src = thumbUrl;
   container.appendChild(img);
   if (itemPreviewable) {
-    container.insertAdjacentHTML('beforeend', '<span class="inspector-preview-hint">' + iconEye() + ' 点按预览</span>');
+    container.insertAdjacentHTML('beforeend', '<span class="inspector-preview-hint">' + iconEye() + ' Tap to preview</span>');
   }
 }
 

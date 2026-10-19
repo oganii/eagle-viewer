@@ -19,15 +19,15 @@ function addImagePreviewTools(overlay, img) {
   var panY = 0;
   var toolbar = document.createElement('div');
   toolbar.className = 'preview-tools preview-image-tools';
-  toolbar.setAttribute('aria-label', '图片预览工具');
+  toolbar.setAttribute('aria-label', 'Image preview tools');
   toolbar.innerHTML =
-    '<button type="button" data-preview-tool="zoom-out" aria-label="缩小">−</button>' +
-    '<button type="button" data-preview-tool="fit">适应</button>' +
+    '<button type="button" data-preview-tool="zoom-out" aria-label="Zoom out">−</button>' +
+    '<button type="button" data-preview-tool="fit">Fit</button>' +
     '<button type="button" data-preview-tool="actual">1:1</button>' +
     '<i aria-hidden="true"></i>' +
-    '<button type="button" data-preview-tool="flip" aria-label="水平翻转" aria-pressed="false">↔</button>' +
-    '<button type="button" data-preview-tool="rotate" aria-label="顺时针旋转 90 度">↻</button>' +
-    '<button type="button" data-preview-tool="zoom-in" aria-label="放大">＋</button>';
+    '<button type="button" data-preview-tool="flip" aria-label="Flip horizontally" aria-pressed="false">↔</button>' +
+    '<button type="button" data-preview-tool="rotate" aria-label="Rotate 90° clockwise">↻</button>' +
+    '<button type="button" data-preview-tool="zoom-in" aria-label="Zoom in">＋</button>';
   var buttons = toolbar.querySelectorAll('button');
   function clampPan() {
     var maxX = Math.max(0, ((img.clientWidth || 0) - window.innerWidth + 48) / 2);
@@ -132,7 +132,7 @@ function addImagePreviewTools(overlay, img) {
   buttons[4].onclick = function(e) {
     e.stopPropagation();
     rotation = (rotation + 90) % 360;
-    buttons[4].title = rotation ? ('已旋转 ' + rotation + '°') : '顺时针旋转 90 度';
+    buttons[4].title = rotation ? ('Rotated ' + rotation + '°') : 'Rotate 90° clockwise';
     applyPan();
   };
   buttons[5].onclick = function(e) { e.stopPropagation(); scale = Math.min(5, scale + 0.2); applyScale(); };
@@ -224,13 +224,13 @@ function addVideoPreviewTools(overlay, video) {
   var rateIndex = 1;
   var toolbar = document.createElement('div');
   toolbar.className = 'preview-tools preview-video-tools';
-  toolbar.setAttribute('aria-label', '视频预览工具');
+  toolbar.setAttribute('aria-label', 'Video preview tools');
   toolbar.innerHTML =
-    '<button type="button" data-preview-tool="flip" aria-label="水平翻转" aria-pressed="false">↔</button>' +
-    '<button type="button" data-preview-tool="rotate" aria-label="顺时针旋转 90 度">↻</button>' +
+    '<button type="button" data-preview-tool="flip" aria-label="Flip horizontally" aria-pressed="false">↔</button>' +
+    '<button type="button" data-preview-tool="rotate" aria-label="Rotate 90° clockwise">↻</button>' +
     '<i aria-hidden="true"></i>' +
-    '<button type="button" data-preview-tool="rate" aria-label="切换播放速度">1×</button>' +
-    '<button type="button" data-preview-tool="loop" aria-label="循环播放" aria-pressed="false">循环</button>';
+    '<button type="button" data-preview-tool="rate" aria-label="Change playback speed">1×</button>' +
+    '<button type="button" data-preview-tool="loop" aria-label="Loop playback" aria-pressed="false">Loop</button>';
   var flipButton = toolbar.querySelector('[data-preview-tool="flip"]');
   var rotateButton = toolbar.querySelector('[data-preview-tool="rotate"]');
   var rateButton = toolbar.querySelector('[data-preview-tool="rate"]');
@@ -255,7 +255,7 @@ function addVideoPreviewTools(overlay, video) {
   rotateButton.onclick = function(e) {
     e.stopPropagation();
     rotation = (rotation + 90) % 360;
-    rotateButton.title = rotation ? ('已旋转 ' + rotation + '°') : '顺时针旋转 90 度';
+    rotateButton.title = rotation ? ('Rotated ' + rotation + '°') : 'Rotate 90° clockwise';
     applyTransform();
   };
   rateButton.onclick = function(e) {
@@ -263,7 +263,7 @@ function addVideoPreviewTools(overlay, video) {
     rateIndex = (rateIndex + 1) % rates.length;
     video.playbackRate = rates[rateIndex];
     rateButton.textContent = rates[rateIndex] + '×';
-    rateButton.title = '播放速度 ' + rates[rateIndex] + '×';
+    rateButton.title = 'Playback speed ' + rates[rateIndex] + '×';
   };
   loopButton.onclick = function(e) {
     e.stopPropagation();

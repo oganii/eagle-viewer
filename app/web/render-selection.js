@@ -14,8 +14,8 @@ function updateBatchBar() {
   var removeCollectionBtn = document.getElementById('batchRemoveCollectionBtn');
   var selectedItems = getSelectedItems();
   var selectedSize = selectedItems.reduce(function(sum, item) { return sum + (item.size || 0); }, 0);
-  if (countEl) countEl.textContent = '已选 ' + n + ' 个';
-  if (metaEl) metaEl.textContent = '总大小 ' + (selectedSize > 0 ? formatSize(selectedSize) : '0 B');
+  if (countEl) countEl.textContent = n + ' selected';
+  if (metaEl) metaEl.textContent = (selectedSize > 0 ? formatSize(selectedSize) : '0 B') + ' total';
   if (breakdownEl) {
     var counts = {};
     selectedItems.forEach(function(item) {
@@ -23,35 +23,35 @@ function updateBatchBar() {
       counts[kind] = (counts[kind] || 0) + 1;
     });
     var parts = Object.keys(counts).sort().map(function(kind) {
-      var label = kind === 'image' ? '图片' : kind === 'video' ? '视频' : kind === 'pdf' ? 'PDF' : kind === 'text' ? 'TXT' : kind === 'document' ? '文档' : '其他';
+      var label = kind === 'image' ? 'Images' : kind === 'video' ? 'Videos' : kind === 'pdf' ? 'PDF' : kind === 'text' ? 'TXT' : kind === 'document' ? 'Docs' : 'Other';
       return label + ' ' + counts[kind];
     });
-    breakdownEl.textContent = '类型分布 ' + (parts.length ? parts.join(' · ') : '-');
+    breakdownEl.textContent = 'Types ' + (parts.length ? parts.join(' · ') : '-');
   }
   if (scopeEl) {
     var selectedInView = selectedItems.length;
     var loadedTotal = state.currentItems.length;
-    scopeEl.textContent = loadedTotal ? ('当前视图 ' + selectedInView + '/' + loadedTotal + ' 已载入') : '当前视图';
+    scopeEl.textContent = loadedTotal ? ('Current view ' + selectedInView + '/' + loadedTotal + ' loaded') : 'Current view';
   }
   if (hintEl && !(bar && bar.dataset.batchFeedback === 'true')) {
-    hintEl.textContent = window.innerWidth <= 768 ? '移动选择模式 · 点素材继续选择' : '⌘/Ctrl+A 全选 · Shift 范围 · Esc 取消';
+    hintEl.textContent = window.innerWidth <= 768 ? 'Selection mode · tap assets to select more' : '⌘/Ctrl+A Select all · Shift Range · Esc Cancel';
   }
   if (previewRail) {
     var visibleItems = selectedItems.slice(0, 12);
     previewRail.innerHTML = visibleItems.map(function(item) {
       var thumbUrl = API + '/api/items/' + item.id + '/thumbnail';
-      var label = (item.name || item.id || '素材') + (item.ext ? '.' + item.ext : '');
+      var label = (item.name || item.id || 'Asset') + (item.ext ? '.' + item.ext : '');
       var inner = (item.hasThumbnail || isImageExt(item.ext)) ?
         '<img src="' + escapeHtml(thumbUrl) + '" alt="" loading="lazy" decoding="async" />' :
         '<span>' + escapeHtml((item.ext || '?').slice(0, 4).toUpperCase()) + '</span>';
-      return '<button type="button" class="batch-preview-thumb" data-selected-preview-id="' + escapeHtml(item.id) + '" title="' + escapeHtml(label) + '" aria-label="定位已选素材 ' + escapeHtml(label) + '">' + inner + '</button>';
+      return '<button type="button" class="batch-preview-thumb" data-selected-preview-id="' + escapeHtml(item.id) + '" title="' + escapeHtml(label) + '" aria-label="Locate selected asset ' + escapeHtml(label) + '">' + inner + '</button>';
     }).join('') + (selectedItems.length > visibleItems.length ? '<span class="batch-preview-more">+' + (selectedItems.length - visibleItems.length) + '</span>' : '');
   }
   if (compareBtn) {
     var comparableCount = selectedItems.filter(function(item) { return isImageExt(item.ext); }).length;
     compareBtn.disabled = comparableCount < 2;
-    compareBtn.textContent = comparableCount > 4 ? '对比前 4 张' : ('对比图片' + (comparableCount ? ' ' + comparableCount : ''));
-    compareBtn.title = comparableCount < 2 ? '至少选择 2 张图片' : '打开 2–4 张图片并排审阅';
+    compareBtn.textContent = comparableCount > 4 ? 'Compare First 4' : ('Compare' + (comparableCount ? ' ' + comparableCount : ''));
+    compareBtn.title = comparableCount < 2 ? 'Select at least 2 images' : 'Review 2–4 images side by side';
   }
   if (n) bar.classList.add('visible'); else bar.classList.remove('visible');
   if (n > 1 && state.inspectorItem) renderModule.closeInspector();
@@ -125,7 +125,7 @@ function updateCheckboxesInView() {
   });
   document.querySelectorAll('[data-list-mobile-action="select"]').forEach(function(btn) {
     var selected = state.selectedIds.has(btn.dataset.id);
-    btn.textContent = selected ? '取消选择' : '选择';
+    btn.textContent = selected ? 'Deselect' : 'Select';
     btn.classList.toggle('is-selected', selected);
     btn.setAttribute('aria-pressed', selected ? 'true' : 'false');
   });
@@ -171,7 +171,7 @@ function updateReturnToCurrentItemButton() {
   var label = state.lastFocusedItemName || '\u5F53\u524D\u7D20\u6750';
   btn.title = target ? ('\u56DE\u5230\u7D20\u6750\uFF1A' + label) : ('\u7EE7\u7EED\u52A0\u8F7D\u5E76\u5B9A\u4F4D\uFF1A' + label);
   var strong = btn.querySelector('strong');
-  if (strong) strong.textContent = target ? '回到当前项' : '定位当前项';
+  if (strong) strong.textContent = target ? 'Back to Current' : 'Locate Current';
 }
 
 function rememberFocusedItem(item) {
@@ -204,7 +204,7 @@ function focusPendingItemWhenLoaded() {
     setTimeout(function() { target.classList.remove('located-item'); }, 1600);
     state.pendingFocusItemId = '';
     state.pendingFocusLoads = 0;
-    if (window.showToast) window.showToast('已定位到素材', 'success');
+    if (window.showToast) window.showToast('Asset located', 'success');
     updateReturnToCurrentItemButton();
     return true;
   }
@@ -216,7 +216,7 @@ function focusPendingItemWhenLoaded() {
   if (!state.incrementalHasMore) {
     state.pendingFocusItemId = '';
     state.pendingFocusLoads = 0;
-    if (window.showToast) window.showToast('已打开文件夹，但当前排序下未定位到素材', 'error');
+    if (window.showToast) window.showToast('Folder opened, but the asset couldn’t be located in the current sort', 'error');
     updateReturnToCurrentItemButton();
   }
   return false;
@@ -450,9 +450,9 @@ function renderInspectorFolderLinks(item) {
   var folderIds = item.folders || [];
   return paths.map(function(path, idx) {
     var folderId = folderIds[idx] || '';
-    var label = path || folderId || '未命名文件夹';
+    var label = path || folderId || 'Untitled folder';
     if (!folderId) return '<span class="inspector-path-chip muted">' + escapeHtml(label) + '</span>';
-    return '<button type="button" class="inspector-path-chip" data-inspector-folder="' + escapeHtml(folderId) + '" data-item-focus-id="' + escapeHtml(item.id || '') + '" title="打开文件夹：' + escapeHtml(label) + '">' +
+    return '<button type="button" class="inspector-path-chip" data-inspector-folder="' + escapeHtml(folderId) + '" data-item-focus-id="' + escapeHtml(item.id || '') + '" title="Open folder: ' + escapeHtml(label) + '">' +
       iconFolder() + '<span>' + escapeHtml(label) + '</span>' +
     '</button>';
   }).join('');
@@ -469,7 +469,7 @@ function getItemFolderLinks(item, limit) {
     var path = paths[i] || folderId || '';
     if (!path && !folderId) continue;
     var parts = String(path).split(' / ').filter(Boolean);
-    var label = parts.length ? parts[parts.length - 1] : (path || '未命名文件夹');
+    var label = parts.length ? parts[parts.length - 1] : (path || 'Untitled folder');
     links.push({
       id: folderId,
       path: path,
@@ -481,7 +481,7 @@ function getItemFolderLinks(item, limit) {
 
 function renderInspectorTagLinks(tags) {
   return (tags || []).map(function(tag) {
-    return '<button type="button" class="tag-chip inspector-tag-chip" data-inspector-tag="' + escapeHtml(tag) + '" title="打开标签：' + escapeHtml(tag) + '">' + escapeHtml(tag) + '</button>';
+    return '<button type="button" class="tag-chip inspector-tag-chip" data-inspector-tag="' + escapeHtml(tag) + '" title="Open tag: ' + escapeHtml(tag) + '">' + escapeHtml(tag) + '</button>';
   }).join('');
 }
 
@@ -520,19 +520,19 @@ function getViewMediaKind(item) {
 function getInspectorTypeLabel(item) {
   var ext = (item.ext || '').toLowerCase();
   var kind = getViewMediaKind(item);
-  if (kind === 'image') return '图片素材';
-  if (kind === 'video') return '视频素材';
-  if (kind === 'audio') return '音频素材';
-  if (ext === 'pdf') return 'PDF 文档';
-  if (ext === 'txt') return '文本素材';
-  if (kind === 'document') return '文档素材';
-  return '通用文件';
+  if (kind === 'image') return 'Image asset';
+  if (kind === 'video') return 'Video asset';
+  if (kind === 'audio') return 'Audio asset';
+  if (ext === 'pdf') return 'PDF document';
+  if (ext === 'txt') return 'Text asset';
+  if (kind === 'document') return 'Document asset';
+  return 'Generic file';
 }
 
 function renderInspectorStatusPills(item) {
   var pills = [];
-  if (item.tags && item.tags.length) pills.push('<span class="inspector-status-pill"># ' + escapeHtml(item.tags.length + ' 标签') + '</span>');
-  if (item.url) pills.push('<span class="inspector-status-pill sourced">' + iconExternalLink() + ' 有来源</span>');
+  if (item.tags && item.tags.length) pills.push('<span class="inspector-status-pill"># ' + escapeHtml(item.tags.length + ' tags') + '</span>');
+  if (item.url) pills.push('<span class="inspector-status-pill sourced">' + iconExternalLink() + ' Has source</span>');
   return pills.join('');
 }
 
@@ -542,8 +542,8 @@ function getInspectorMetaLine(item) {
   if (item.width && item.height) meta.push(item.width + ' × ' + item.height);
   else if (item.size) meta.push(formatSize(item.size));
   if (item.duration) meta.push(formatMediaDuration(item.duration));
-  if (item.tags && item.tags.length) meta.push(item.tags.length + ' 标签');
-  if (item.url) meta.push(getItemSourceDomain(item) || '有来源');
+  if (item.tags && item.tags.length) meta.push(item.tags.length + ' tags');
+  if (item.url) meta.push(getItemSourceDomain(item) || 'Has source');
   return meta.join(' · ') || getInspectorTypeLabel(item);
 }
 
@@ -551,10 +551,10 @@ function renderInspectorMobileSummary(item) {
   var summary = document.getElementById('inspectorMobileSummary');
   if (!summary) return;
   summary.innerHTML = '<div class="inspector-mobile-summary-main">' +
-      '<strong>' + escapeHtml(item.name || '未命名素材') + '</strong>' +
+      '<strong>' + escapeHtml(item.name || 'Untitled asset') + '</strong>' +
       '<span>' + escapeHtml(getInspectorMetaLine(item)) + '</span>' +
     '</div>' +
-    '<div class="inspector-mobile-summary-hint">上拉展开 · 下滑关闭</div>';
+    '<div class="inspector-mobile-summary-hint">Swipe up to expand · down to close</div>';
 }
 
 function bindInspectorPreviewAction(item, fileUrl) {
@@ -582,9 +582,9 @@ function getInspectorShape(item) {
 }
 
 function getInspectorShapeLabel(shape) {
-  if (shape === 'landscape') return '横图';
-  if (shape === 'portrait') return '竖图';
-  if (shape === 'square') return '方图';
+  if (shape === 'landscape') return 'Landscape';
+  if (shape === 'portrait') return 'Portrait';
+  if (shape === 'square') return 'Square';
   return '';
 }
 
@@ -597,20 +597,20 @@ function renderInspectorRelatedLinks(item) {
   var links = [];
   var ext = (item.ext || '').toLowerCase();
   var type = getInspectorRelatedType(item);
-  var typeLabel = getInspectorTypeLabel(item).replace('素材', '').replace('文档', '文档');
+  var typeLabel = getInspectorTypeLabel(item).replace(' asset', '').replace('document', 'document');
   if (ext) {
-    links.push('<button type="button" class="inspector-related-chip" data-inspector-related="ext" data-query="' + escapeHtml(ext) + '"><span>同格式</span><strong>.' + escapeHtml(ext) + '</strong></button>');
+    links.push('<button type="button" class="inspector-related-chip" data-inspector-related="ext" data-query="' + escapeHtml(ext) + '"><span>Same format</span><strong>.' + escapeHtml(ext) + '</strong></button>');
   }
   if (type && type !== 'all') {
-    links.push('<button type="button" class="inspector-related-chip" data-inspector-related="type" data-type="' + escapeHtml(type) + '"><span>同类型</span><strong>' + escapeHtml(typeLabel) + '</strong></button>');
+    links.push('<button type="button" class="inspector-related-chip" data-inspector-related="type" data-type="' + escapeHtml(type) + '"><span>Same type</span><strong>' + escapeHtml(typeLabel) + '</strong></button>');
   }
   var shape = getInspectorShape(item);
   var shapeLabel = getInspectorShapeLabel(shape);
   if (shape) {
-    links.push('<button type="button" class="inspector-related-chip" data-inspector-related="shape" data-type="' + escapeHtml(type) + '" data-shape="' + escapeHtml(shape) + '"><span>同构图</span><strong>' + escapeHtml(shapeLabel) + '</strong></button>');
+    links.push('<button type="button" class="inspector-related-chip" data-inspector-related="shape" data-type="' + escapeHtml(type) + '" data-shape="' + escapeHtml(shape) + '"><span>Same shape</span><strong>' + escapeHtml(shapeLabel) + '</strong></button>');
   }
   if (item.width && item.height) {
-    links.push('<button type="button" class="inspector-related-chip wide" data-inspector-related="min-dimensions" data-type="' + escapeHtml(type) + '" data-min-width="' + escapeHtml(String(item.width)) + '" data-min-height="' + escapeHtml(String(item.height)) + '"><span>不小于此尺寸</span><strong>' + escapeHtml(item.width + ' × ' + item.height) + '</strong></button>');
+    links.push('<button type="button" class="inspector-related-chip wide" data-inspector-related="min-dimensions" data-type="' + escapeHtml(type) + '" data-min-width="' + escapeHtml(String(item.width)) + '" data-min-height="' + escapeHtml(String(item.height)) + '"><span>At least this size</span><strong>' + escapeHtml(item.width + ' × ' + item.height) + '</strong></button>');
   }
   return links.length ? '<div class="inspector-related-grid">' + links.join('') + '</div>' : '';
 }

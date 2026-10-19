@@ -30,22 +30,22 @@ function renderContent() {
       if (remoteOffline) {
         body.innerHTML =
           '<div class="empty-state offline-state">' + iconFolderOutline() +
-            '<strong>' + (snapshotMeta && snapshotMeta.savedAt ? '当前视图没有可用快照' : '远程 Vault 暂不可达') + '</strong>' +
-            '<span>' + (snapshotMeta && snapshotMeta.savedAt ? ('已有快照保存于 ' + new Date(snapshotMeta.savedAt).toLocaleString('zh-CN') + '，但这个视图尚未缓存。') : '这不是资料库为空；请检查 VPN、NAS 或反向代理后重连。') + '</span>' +
-            '<div class="empty-actions"><button type="button" id="offlineEmptyRetryBtn">重连</button><button type="button" id="offlineEmptySnapshotBtn">保存快照</button></div>' +
+            '<strong>' + (snapshotMeta && snapshotMeta.savedAt ? 'No snapshot for this view' : 'Remote Vault unreachable') + '</strong>' +
+            '<span>' + (snapshotMeta && snapshotMeta.savedAt ? ('A snapshot was saved ' + new Date(snapshotMeta.savedAt).toLocaleString('zh-CN') + ', but this view isn’t cached yet.') : 'The library isn’t empty; check your VPN, NAS, or reverse proxy, then reconnect.') + '</span>' +
+            '<div class="empty-actions"><button type="button" id="offlineEmptyRetryBtn">Reconnect</button><button type="button" id="offlineEmptySnapshotBtn">Save Snapshot</button></div>' +
           '</div>';
         var retryBtn = document.getElementById('offlineEmptyRetryBtn');
         var snapshotBtn = document.getElementById('offlineEmptySnapshotBtn');
         if (retryBtn) retryBtn.onclick = function() {
           if (EagleViewer.modules.interactions && EagleViewer.modules.interactions.checkRemoteStatus) {
-            EagleViewer.modules.interactions.checkRemoteStatus({ reload: false, quietStrip: false, message: '正在检查远程 Vault…' });
+            EagleViewer.modules.interactions.checkRemoteStatus({ reload: false, quietStrip: false, message: 'Checking remote Vault…' });
           }
         };
         if (snapshotBtn) snapshotBtn.onclick = function() {
           if (api && api.warmCurrentOfflineSnapshot) api.warmCurrentOfflineSnapshot();
         };
       } else {
-        body.innerHTML = '<div class="empty-state">' + iconFolderOutline() + '<span>' + (state.currentEmptyMsg || '暂无素材') + '</span></div>';
+        body.innerHTML = '<div class="empty-state">' + iconFolderOutline() + '<span>' + (state.currentEmptyMsg || 'No assets') + '</span></div>';
       }
     return;
   }
@@ -105,7 +105,7 @@ function appendSubfoldersHint(container) {
   if (state.currentView !== 'folder' || state.currentItems.length || !state.currentSubfolders.length) return;
   var hint = document.createElement('div');
   hint.className = 'folder-hint';
-  hint.textContent = '此文件夹只包含子文件夹，点击卡片进入';
+  hint.textContent = 'This folder only contains subfolders; click a card to open it';
   container.appendChild(hint);
 }
 
@@ -118,7 +118,7 @@ function showEmptyState() {
   state.currentTitle = '';
   state.currentTotal = 0;
   var body = document.getElementById('contentBody');
-  body.innerHTML = '<div class="empty-state" id="emptyState">' + iconFolderOutline() + '<span>选择左侧文件夹查看素材</span></div>';
+  body.innerHTML = '<div class="empty-state" id="emptyState">' + iconFolderOutline() + '<span>Select a folder from the sidebar</span></div>';
   document.getElementById('contentToolbar').style.display = 'none';
   renderModule.closeInspector();
   updateUrlFromState();

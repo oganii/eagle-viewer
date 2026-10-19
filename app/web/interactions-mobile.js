@@ -40,8 +40,8 @@ function getTopSourceDomainQuickItems(limit) {
       key: 'source:' + domain,
       group: 'source',
       title: domain,
-      hint: counts[domain] + ' 项 · 当前视图',
-      meta: '来源',
+      hint: counts[domain] + ' items · current view',
+      meta: 'Source',
       run: function() { openSourceDomainView(domain); }
     };
   });
@@ -61,7 +61,7 @@ function openSourceDomainView(domain) {
 
 function getMobileSearchQuickItems() {
   return [
-    { key: 'recent7', group: 'browse', title: '最近 7 天', hint: '新增素材', run: function() { api.loadRecentItems(7); } }
+    { key: 'recent7', group: 'browse', title: 'Last 7 Days', hint: 'New assets', run: function() { api.loadRecentItems(7); } }
   ];
 }
 
@@ -69,8 +69,8 @@ function renderMobileSearchQuick() {
   var quick = document.getElementById('mobileSearchQuick');
   if (!quick) return;
   var groups = [
-    { key: 'continue', title: '继续浏览', hint: '回到最近内容' },
-    { key: 'browse', title: '快速浏览', hint: '常用入口' }
+    { key: 'continue', title: 'Continue', hint: 'Back to recent content' },
+    { key: 'browse', title: 'Quick Browse', hint: 'Shortcuts' }
   ];
   var items = getMobileSearchQuickItems();
   quick.innerHTML = renderMobileSearchStatusCard() + groups.map(function(group) {
@@ -97,15 +97,15 @@ function renderMobileSearchStatusCard() {
   var offline = navigator.onLine === false || stripState === 'offline';
   var checking = stripState === 'checking';
   if (!offline && !checking && !snapshot) return '';
-  var title = offline ? (snapshot ? '正在使用可用快照' : '远程 Vault 暂不可达') : (checking ? '正在检查远程连接' : '离线快照已准备');
+  var title = offline ? (snapshot ? 'Using available snapshot' : 'Remote Vault unreachable') : (checking ? 'Checking remote connection' : 'Offline snapshot ready');
   var meta = offline
-    ? (snapshot ? ('最近快照 · ' + formatSnapshotAge(snapshot.savedAt) + ' · ' + (snapshot.ok || 0) + ' 项') : '没有可用快照，建议回到内网或 VPN 后保存')
-    : (checking ? '检查完成前可继续浏览已缓存内容' : ('保存于 ' + formatSnapshotAge(snapshot.savedAt) + ' · ' + (snapshot.ok || 0) + ' 项'));
+    ? (snapshot ? ('Latest snapshot · ' + formatSnapshotAge(snapshot.savedAt) + ' · ' + (snapshot.ok || 0) + ' items') : 'No snapshot available; save one when back on LAN or VPN')
+    : (checking ? 'You can browse cached content while checking' : ('Saved ' + formatSnapshotAge(snapshot.savedAt) + ' · ' + (snapshot.ok || 0) + ' items'));
   return '<div class="mobile-search-status-card" data-state="' + (offline ? 'offline' : (checking ? 'checking' : 'ready')) + '">' +
     '<span></span>' +
     '<div><strong>' + escapeHtml(title) + '</strong><small>' + escapeHtml(meta) + '</small></div>' +
-    '<button type="button" data-mobile-search-status-action="reconnect">' + (offline ? '重连' : '检查') + '</button>' +
-    '<button type="button" data-mobile-search-status-action="snapshot">保存</button>' +
+    '<button type="button" data-mobile-search-status-action="reconnect">' + (offline ? 'Reconnect' : 'Check') + '</button>' +
+    '<button type="button" data-mobile-search-status-action="snapshot">Save</button>' +
   '</div>';
 }
 
@@ -130,7 +130,7 @@ function syncMobileSearchSort() {
   var dirBtn = wrap.querySelector('[data-mobile-dir-toggle]');
   if (dirBtn) {
     var asc = state.listDir === 'asc';
-    dirBtn.textContent = asc ? '升序 ↑' : '降序 ↓';
+    dirBtn.textContent = asc ? 'Asc ↑' : 'Desc ↓';
     dirBtn.classList.toggle('active', true);
     dirBtn.setAttribute('aria-pressed', asc ? 'true' : 'false');
   }
@@ -168,12 +168,12 @@ function getMobileSearchResults(query) {
     });
   } else {
     state.tagData.slice(0, 8).forEach(function(tag) {
-      push('tag', '#' + tag.name, (tag.count || 0) + ' 项 · 标签', tag.name);
+      push('tag', '#' + tag.name, (tag.count || 0) + ' items · tag', tag.name);
     });
     var folders = [];
     getFolderPathMatches('', state.treeData, [], folders);
     folders.slice(0, 8).forEach(function(folder) {
-      push('folder', folder.path, '文件夹', folder.id);
+      push('folder', folder.path, 'Folder', folder.id);
     });
   }
   return results.slice(0, 16);
@@ -189,15 +189,15 @@ function renderMobileSearchResults() {
   if (!results.length) {
     list.innerHTML =
       '<div class="mobile-search-empty">' +
-        '<strong>没有匹配项</strong>' +
-        '<span>试试素材名称、标签或备注。</span>' +
+        '<strong>No matches</strong>' +
+        '<span>Try an asset name, tag, or note.</span>' +
         '<div class="mobile-search-empty-actions">' +
-          '<button type="button" data-mobile-search-template="">关键词</button>' +
+          '<button type="button" data-mobile-search-template="">Keyword</button>' +
         '</div>' +
       '</div>';
     return;
   }
-  var groupLabels = { tag: '标签', folder: '文件夹', search: '搜索建议' };
+  var groupLabels = { tag: 'Tags', folder: 'Folders', search: 'Suggestions' };
   var groupOrder = ['tag', 'folder', 'search'];
   var groups = {};
   groupOrder.forEach(function(type) { groups[type] = []; });
@@ -212,7 +212,7 @@ function renderMobileSearchResults() {
       groups[type].map(function(entry) {
         var item = entry.item;
         var idx = entry.idx;
-        var kicker = item.type === 'tag' ? '标签' : item.type === 'folder' ? '文件夹' : '搜索';
+        var kicker = item.type === 'tag' ? 'Tag' : item.type === 'folder' ? 'Folder' : 'Search';
         return '<button type="button" class="mobile-search-result" data-result-type="' + escapeHtml(item.type) + '" data-mobile-search-index="' + idx + '">' +
           '<span>' + escapeHtml(kicker) + '</span><strong>' + escapeHtml(item.title) + '</strong><small>' + escapeHtml(item.hint) + '</small>' +
         '</button>';
@@ -376,7 +376,7 @@ function setupMobileSearchSheet() {
     var statusAction = e.target.closest('[data-mobile-search-status-action]');
     if (statusAction) {
       var status = statusAction.dataset.mobileSearchStatusAction;
-      if (status === 'reconnect') checkRemoteStatus({ reload: false, quietStrip: false, message: '正在检查远程 Vault…' });
+      if (status === 'reconnect') checkRemoteStatus({ reload: false, quietStrip: false, message: 'Checking remote Vault…' });
       else if (status === 'snapshot') api.warmCurrentOfflineSnapshot();
       return;
     }
@@ -507,7 +507,7 @@ function setupMobileMoreSheet() {
       return;
     }
     if (e.target.closest('#mobileRemoteRefresh')) {
-      checkRemoteStatus({ reload: false, quietStrip: false, message: '正在检查远程 Vault…' });
+      checkRemoteStatus({ reload: false, quietStrip: false, message: 'Checking remote Vault…' });
       return;
     }
     var actionEl = e.target.closest('[data-mobile-more-action]');

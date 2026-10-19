@@ -422,7 +422,7 @@ def _path_from_node(node: FolderNode) -> str:
     """Build path string from node to root using parent chain."""
     parts: list[str] = []
     while node:
-        parts.append(node.name or "(未命名)")
+        parts.append(node.name or "(Untitled)")
         if not node.parent:
             break
         parent = _folder_by_id.get(str(node.parent))
@@ -483,7 +483,7 @@ def get_subfolders(folder_id: str) -> list[dict]:
     node = _folder_by_id.get(fid)
     if not node or node.locked:
         return []
-    return [{"id": c.id, "name": c.name or "(未命名)", "locked": c.locked} for c in node.children]
+    return [{"id": c.id, "name": c.name or "(Untitled)", "locked": c.locked} for c in node.children]
 
 
 def _compute_folder_counts(

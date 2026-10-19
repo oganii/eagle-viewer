@@ -39,32 +39,32 @@ function buildItemShareUrl(item) {
 async function shareItemLink(item, button) {
   if (!item) return;
   var url = buildItemShareUrl(item);
-  var title = item.name || 'Eagle Vault 素材';
+  var title = item.name || 'Eagle Vault asset';
   try {
     if (navigator.share && window.innerWidth <= 768) {
       await navigator.share({ title: title, text: title, url: url });
-      showToast('已打开系统分享', 'success');
+      showToast('Opened system share', 'success');
     } else if (navigator.clipboard && navigator.clipboard.writeText) {
       await navigator.clipboard.writeText(url);
-      showToast('素材链接已复制', 'success');
+      showToast('Asset link copied', 'success');
       if (button) {
         var label = button.querySelector('span') || button;
         var old = label.textContent;
-        label.textContent = '已复制';
+        label.textContent = 'Copied';
         setTimeout(function() { label.textContent = old; }, 1200);
       }
     } else {
-      window.prompt('复制素材链接', url);
-      showToast('素材链接已准备复制');
+      window.prompt('Copy asset link', url);
+      showToast('Asset link ready to copy');
     }
   } catch (err) {
     if (err && err.name === 'AbortError') return;
     if (navigator.clipboard && navigator.clipboard.writeText) {
       await navigator.clipboard.writeText(url);
-      showToast('素材链接已复制', 'success');
+      showToast('Asset link copied', 'success');
     } else {
-      window.prompt('复制素材链接', url);
-      showToast('素材链接已准备复制');
+      window.prompt('Copy asset link', url);
+      showToast('Asset link ready to copy');
     }
   }
 }
@@ -72,16 +72,16 @@ async function shareItemLink(item, button) {
 async function shareItemFile(item, button) {
   if (!item) return;
   if (isRemoteAccessUnavailable()) {
-    showToast('分享原文件需要连接远程 Vault', 'error');
+    showToast('Sharing originals requires the remote Vault', 'error');
     return;
   }
   if (!navigator.share || !navigator.canShare || typeof File === 'undefined') {
-    showToast('当前浏览器不支持原文件系统分享，请使用下载', 'error');
+    showToast('This browser can’t share original files; use Download instead', 'error');
     return;
   }
   var maxShareBytes = 64 * 1024 * 1024;
   if (Number(item.size || 0) > maxShareBytes) {
-    showToast('原文件超过 64 MB，请使用下载或分享页面链接', 'error');
+    showToast('Original exceeds 64 MB; use Download or share the page link', 'error');
     return;
   }
   var label = button ? (button.querySelector('span') || button) : null;
@@ -91,22 +91,22 @@ async function shareItemFile(item, button) {
     button.disabled = true;
     button.classList.add('is-loading');
   }
-  if (label) label.textContent = '准备原文件…';
+  if (label) label.textContent = 'Preparing…';
   try {
     var response = await fetch(buildItemFileUrl(item), { cache: 'no-store' });
     if (handleAuthResponse(response)) return;
-    if (response.status === 503) throw new Error('远程 Vault 暂不可达');
-    if (!response.ok) throw new Error('读取原文件失败');
+    if (response.status === 503) throw new Error('Remote Vault unreachable');
+    if (!response.ok) throw new Error('Failed to read original file');
     var blob = await response.blob();
-    if (blob.size > maxShareBytes) throw new Error('原文件超过 64 MB，请使用下载');
+    if (blob.size > maxShareBytes) throw new Error('Original exceeds 64 MB; use Download instead');
     var file = new File([blob], buildItemDownloadName(item), { type: blob.type || 'application/octet-stream' });
-    if (!navigator.canShare({ files: [file] })) throw new Error('当前浏览器不支持分享这种文件，请使用下载');
-    await navigator.share({ files: [file], title: item.name || 'Eagle Vault 素材' });
-    showToast('已交给系统分享', 'success');
+    if (!navigator.canShare({ files: [file] })) throw new Error('This browser can’t share this file type; use Download instead');
+    await navigator.share({ files: [file], title: item.name || 'Eagle Vault asset' });
+    showToast('Sent to system share', 'success');
     closeQuickActionSheet();
   } catch (err) {
     if (err && err.name === 'AbortError') return;
-    showToast((err && err.message) || '分享原文件失败，请使用下载', 'error');
+    showToast((err && err.message) || 'Failed to share original; use Download instead', 'error');
   } finally {
     if (button && button.isConnected) {
       button.disabled = oldDisabled;
@@ -202,29 +202,29 @@ async function copyTextToClipboard(text, title, button) {
   try {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       await navigator.clipboard.writeText(text);
-      showToast((title || '文本') + '已复制', 'success');
+      showToast((title || 'Text') + ' copied', 'success');
       if (button) {
         var label = button.querySelector('span') || button;
         var old = label.textContent;
-        label.textContent = '已复制';
+        label.textContent = 'Copied';
         setTimeout(function() { label.textContent = old; }, 1200);
       }
     } else {
-      window.prompt(title || '复制文本', text);
-      showToast((title || '文本') + '已准备复制');
+      window.prompt(title || 'Copy text', text);
+      showToast((title || 'Text') + ' ready to copy');
     }
   } catch (err) {
-    window.prompt(title || '复制文本', text);
-    showToast((title || '文本') + '已准备复制');
+    window.prompt(title || 'Copy text', text);
+    showToast((title || 'Text') + ' ready to copy');
   }
 }
 
 function copyItemInfo(item, button) {
-  copyTextToClipboard(buildItemInfoText(item), '复制素材信息', button);
+  copyTextToClipboard(buildItemInfoText(item), 'Asset info', button);
 }
 
 function copyItemReference(item, format, button) {
-  var title = format === 'html' ? '复制 HTML 引用' : (format === 'text' ? '复制纯文本引用' : '复制 Markdown 引用');
+  var title = format === 'html' ? 'HTML reference' : (format === 'text' ? 'Plain-text reference' : 'Markdown reference');
   copyTextToClipboard(buildItemReferenceText(item, format), title, button);
 }
 
@@ -249,25 +249,25 @@ function buildBatchReferencesText(items) {
 function copySelectedLinks(button) {
   var items = getSelectedItems();
   if (!items.length) return;
-  copyTextToClipboard(buildBatchLinksText(items), '复制素材链接', button);
+  copyTextToClipboard(buildBatchLinksText(items), 'Asset links', button);
 }
 
 function copySelectedInfo(button) {
   var items = getSelectedItems();
   if (!items.length) return;
-  copyTextToClipboard(buildBatchInfoText(items), '复制素材信息', button);
+  copyTextToClipboard(buildBatchInfoText(items), 'Asset info', button);
 }
 
 function copySelectedReferences(button) {
   var items = getSelectedItems();
   if (!items.length) return;
-  copyTextToClipboard(buildBatchReferencesText(items), '复制素材引用', button);
+  copyTextToClipboard(buildBatchReferencesText(items), 'Asset references', button);
 }
 
 async function copyItemImage(id, button) {
   if (!id) return;
   if (!navigator.clipboard || typeof navigator.clipboard.write !== 'function') {
-    showToast('当前环境不支持复制图片，请使用 HTTPS', 'error');
+    showToast('Copying images isn’t supported here; use HTTPS', 'error');
     return;
   }
   var old = button ? button.innerHTML : '';
@@ -278,13 +278,13 @@ async function copyItemImage(id, button) {
     var type = blob.type || 'image/png';
     if (!type.startsWith('image/')) type = 'image/png';
     await navigator.clipboard.write([new ClipboardItem({ [type]: blob })]);
-    showToast('图片已复制到剪贴板', 'success');
+    showToast('Image copied to clipboard', 'success');
     if (button) {
-      button.innerHTML = iconCopy() + ' 已复制';
+      button.innerHTML = iconCopy() + ' Copied';
       setTimeout(function() { button.innerHTML = old; }, 1500);
     }
   } catch (err) {
-    showToast('复制图片失败，请使用 HTTPS 或受支持浏览器', 'error');
+    showToast('Failed to copy image; use HTTPS or a supported browser', 'error');
   }
 }
 
@@ -318,7 +318,7 @@ function openFolderAndFocus(folderId, itemId) {
 function openItemFolder(item) {
   var folder = getPrimaryItemFolder(item);
   if (!folder || !folder.id) {
-    showToast('这个素材没有文件夹归属', 'error');
+    showToast('This asset isn’t in any folder', 'error');
     return;
   }
   closeQuickActionSheet();
@@ -344,7 +344,7 @@ function runItemAction(item, action, sourceEl) {
   } else if (action === 'source') {
     var sourceDomain = getItemSourceDomain(item);
     if (!sourceDomain) {
-      showToast('这个素材没有来源站点', 'error');
+      showToast('This asset has no source site', 'error');
       return;
     }
     closeQuickActionSheet();
@@ -368,7 +368,7 @@ function runItemAction(item, action, sourceEl) {
     copyItemReference(item, action === 'copy-html' ? 'html' : (action === 'copy-ref' ? 'text' : 'markdown'), sourceEl);
   } else if (action === 'download') {
     if (isRemoteAccessUnavailable()) {
-      showToast('下载原文件需要连接远程 Vault', 'error');
+      showToast('Downloading originals requires the remote Vault', 'error');
       return;
     }
     var resetDownloadButton = null;
@@ -378,7 +378,7 @@ function runItemAction(item, action, sourceEl) {
       sourceEl.disabled = true;
       var label = sourceEl.querySelector('span');
       var oldLabel = label ? label.textContent : '';
-      if (label) label.textContent = '开始下载';
+      if (label) label.textContent = 'Downloading';
       resetDownloadButton = function() {
         if (!sourceEl.isConnected) return;
         sourceEl.classList.remove('is-loading');
@@ -390,7 +390,7 @@ function runItemAction(item, action, sourceEl) {
     a.href = fileUrl + '?download=true';
     a.download = buildItemDownloadName(item);
     a.click();
-    showToast('原文件已开始下载', 'success');
+    showToast('Download started', 'success');
     if (resetDownloadButton) setTimeout(resetDownloadButton, 1200);
     closeQuickActionSheet();
   }

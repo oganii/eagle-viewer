@@ -24,8 +24,8 @@ function closeDesktopContextMenu() {
 
 function renderQuickActionStatePills(item) {
   var pills = [];
-  if (state.selectedIds.has(item.id)) pills.push('<span class="quick-action-state-pill selected">' + iconCollection() + ' 已选中</span>');
-  if (!pills.length) pills.push('<span class="quick-action-state-pill muted">未选择</span>');
+  if (state.selectedIds.has(item.id)) pills.push('<span class="quick-action-state-pill selected">' + iconCollection() + ' Selected</span>');
+  if (!pills.length) pills.push('<span class="quick-action-state-pill muted">Not selected</span>');
   return pills.join('');
 }
 
@@ -37,28 +37,28 @@ function updateQuickActionSheetState(sheet, item) {
   if (status) status.innerHTML = renderQuickActionStatePills(item);
   if (select) {
     select.classList.toggle('active', selected);
-    select.querySelector('span').textContent = selected ? '取消选择' : '选择';
+    select.querySelector('span').textContent = selected ? 'Deselect' : 'Select';
   }
   if (download) {
     var offline = isRemoteAccessUnavailable();
     download.classList.toggle('requires-remote', offline);
     download.disabled = offline;
-    download.title = offline ? '下载原文件需要连接远程 Vault' : '';
-    download.querySelector('span').textContent = offline ? '需联网' : '下载';
+    download.title = offline ? 'Downloading originals requires the remote Vault' : '';
+    download.querySelector('span').textContent = offline ? 'Offline' : 'Download';
   }
 }
 
 function updateDesktopContextMenuState(menu, item) {
   var select = menu.querySelector('[data-context-action="select"] span');
   var download = menu.querySelector('[data-context-action="download"]');
-  if (select) select.textContent = state.selectedIds.has(item.id) ? '取消选择' : '加入选择';
+  if (select) select.textContent = state.selectedIds.has(item.id) ? 'Deselect' : 'Add to Selection';
   if (download) {
     var offline = isRemoteAccessUnavailable();
     download.classList.toggle('requires-remote', offline);
     download.disabled = offline;
-    download.title = offline ? '下载原文件需要连接远程 Vault' : '';
+    download.title = offline ? 'Downloading originals requires the remote Vault' : '';
     var label = download.querySelector('span');
-    if (label) label.textContent = offline ? '需联网' : '下载原文件';
+    if (label) label.textContent = offline ? 'Offline' : 'Download Original';
   }
 }
 
@@ -75,21 +75,21 @@ function openDesktopContextMenu(item, x, y, sourceEl) {
   menu.className = 'item-context-menu';
   menu.dataset.itemId = item.id || '';
   menu.setAttribute('role', 'menu');
-  menu.setAttribute('aria-label', '素材快捷菜单');
+  menu.setAttribute('aria-label', 'Asset menu');
   menu.innerHTML =
     '<div class="item-context-head">' +
-      '<strong>' + escapeHtml(item.name || '未命名素材') + '</strong>' +
-      '<span>' + escapeHtml(meta.join(' · ') || '素材') + '</span>' +
+      '<strong>' + escapeHtml(item.name || 'Untitled asset') + '</strong>' +
+      '<span>' + escapeHtml(meta.join(' · ') || 'Asset') + '</span>' +
     '</div>' +
-    '<button type="button" role="menuitem" data-context-action="preview">' + iconEye() + '<span>预览</span><kbd>Enter</kbd></button>' +
-    '<button type="button" role="menuitem" data-context-action="inspect">' + iconInfo() + '<span>查看详情</span></button>' +
-    (primaryFolder ? '<button type="button" role="menuitem" data-context-action="folder">' + iconFolder() + '<span>打开文件夹</span></button>' : '') +
-    '<button type="button" role="menuitem" data-context-action="select">' + iconCollection() + '<span>加入选择</span></button>' +
+    '<button type="button" role="menuitem" data-context-action="preview">' + iconEye() + '<span>Preview</span><kbd>Enter</kbd></button>' +
+    '<button type="button" role="menuitem" data-context-action="inspect">' + iconInfo() + '<span>View Details</span></button>' +
+    (primaryFolder ? '<button type="button" role="menuitem" data-context-action="folder">' + iconFolder() + '<span>Open Folder</span></button>' : '') +
+    '<button type="button" role="menuitem" data-context-action="select">' + iconCollection() + '<span>Add to Selection</span></button>' +
     '<div class="item-context-separator"></div>' +
-    '<button type="button" role="menuitem" data-context-action="share">' + iconExternalLink() + '<span>复制素材链接</span></button>' +
-    (canCopyImage(item.ext) ? '<button type="button" role="menuitem" data-context-action="copy">' + iconCopy() + '<span>复制图片</span></button>' : '') +
+    '<button type="button" role="menuitem" data-context-action="share">' + iconExternalLink() + '<span>Copy Asset Link</span></button>' +
+    (canCopyImage(item.ext) ? '<button type="button" role="menuitem" data-context-action="copy">' + iconCopy() + '<span>Copy Image</span></button>' : '') +
     '<div class="item-context-separator"></div>' +
-    '<button type="button" role="menuitem" data-context-action="download">' + iconDownload() + '<span>下载原文件</span></button>';
+    '<button type="button" role="menuitem" data-context-action="download">' + iconDownload() + '<span>Download Original</span></button>';
   document.body.appendChild(menu);
   if (sourceEl) sourceEl.classList.add('context-active');
   updateDesktopContextMenuState(menu, item);
@@ -125,32 +125,32 @@ function openQuickActionSheet(item) {
   sheet.dataset.itemId = item.id || '';
   sheet.innerHTML =
     '<div class="quick-action-backdrop" data-quick-action="close"></div>' +
-    '<div class="quick-action-sheet" role="dialog" aria-modal="true" aria-label="素材快捷操作">' +
+    '<div class="quick-action-sheet" role="dialog" aria-modal="true" aria-label="Asset actions">' +
       '<div class="quick-action-grabber"></div>' +
       '<div class="quick-action-head">' +
-        '<strong>' + escapeHtml(item.name || '未命名素材') + '</strong>' +
-        '<span>' + escapeHtml(meta.join(' · ') || '素材') + '</span>' +
+        '<strong>' + escapeHtml(item.name || 'Untitled asset') + '</strong>' +
+        '<span>' + escapeHtml(meta.join(' · ') || 'Asset') + '</span>' +
       '</div>' +
       '<div class="quick-action-sections">' +
         '<section class="quick-action-section primary">' +
-          '<div class="quick-action-section-title"><span>打开</span><em>预览或查看素材信息</em></div>' +
+          '<div class="quick-action-section-title"><span>Open</span><em>Preview or view asset info</em></div>' +
           '<div class="quick-action-grid quick-action-grid-primary">' +
-            '<button type="button" class="primary-action" data-quick-action="preview">' + iconEye() + '<span>预览</span></button>' +
-            '<button type="button" data-quick-action="inspect">' + iconInfo() + '<span>详情</span></button>' +
-            (primaryFolder ? '<button type="button" data-quick-action="folder">' + iconFolder() + '<span>文件夹</span></button>' : '') +
+            '<button type="button" class="primary-action" data-quick-action="preview">' + iconEye() + '<span>Preview</span></button>' +
+            '<button type="button" data-quick-action="inspect">' + iconInfo() + '<span>Details</span></button>' +
+            (primaryFolder ? '<button type="button" data-quick-action="folder">' + iconFolder() + '<span>Folder</span></button>' : '') +
           '</div>' +
         '</section>' +
         '<section class="quick-action-section organize">' +
-          '<div class="quick-action-section-title"><span>操作</span><em>选择当前素材</em></div>' +
+          '<div class="quick-action-section-title"><span>Actions</span><em>Select this asset</em></div>' +
           '<div class="quick-action-grid">' +
-            '<button type="button" data-quick-action="select">' + iconCollection() + '<span>选择</span></button>' +
+            '<button type="button" data-quick-action="select">' + iconCollection() + '<span>Select</span></button>' +
           '</div>' +
         '</section>' +
         '<section class="quick-action-section output">' +
-          '<div class="quick-action-section-title"><span>输出</span><em>复制链接或下载原文件</em></div>' +
+          '<div class="quick-action-section-title"><span>Export</span><em>Copy link or download original</em></div>' +
           '<div class="quick-action-grid">' +
-            '<button type="button" data-quick-action="share">' + iconExternalLink() + '<span>链接</span></button>' +
-            '<button type="button" data-quick-action="download">' + iconDownload() + '<span>下载</span></button>' +
+            '<button type="button" data-quick-action="share">' + iconExternalLink() + '<span>Link</span></button>' +
+            '<button type="button" data-quick-action="download">' + iconDownload() + '<span>Download</span></button>' +
           '</div>' +
         '</section>' +
       '</div>' +

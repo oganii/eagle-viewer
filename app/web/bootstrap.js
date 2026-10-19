@@ -63,12 +63,12 @@ async function init() {
     await restorePendingInspector();
     if (interactions.runPendingLaunchAction) await interactions.runPendingLaunchAction();
     if (standaloneRouteRestore && standaloneRouteRestore.restored && window.showToast) {
-      window.showToast('已回到上次浏览位置', 'success');
+      window.showToast('Restored your last position', 'success');
     } else if (standaloneRouteRestore && standaloneRouteRestore.reason === 'stale' && window.showToast) {
-      window.showToast('上次位置已过期，已打开资料库');
+      window.showToast('Last position expired; opened the library');
     }
   } catch (e) {
-    document.getElementById('contentBody').innerHTML = '<div class="empty-state">' + iconFolderOutline() + '<span>无法加载资源库，请确认已挂载 Eagle 库路径。</span></div>';
+    document.getElementById('contentBody').innerHTML = '<div class="empty-state">' + iconFolderOutline() + '<span>Could not load the library. Make sure the Eagle library path is mounted.</span></div>';
   }
 }
 
@@ -88,7 +88,7 @@ function renderVersionBadge() {
   if (!badge || !EagleViewer.config || !EagleViewer.config.version) return;
   badge.textContent = 'v' + EagleViewer.config.version;
   if (EagleViewer.config.versionDate) {
-    badge.title = '版本 ' + EagleViewer.config.version + ' · ' + EagleViewer.config.versionDate;
+    badge.title = 'Version ' + EagleViewer.config.version + ' · ' + EagleViewer.config.versionDate;
   }
 }
 
@@ -129,7 +129,7 @@ function showPwaUpdatePrompt(registration) {
   if (later) later.onclick = hidePwaUpdatePrompt;
   if (apply) apply.onclick = function() {
     apply.disabled = true;
-    apply.textContent = '正在更新…';
+    apply.textContent = 'Updating…';
     pwaReloadRequested = true;
     var waiting = pwaUpdateRegistration && pwaUpdateRegistration.waiting;
     if (waiting) waiting.postMessage({ type: 'SKIP_WAITING' });

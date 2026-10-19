@@ -2,9 +2,9 @@
 
 // ===== Card rendering (masonry) =====
 function renderCardQuickActions(item) {
-  return '<div class="card-quick-actions" aria-label="卡片快捷操作">' +
-    '<button type="button" class="card-quick-action" data-card-action="preview" data-id="' + escapeHtml(item.id) + '" title="' + (isItemPreviewable(item) ? '预览' : '打开') + '" aria-label="' + (isItemPreviewable(item) ? '预览' : '打开') + '">' + iconEye() + '</button>' +
-    '<button type="button" class="card-quick-action" data-card-action="inspect" data-id="' + escapeHtml(item.id) + '" title="详情" aria-label="详情">' + iconInfo() + '</button>' +
+  return '<div class="card-quick-actions" aria-label="Card actions">' +
+    '<button type="button" class="card-quick-action" data-card-action="preview" data-id="' + escapeHtml(item.id) + '" title="' + (isItemPreviewable(item) ? 'Preview' : 'Open') + '" aria-label="' + (isItemPreviewable(item) ? 'Preview' : 'Open') + '">' + iconEye() + '</button>' +
+    '<button type="button" class="card-quick-action" data-card-action="inspect" data-id="' + escapeHtml(item.id) + '" title="Details" aria-label="Details">' + iconInfo() + '</button>' +
   '</div>';
 }
 
@@ -20,7 +20,7 @@ function renderItemCard(item, container) {
   cb.type = 'checkbox';
   cb.className = 'card-checkbox item-cb';
   cb.dataset.id = item.id;
-  cb.setAttribute('aria-label', '选择 ' + (item.name || '素材'));
+  cb.setAttribute('aria-label', 'Select ' + (item.name || 'asset'));
   cb.checked = state.selectedIds.has(item.id);
   cb.onclick = function(e) { e.stopPropagation(); toggleSelect(item.id); };
   card.appendChild(cb);
@@ -82,12 +82,12 @@ function renderItemCard(item, container) {
     if (item.duration) meta.push(formatMediaDuration(item.duration));
     if (item.width && item.height) meta.push(item.width + ' × ' + item.height);
     else if (item.size) meta.push(formatSize(item.size));
-    details.innerHTML = '<div class="card-details-name">' + escapeHtml(item.name || '未命名') + '</div>' +
-      '<div class="card-details-meta">' + escapeHtml(meta.join(' · ') || '素材') + '</div>' +
+    details.innerHTML = '<div class="card-details-name">' + escapeHtml(item.name || 'Untitled') + '</div>' +
+      '<div class="card-details-meta">' + escapeHtml(meta.join(' · ') || 'Asset') + '</div>' +
       '<div class="card-details-pills">' +
-        (folderLink && folderLink.id ? '<button type="button" class="card-details-folder" data-item-folder="' + escapeHtml(folderLink.id) + '" data-item-focus-id="' + escapeHtml(item.id) + '" title="打开文件夹：' + escapeHtml(folderLink.path || folderLink.label) + '">' + iconFolder() + escapeHtml(folderLink.label) + '</button>' : '') +
-        (item.ext ? '<button type="button" class="card-details-ext" data-item-ext="' + escapeHtml(item.ext) + '" title="筛选格式：' + escapeHtml(item.ext) + '">' + escapeHtml(String(item.ext).toUpperCase()) + '</button>' : '') +
-        ((item.tags && item.tags.length) ? '<button type="button" class="card-details-tag" data-item-tag="' + escapeHtml(item.tags[0]) + '" title="打开标签：' + escapeHtml(item.tags[0]) + '"># ' + escapeHtml(item.tags[0]) + '</button>' : '') +
+        (folderLink && folderLink.id ? '<button type="button" class="card-details-folder" data-item-folder="' + escapeHtml(folderLink.id) + '" data-item-focus-id="' + escapeHtml(item.id) + '" title="Open folder: ' + escapeHtml(folderLink.path || folderLink.label) + '">' + iconFolder() + escapeHtml(folderLink.label) + '</button>' : '') +
+        (item.ext ? '<button type="button" class="card-details-ext" data-item-ext="' + escapeHtml(item.ext) + '" title="Filter by format: ' + escapeHtml(item.ext) + '">' + escapeHtml(String(item.ext).toUpperCase()) + '</button>' : '') +
+        ((item.tags && item.tags.length) ? '<button type="button" class="card-details-tag" data-item-tag="' + escapeHtml(item.tags[0]) + '" title="Open tag: ' + escapeHtml(item.tags[0]) + '"># ' + escapeHtml(item.tags[0]) + '</button>' : '') +
         (sourceDomain ? '<span class="card-details-source">' + iconExternalLink() + escapeHtml(sourceDomain) + '</span>' : '') +
       '</div>';
     card.appendChild(details);
@@ -130,7 +130,7 @@ function renderFolderCard(sub, container) {
   var card = document.createElement('div');
   card.className = 'folder-card' + (sub.locked ? ' locked' : '');
   card.dataset.aspectRatio = '1.4';
-  card.innerHTML = '<span class="folder-card-icon">' + (sub.locked ? iconLock() : iconFolderLarge()) + '</span><span class="folder-card-copy"><span class="folder-card-name">' + escapeHtml(sub.name) + '</span>' + (sub.locked ? '<small>Eagle 密码保护</small>' : '') + '</span>';
+  card.innerHTML = '<span class="folder-card-icon">' + (sub.locked ? iconLock() : iconFolderLarge()) + '</span><span class="folder-card-copy"><span class="folder-card-name">' + escapeHtml(sub.name) + '</span>' + (sub.locked ? '<small>Eagle password-protected</small>' : '') + '</span>';
   card.onclick = function() {
     if (sub.locked) {
       showLockedFolderNotice(sub);
@@ -159,7 +159,7 @@ function renderListRow(item, tbody) {
   cb.type = 'checkbox';
   cb.className = 'item-cb';
   cb.dataset.id = item.id;
-  cb.setAttribute('aria-label', '选择 ' + (item.name || '素材'));
+  cb.setAttribute('aria-label', 'Select ' + (item.name || 'asset'));
   cb.checked = state.selectedIds.has(item.id);
   cb.onclick = function(e) { e.stopPropagation(); toggleSelect(item.id); };
   checkCell.appendChild(cb);
@@ -196,9 +196,9 @@ function renderListRow(item, tbody) {
     '</div>' +
     (mobileMeta.length ? '<div class="list-mobile-meta">' + mobileMeta.map(function(part) { return '<span>' + escapeHtml(part) + '</span>'; }).join('') + '</div>' : '') +
     '<div class="list-mobile-actions">' +
-      '<button type="button" data-list-mobile-action="preview" data-id="' + escapeHtml(item.id) + '">' + (isItemPreviewable(item) ? '预览' : '打开') + '</button>' +
-      '<button type="button" data-list-mobile-action="inspect" data-id="' + escapeHtml(item.id) + '">详情</button>' +
-      '<button type="button" data-list-mobile-action="select" data-id="' + escapeHtml(item.id) + '" aria-pressed="' + (state.selectedIds.has(item.id) ? 'true' : 'false') + '" class="' + (state.selectedIds.has(item.id) ? 'is-selected' : '') + '">' + (state.selectedIds.has(item.id) ? '取消选择' : '选择') + '</button>' +
+      '<button type="button" data-list-mobile-action="preview" data-id="' + escapeHtml(item.id) + '">' + (isItemPreviewable(item) ? 'Preview' : 'Open') + '</button>' +
+      '<button type="button" data-list-mobile-action="inspect" data-id="' + escapeHtml(item.id) + '">Details</button>' +
+      '<button type="button" data-list-mobile-action="select" data-id="' + escapeHtml(item.id) + '" aria-pressed="' + (state.selectedIds.has(item.id) ? 'true' : 'false') + '" class="' + (state.selectedIds.has(item.id) ? 'is-selected' : '') + '">' + (state.selectedIds.has(item.id) ? 'Deselect' : 'Select') + '</button>' +
     '</div>' +
     (sourceDomain ? '<span class="list-source-domain">' + iconExternalLink() + '<span>' + escapeHtml(sourceDomain) + '</span></span>' : '');
   nameCell.style.cursor = 'pointer';
@@ -221,7 +221,7 @@ function renderListRow(item, tbody) {
   if (folderLinks.length) {
     pathCell.innerHTML = folderLinks.map(function(link) {
       if (!link.id) return '<span class="list-folder-chip muted">' + iconFolder() + '<span>' + escapeHtml(link.label) + '</span></span>';
-      return '<button type="button" class="list-folder-chip" data-item-folder="' + escapeHtml(link.id) + '" data-item-focus-id="' + escapeHtml(item.id) + '" title="打开文件夹：' + escapeHtml(link.path || link.label) + '">' + iconFolder() + '<span>' + escapeHtml(link.label) + '</span></button>';
+      return '<button type="button" class="list-folder-chip" data-item-folder="' + escapeHtml(link.id) + '" data-item-focus-id="' + escapeHtml(item.id) + '" title="Open folder: ' + escapeHtml(link.path || link.label) + '">' + iconFolder() + '<span>' + escapeHtml(link.label) + '</span></button>';
     }).join('') + ((Math.max((item.folders || []).length, pathList.length) > folderLinks.length) ? '<span class="list-folder-more">+' + (Math.max((item.folders || []).length, pathList.length) - folderLinks.length) + '</span>' : '');
   } else {
     pathCell.textContent = '—';
@@ -230,7 +230,7 @@ function renderListRow(item, tbody) {
 
   var extCell = document.createElement('td');
   extCell.className = 'col-ext';
-  extCell.innerHTML = item.ext ? '<button type="button" class="list-ext-chip" data-item-ext="' + escapeHtml(item.ext) + '" title="筛选格式：.' + escapeHtml(item.ext) + '">.' + escapeHtml(item.ext) + '</button>' : '—';
+  extCell.innerHTML = item.ext ? '<button type="button" class="list-ext-chip" data-item-ext="' + escapeHtml(item.ext) + '" title="Filter by format: .' + escapeHtml(item.ext) + '">.' + escapeHtml(item.ext) + '</button>' : '—';
   tr.appendChild(extCell);
 
   var dimsCell = document.createElement('td');
@@ -256,7 +256,7 @@ function renderListRow(item, tbody) {
   var tagsCell = document.createElement('td');
   tagsCell.className = 'col-tags';
   tagsCell.innerHTML = (item.tags && item.tags.length) ? item.tags.slice(0, 5).map(function(tag) {
-    return '<button type="button" class="list-tag-chip" data-item-tag="' + escapeHtml(tag) + '" title="打开标签：' + escapeHtml(tag) + '">#' + escapeHtml(tag) + '</button>';
+    return '<button type="button" class="list-tag-chip" data-item-tag="' + escapeHtml(tag) + '" title="Open tag: ' + escapeHtml(tag) + '">#' + escapeHtml(tag) + '</button>';
   }).join('') : '';
   tr.appendChild(tagsCell);
 
@@ -264,10 +264,10 @@ function renderListRow(item, tbody) {
   actionsCell.className = 'col-actions';
   var downloadDisabled = isRemoteAccessUnavailableForRender();
   var actHtml = '';
-  if (isPreviewable(item.ext)) actHtml += '<a href="' + fileUrl + '" target="_blank" rel="noopener">预览</a>';
-  else if (isItemPreviewable(item)) actHtml += '<button type="button" data-list-mobile-action="preview" data-id="' + escapeHtml(item.id) + '">缓存预览</button>';
-  actHtml += '<button type="button" class="btn-download-original list-download-action' + (downloadDisabled ? ' requires-remote' : '') + '" data-id="' + escapeHtml(item.id) + '"' + (downloadDisabled ? ' disabled title="下载原文件需要连接远程 Vault"' : '') + '>' + (downloadDisabled ? '需联网' : '下载') + '</button>';
-  if (canCopyImage(item.ext)) actHtml += '<button type="button" class="btn-copy" data-id="' + escapeHtml(item.id) + '">复制</button>';
+  if (isPreviewable(item.ext)) actHtml += '<a href="' + fileUrl + '" target="_blank" rel="noopener">Preview</a>';
+  else if (isItemPreviewable(item)) actHtml += '<button type="button" data-list-mobile-action="preview" data-id="' + escapeHtml(item.id) + '">Cached Preview</button>';
+  actHtml += '<button type="button" class="btn-download-original list-download-action' + (downloadDisabled ? ' requires-remote' : '') + '" data-id="' + escapeHtml(item.id) + '"' + (downloadDisabled ? ' disabled title="Downloading originals requires the remote Vault"' : '') + '>' + (downloadDisabled ? 'Offline' : 'Download') + '</button>';
+  if (canCopyImage(item.ext)) actHtml += '<button type="button" class="btn-copy" data-id="' + escapeHtml(item.id) + '">Copy</button>';
   actionsCell.innerHTML = actHtml;
   tr.appendChild(actionsCell);
 
@@ -297,7 +297,7 @@ function renderFolderListRow(sub, tbody) {
 
   var nameTd = document.createElement('td');
   nameTd.className = 'col-name';
-  nameTd.innerHTML = '<span>' + escapeHtml(sub.name) + '</span>' + (sub.locked ? '<small class="folder-row-locked">Eagle 密码保护</small>' : '');
+  nameTd.innerHTML = '<span>' + escapeHtml(sub.name) + '</span>' + (sub.locked ? '<small class="folder-row-locked">Eagle password-protected</small>' : '');
   tr.appendChild(nameTd);
 
   var pathTd = document.createElement('td');
@@ -324,7 +324,7 @@ function renderFolderListRow(sub, tbody) {
 
   var actTd = document.createElement('td');
   actTd.className = 'col-actions';
-  actTd.textContent = sub.locked ? '已锁定' : '进入';
+  actTd.textContent = sub.locked ? 'Locked' : 'Open';
   tr.appendChild(actTd);
 
   tr.onclick = function() {
@@ -355,13 +355,13 @@ function showLockedFolderNotice(folder) {
   overlay.className = 'locked-folder-overlay';
   overlay.setAttribute('role', 'dialog');
   overlay.setAttribute('aria-modal', 'true');
-  overlay.setAttribute('aria-label', 'Eagle 保护文件夹');
+  overlay.setAttribute('aria-label', 'Eagle protected folder');
   overlay.innerHTML = '<section class="locked-folder-card">' +
     '<div class="locked-folder-mark"><span>' + iconLock() + '</span><small>REMOTE PRIVACY BOUNDARY</small></div>' +
-    '<div class="locked-folder-copy"><span>EAGLE PROTECTED</span><h2>' + escapeHtml((folder && folder.name) || '受保护文件夹') + '</h2><p>这个文件夹由 Eagle 密码保护。远程 Viewer 不会索引、搜索、预览或传输其中任何素材。</p></div>' +
-    '<div class="locked-folder-rules"><div><strong>0</strong><span>远程可见素材</span></div><div><strong>423</strong><span>API 锁定响应</span></div><div><strong>只读</strong><span>Vault 保持原样</span></div></div>' +
-    '<div class="locked-folder-note"><i></i><span>如需访问，请先在本机 Eagle 中解除文件夹密码，再回到 Viewer 重新载入 Vault。</span></div>' +
-    '<button type="button" data-close-locked-folder>知道了</button>' +
+    '<div class="locked-folder-copy"><span>EAGLE PROTECTED</span><h2>' + escapeHtml((folder && folder.name) || 'Protected folder') + '</h2><p>This folder is password-protected in Eagle. The remote viewer will not index, search, preview, or transfer any of its assets.</p></div>' +
+    '<div class="locked-folder-rules"><div><strong>0</strong><span>Visible remotely</span></div><div><strong>423</strong><span>API locked response</span></div><div><strong>Read-only</strong><span>Vault unchanged</span></div></div>' +
+    '<div class="locked-folder-note"><i></i><span>To access it, remove the folder password in Eagle on this machine, then reload the Vault in the viewer.</span></div>' +
+    '<button type="button" data-close-locked-folder>Got It</button>' +
   '</section>';
   overlay.onclick = function(e) { if (e.target === overlay || e.target.closest('[data-close-locked-folder]')) closeLockedFolderNotice(); };
   overlay.onkeydown = function(e) { if (e.key === 'Escape') closeLockedFolderNotice(); };
@@ -375,14 +375,14 @@ function showLockedFolderNotice(folder) {
 
 function renderItemsList(subfolders, items, container, emptyMsg) {
   if (!subfolders.length && !items.length) {
-    container.innerHTML = '<div class="empty-state">' + iconFolderOutline() + '<span>' + (emptyMsg || '暂无素材') + '</span></div>';
+    container.innerHTML = '<div class="empty-state">' + iconFolderOutline() + '<span>' + (emptyMsg || 'No assets') + '</span></div>';
     return;
   }
   var itemIds = items.map(function(it) { return it.id; });
   var allChecked = itemIds.length > 0 && itemIds.every(function(id) { return state.selectedIds.has(id); });
   container.innerHTML = '<div class="list-wrap"><table class="list-table"><thead><tr>' +
     '<th class="col-check"><input type="checkbox" id="listSelectAll" ' + (allChecked ? 'checked' : '') + '></th>' +
-    '<th class="col-thumb"></th><th>名称</th><th>路径</th><th>格式</th><th>尺寸</th><th>大小</th><th>创建时间</th><th>修改时间</th><th>标签</th><th>操作</th>' +
+    '<th class="col-thumb"></th><th>Name</th><th>Path</th><th>Format</th><th>Dimensions</th><th>Size</th><th>Created</th><th>Modified</th><th>Tags</th><th>Actions</th>' +
     '</tr></thead><tbody></tbody></table></div>';
   var tbody = container.querySelector('tbody');
   subfolders.forEach(function(sub) { renderFolderListRow(sub, tbody); });
@@ -406,7 +406,7 @@ function renderLoadMoreStatus(container) {
   if (existing) existing.remove();
   var status = document.createElement('div');
   status.className = 'load-more-status';
-  status.textContent = state.incrementalLoading ? '正在加载更多…' : (state.incrementalHasMore ? '继续向下滚动以加载更多' : '已加载全部内容');
+  status.textContent = state.incrementalLoading ? 'Loading more…' : (state.incrementalHasMore ? 'Scroll down to load more' : 'All items loaded');
   container.appendChild(status);
 }
 
@@ -436,20 +436,20 @@ function renderViewSummary() {
   });
   var parts = [];
   if (state.incrementalHasMore && ['all', 'recent', 'folder', 'tag', 'search'].indexOf(state.currentView) >= 0) {
-    parts.push(['已载入', items.length + ' / ' + (state.currentTotal || items.length)]);
+    parts.push(['Loaded', items.length + ' / ' + (state.currentTotal || items.length)]);
   }
-  parts.push(['大小', totalSize ? formatSize(totalSize) : '0 B']);
+  parts.push(['Size', totalSize ? formatSize(totalSize) : '0 B']);
   [
-    ['图片', counts.image],
-    ['视频', counts.video],
-    ['文档', counts.document],
-    ['音频', counts.audio],
-    ['其他', counts.other]
+    ['Images', counts.image],
+    ['Videos', counts.video],
+    ['Documents', counts.document],
+    ['Audio', counts.audio],
+    ['Other', counts.other]
   ].forEach(function(row) {
     if (row[1]) parts.push(row);
   });
-  if (tagged) parts.push(['有标签', tagged]);
-  if (sourced) parts.push(['有来源', sourced]);
+  if (tagged) parts.push(['Tagged', tagged]);
+  if (sourced) parts.push(['With source', sourced]);
   var html = parts.map(function(part) {
     return '<span class="view-summary-pill"><strong>' + escapeHtml(part[0]) + '</strong>' + escapeHtml(String(part[1])) + '</span>';
   }).join('');
@@ -501,16 +501,16 @@ function getMobileWorkbarRemoteState() {
   if (navigator.onLine === false || (strip && !strip.hidden && strip.dataset.state === 'offline')) {
     return {
       state: 'offline',
-      label: snapshot && snapshot.savedAt ? '离线快照' : '远程离线'
+      label: snapshot && snapshot.savedAt ? 'Offline snapshot' : 'Remote offline'
     };
   }
   if (strip && !strip.hidden && strip.dataset.state === 'checking') {
-    return { state: 'checking', label: '检查中' };
+    return { state: 'checking', label: 'Checking' };
   }
   if (snapshot && snapshot.savedAt && window.innerWidth <= 768) {
-    return { state: 'ready', label: '快照可用' };
+    return { state: 'ready', label: 'Snapshot ready' };
   }
-  return { state: 'online', label: 'Vault 在线' };
+  return { state: 'online', label: 'Vault online' };
 }
 
 function getMobileSnapshotLabel() {
@@ -518,12 +518,12 @@ function getMobileSnapshotLabel() {
   try {
     snapshot = JSON.parse(localStorage.getItem('eagle-viewer-offline-snapshot-meta') || 'null');
   } catch (e) {}
-  if (!snapshot || !snapshot.savedAt) return '未保存';
+  if (!snapshot || !snapshot.savedAt) return 'Not saved';
   var diff = Date.now() - Number(snapshot.savedAt || 0);
-  if (!isFinite(diff) || diff < 0) return (snapshot.ok || 0) + ' 项 · 刚刚';
+  if (!isFinite(diff) || diff < 0) return (snapshot.ok || 0) + ' items · just now';
   var minutes = Math.floor(diff / 60000);
-  var age = minutes < 1 ? '刚刚' : (minutes < 60 ? minutes + '分钟前' : (minutes < 1440 ? Math.floor(minutes / 60) + '小时前' : Math.floor(minutes / 1440) + '天前'));
-  return (snapshot.ok || 0) + ' 项 · ' + age;
+  var age = minutes < 1 ? 'just now' : (minutes < 60 ? minutes + 'm ago' : (minutes < 1440 ? Math.floor(minutes / 60) + 'h ago' : Math.floor(minutes / 1440) + 'd ago'));
+  return (snapshot.ok || 0) + ' items · ' + age;
 }
 
 function updateMobileWorkbar() {
@@ -532,19 +532,19 @@ function updateMobileWorkbar() {
   var remote = getMobileWorkbarRemoteState();
   var filterSpecs = typeof getFilterChipSpecs === 'function' ? getFilterChipSpecs(state.advancedFilters || {}) : [];
   var filterHtml = filterSpecs.length
-    ? '<div class="mobile-workbar-filters" aria-label="当前筛选">' +
+    ? '<div class="mobile-workbar-filters" aria-label="Active filters">' +
         filterSpecs.map(function(spec) {
           return '<button type="button" data-clear-filter="' + escapeHtml(spec.key) + '">' +
             '<span>' + escapeHtml(spec.label) + '</span><strong>' + escapeHtml(String(spec.value)) + '</strong>' + iconClose() +
           '</button>';
         }).join('') +
-        '<button type="button" class="mobile-workbar-clear" data-clear-all-filters>清空</button>' +
+        '<button type="button" class="mobile-workbar-clear" data-clear-all-filters>Clear</button>' +
       '</div>'
     : '';
   el.hidden = false;
   el.dataset.state = remote.state;
   var backHtml = canNavigateBackInApp()
-    ? '<button type="button" class="mobile-workbar-back" data-mobile-workbar-action="back" aria-label="返回上个视图">' + iconChevronLeft() + '</button>'
+    ? '<button type="button" class="mobile-workbar-back" data-mobile-workbar-action="back" aria-label="Back to previous view">' + iconChevronLeft() + '</button>'
     : '';
   el.innerHTML =
     backHtml +
@@ -557,8 +557,8 @@ function updateMobileWorkbar() {
       '<span></span>' + escapeHtml(remote.label) +
     '</div>' +
     '<div class="mobile-workbar-actions">' +
-      '<button type="button" data-mobile-workbar-action="search" aria-label="打开搜索">' + iconSearch() + '</button>' +
-      '<button type="button" data-mobile-workbar-action="more" aria-label="打开更多">' + iconSliders() + '</button>' +
+      '<button type="button" data-mobile-workbar-action="search" aria-label="Open search">' + iconSearch() + '</button>' +
+      '<button type="button" data-mobile-workbar-action="more" aria-label="Open more">' + iconSliders() + '</button>' +
     '</div>' +
     filterHtml;
 }
@@ -581,7 +581,7 @@ function updateContentTitle() {
   var titleEl = document.getElementById('contentTitle');
   if (!titleEl) return;
   renderContentCrumbs();
-  titleEl.textContent = state.currentTotal >= 0 ? state.currentTotal + ' 项' : '';
+  titleEl.textContent = state.currentTotal >= 0 ? state.currentTotal + ' items' : '';
   renderViewSummary();
   updateMobileWorkbar();
   updateSidebarCounts();
@@ -613,14 +613,14 @@ function getOfflineSnapshotBannerHtml() {
   } catch (e) {}
   if (!offline && !checking && !(snapshotMeta && snapshotMeta.savedAt && window.innerWidth <= 768)) return '';
   var stateName = offline ? 'offline' : (checking ? 'checking' : 'ready');
-  var title = offline ? '正在浏览离线 / 缓存结果' : (checking ? '正在检查远程 Vault…' : '离线快照可用');
+  var title = offline ? 'Browsing offline / cached results' : (checking ? 'Checking remote Vault…' : 'Offline snapshot available');
   var message = snapshotMeta && snapshotMeta.savedAt
-    ? ('最近快照 ' + new Date(snapshotMeta.savedAt).toLocaleString('zh-CN') + ' · ' + (snapshotMeta.ok || 0) + ' 项；重连后刷新实时 Vault。')
-    : '当前结果可能不是实时远程 Vault；重连后刷新最新索引。';
+    ? ('Latest snapshot ' + new Date(snapshotMeta.savedAt).toLocaleString('zh-CN') + ' · ' + (snapshotMeta.ok || 0) + ' items; reconnect to refresh the live Vault.')
+    : 'These results may not reflect the live remote Vault; reconnect to refresh the index.';
   return '<div class="offline-snapshot-banner" data-state="' + stateName + '">' +
     '<span class="offline-snapshot-dot"></span>' +
     '<div><strong>' + escapeHtml(title) + '</strong><small>' + escapeHtml(message) + '</small></div>' +
-    '<button type="button" id="offlineBannerRetryBtn">重连</button>' +
+    '<button type="button" id="offlineBannerRetryBtn">Reconnect</button>' +
   '</div>';
 }
 
@@ -628,7 +628,7 @@ function bindOfflineSnapshotBanner() {
   var retry = document.getElementById('offlineBannerRetryBtn');
   if (retry) retry.onclick = function() {
     if (EagleViewer.modules.interactions && EagleViewer.modules.interactions.checkRemoteStatus) {
-      EagleViewer.modules.interactions.checkRemoteStatus({ reload: false, quietStrip: false, message: '正在检查远程 Vault…' });
+      EagleViewer.modules.interactions.checkRemoteStatus({ reload: false, quietStrip: false, message: 'Checking remote Vault…' });
     }
   };
 }

@@ -76,7 +76,7 @@ function bindEvents() {
     if (state.currentView === 'folder' && state.currentFolderId && state.incrementalHasMore) {
       api.loadFolderItems(state.currentFolderId, false);
     } else if (window.showToast) {
-      window.showToast('当前素材不在这个视图里', 'error');
+      window.showToast('This asset is not in the current view', 'error');
     }
   };
   if (mobileLibraryBtn) mobileLibraryBtn.onclick = function() {

@@ -28,12 +28,12 @@ function createPreviewOverlay() {
   overlay.className = 'preview-overlay';
   overlay.setAttribute('role', 'dialog');
   overlay.setAttribute('aria-modal', 'true');
-  overlay.setAttribute('aria-label', '素材全屏预览');
+  overlay.setAttribute('aria-label', 'Full-screen asset preview');
   overlay._cleanup = [];
   overlay.onclick = function(e) { if (e.target === overlay) closePreviewOverlay(overlay); };
   var close = document.createElement('button');
   close.className = 'preview-close';
-  close.setAttribute('aria-label', '关闭全屏预览');
+  close.setAttribute('aria-label', 'Close full-screen preview');
   close.innerHTML = iconClose();
   close.onclick = function() { closePreviewOverlay(overlay); };
   overlay.appendChild(close);
@@ -76,10 +76,10 @@ function getCompareImageItems(items) {
 function openCompare(items) {
   var eligible = getCompareImageItems(items);
   if (eligible.length < 2) {
-    if (window.showToast) window.showToast('请至少选择 2 张图片进行对比', 'error');
+    if (window.showToast) window.showToast('Select at least 2 images to compare', 'error');
     return;
   }
-  if (eligible.length > 4 && window.showToast) window.showToast('对比台已载入前 4 张图片');
+  if (eligible.length > 4 && window.showToast) window.showToast('Loaded the first 4 images for comparison');
   eligible = eligible.slice(0, 4);
   document.querySelectorAll('.compare-overlay').forEach(function(existing) { closeCompareOverlay(existing); });
   document.querySelectorAll('.preview-overlay').forEach(function(existing) { closePreviewOverlay(existing); });
@@ -88,30 +88,30 @@ function openCompare(items) {
   overlay.className = 'compare-overlay';
   overlay.setAttribute('role', 'dialog');
   overlay.setAttribute('aria-modal', 'true');
-  overlay.setAttribute('aria-label', '图片对比台');
+  overlay.setAttribute('aria-label', 'Image comparison');
   overlay._cleanup = [];
   overlay.innerHTML = '<header class="compare-head">' +
-    '<div class="compare-title"><span>' + iconCompare() + '</span><div><small>VISUAL COMPARE</small><strong>图片对比台</strong></div><b>' + eligible.length + ' UP</b></div>' +
-    '<div class="compare-tools" role="toolbar" aria-label="对比工具">' +
-      '<button type="button" data-compare-action="sync" class="active" aria-pressed="true">同步</button>' +
-      '<button type="button" data-compare-action="zoom-out" aria-label="缩小">−</button>' +
+    '<div class="compare-title"><span>' + iconCompare() + '</span><div><small>VISUAL COMPARE</small><strong>Image Compare</strong></div><b>' + eligible.length + ' UP</b></div>' +
+    '<div class="compare-tools" role="toolbar" aria-label="Compare tools">' +
+      '<button type="button" data-compare-action="sync" class="active" aria-pressed="true">Sync</button>' +
+      '<button type="button" data-compare-action="zoom-out" aria-label="Zoom out">−</button>' +
       '<output data-compare-zoom>100%</output>' +
-      '<button type="button" data-compare-action="zoom-in" aria-label="放大">＋</button>' +
-      '<button type="button" data-compare-action="fit">适应</button>' +
+      '<button type="button" data-compare-action="zoom-in" aria-label="Zoom in">＋</button>' +
+      '<button type="button" data-compare-action="fit">Fit</button>' +
       '<button type="button" data-compare-action="actual">1:1</button>' +
-      '<button type="button" data-compare-action="close" class="compare-close" aria-label="关闭对比">' + iconClose() + '</button>' +
+      '<button type="button" data-compare-action="close" class="compare-close" aria-label="Close compare">' + iconClose() + '</button>' +
     '</div>' +
   '</header>' +
   '<main class="compare-grid compare-count-' + eligible.length + '">' + eligible.map(function(item, index) {
     var fileUrl = API + '/api/items/' + encodeURIComponent(item.id) + '/file';
     var thumbUrl = API + '/api/items/' + encodeURIComponent(item.id) + '/thumbnail';
-    var dimensions = item.width && item.height ? item.width + ' × ' + item.height : '尺寸未知';
+    var dimensions = item.width && item.height ? item.width + ' × ' + item.height : 'Unknown size';
     return '<article class="compare-pane" data-compare-index="' + index + '">' +
-      '<div class="compare-canvas"><img src="' + fileUrl + '" data-fallback="' + thumbUrl + '" alt="' + escapeHtml(item.name || '对比图片') + '" draggable="false"></div>' +
-      '<footer><span>' + String(index + 1).padStart(2, '0') + '</span><div><strong>' + escapeHtml(item.name || '未命名素材') + '</strong><small>' + escapeHtml((item.ext || 'IMAGE').toUpperCase() + ' · ' + dimensions) + '</small></div><b data-compare-pane-zoom>100%</b></footer>' +
+      '<div class="compare-canvas"><img src="' + fileUrl + '" data-fallback="' + thumbUrl + '" alt="' + escapeHtml(item.name || 'Comparison image') + '" draggable="false"></div>' +
+      '<footer><span>' + String(index + 1).padStart(2, '0') + '</span><div><strong>' + escapeHtml(item.name || 'Untitled asset') + '</strong><small>' + escapeHtml((item.ext || 'IMAGE').toUpperCase() + ' · ' + dimensions) + '</small></div><b data-compare-pane-zoom>100%</b></footer>' +
     '</article>';
   }).join('') + '</main>' +
-  '<div class="compare-mobile-hint">横滑切换 · 双击复位</div>';
+  '<div class="compare-mobile-hint">Swipe to switch · Double-tap to reset</div>';
 
   document.body.appendChild(overlay);
   document.body.classList.add('compare-open');
@@ -253,7 +253,7 @@ function setPreviewQualityNotice(overlay, offline) {
   notice.dataset.state = offline ? 'offline' : 'fallback';
   notice.setAttribute('role', 'status');
   notice.innerHTML = offline
-    ? '<strong>离线预览</strong><small>当前为缓存缩略图 · 原文件需重连</small>'
-    : '<strong>缩略图预览</strong><small>原文件加载失败 · 当前显示低分辨率版本</small>';
+    ? '<strong>Offline Preview</strong><small>Showing cached thumbnail · reconnect for original</small>'
+    : '<strong>Thumbnail Preview</strong><small>Original failed to load · showing low-resolution version</small>';
   if (!notice.parentNode) overlay.appendChild(notice);
 }

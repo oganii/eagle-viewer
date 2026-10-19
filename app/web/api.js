@@ -78,7 +78,7 @@ function getPreferredViewMode() {
 function findFolderPathById(folderId, nodes, trail) {
   for (var i = 0; i < (nodes || []).length; i++) {
     var node = nodes[i];
-    var next = trail.concat(node.name || '文件夹');
+    var next = trail.concat(node.name || 'Folder');
     if (String(node.id) === String(folderId)) return next.join(' / ');
     var child = findFolderPathById(folderId, node.children || [], next);
     if (child) return child;
@@ -126,7 +126,7 @@ async function loadIncrementalView(options) {
   if (reset && activeListAbortController) activeListAbortController.abort();
   if (reset && typeof AbortController !== 'undefined') activeListAbortController = new AbortController();
   if (reset) {
-    document.getElementById('contentBody').innerHTML = '<div class="loading-spinner">加载中…</div>';
+    document.getElementById('contentBody').innerHTML = '<div class="loading-spinner">Loading…</div>';
     document.getElementById('contentToolbar').style.display = 'flex';
   }
   try {
@@ -155,8 +155,8 @@ async function loadIncrementalView(options) {
     if (requestId !== state.activeListRequest) return;
     state.incrementalLoading = false;
     if (reset) {
-      var title = error && error.message === 'offline' ? '远程 Vault 暂不可达' : '加载失败';
-      document.getElementById('contentBody').innerHTML = '<div class="empty-state offline-state">' + iconFolderOutline() + '<strong>' + title + '</strong><span>请检查网络连接、VPN 或远程挂载状态。</span></div>';
+      var title = error && error.message === 'offline' ? 'Remote Vault unreachable' : 'Failed to load';
+      document.getElementById('contentBody').innerHTML = '<div class="empty-state offline-state">' + iconFolderOutline() + '<strong>' + title + '</strong><span>Check your network connection, VPN, or remote mount.</span></div>';
     }
   } finally {
     if (reset && requestId === state.activeListRequest) activeListAbortController = null;
@@ -164,17 +164,17 @@ async function loadIncrementalView(options) {
 }
 
 function loadAllItems(reset) {
-  return loadIncrementalView({ view: 'all', apiPath: '/api/items', title: '全部文件', emptyMsg: '资源库中暂无素材', reset: reset });
+  return loadIncrementalView({ view: 'all', apiPath: '/api/items', title: 'All Items', emptyMsg: 'No assets in this library', reset: reset });
 }
 
 function loadRecentItems(days, reset) {
   days = Number(days) === 30 ? 30 : 7;
   setRecentActive(days);
-  return loadIncrementalView({ view: 'recent', apiPath: '/api/recent?days=' + days, title: '最近 ' + days + ' 天', emptyMsg: '最近暂无素材', reset: reset, days: days });
+  return loadIncrementalView({ view: 'recent', apiPath: '/api/recent?days=' + days, title: 'Last ' + days + ' days', emptyMsg: 'No recent assets', reset: reset, days: days });
 }
 
 function loadTagItems(tagName, reset) {
-  return loadIncrementalView({ view: 'tag', apiPath: '/api/tags/' + encodeURIComponent(tagName) + '/items', title: '标签「' + tagName + '」', emptyMsg: '该标签下暂无素材', reset: reset, tagName: tagName });
+  return loadIncrementalView({ view: 'tag', apiPath: '/api/tags/' + encodeURIComponent(tagName) + '/items', title: 'Tag “' + tagName + '”', emptyMsg: 'No assets with this tag', reset: reset, tagName: tagName });
 }
 
 function loadFolderItems(folderId, reset) {
@@ -187,8 +187,8 @@ function loadFolderItems(folderId, reset) {
   return loadIncrementalView({
     view: 'folder',
     apiPath: '/api/folders/' + encodeURIComponent(folderId) + '/items',
-    title: findFolderPathById(folderId, state.treeData, []) || '文件夹',
-    emptyMsg: '此文件夹暂无素材',
+    title: findFolderPathById(folderId, state.treeData, []) || 'Folder',
+    emptyMsg: 'This folder is empty',
     reset: reset,
     folderId: folderId,
     getSubfolders: function(data) { return data.subfolders || []; }
@@ -199,7 +199,7 @@ function doSearch(reset) {
   var input = document.getElementById('searchInput');
   var query = String((input && input.value) || state.searchQuery || '').trim();
   if (!query) return loadAllItems(true);
-  return loadIncrementalView({ view: 'search', apiPath: '/api/search?q=' + encodeURIComponent(query), title: '搜索「' + query + '」', emptyMsg: '没有匹配的素材', reset: reset, searchQuery: query });
+  return loadIncrementalView({ view: 'search', apiPath: '/api/search?q=' + encodeURIComponent(query), title: 'Search “' + query + '”', emptyMsg: 'No matching assets', reset: reset, searchQuery: query });
 }
 
 function maybeLoadMoreIncrementalView() {

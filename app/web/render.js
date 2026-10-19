@@ -23,11 +23,11 @@ function renderFolder(f, depth) {
 
   var name = document.createElement('span');
   name.className = 'sidebar-item-name';
-  name.textContent = f.name || '(未命名)';
+  name.textContent = f.name || '(Untitled)';
 
   var count = document.createElement('span');
   count.className = 'sidebar-item-count';
-  count.textContent = f.locked ? '受保护' : ((f.count != null ? f.count : 0) + '');
+  count.textContent = f.locked ? 'Locked' : ((f.count != null ? f.count : 0) + '');
 
   row.appendChild(icon);
   row.appendChild(name);
@@ -65,8 +65,8 @@ function renderFolder(f, depth) {
     else if (e.key === ' ') { e.preventDefault(); if (hasChildren) toggleExpand(); }
   };
   if (f.locked) {
-    row.setAttribute('aria-label', (f.name || '文件夹') + ' · Eagle 密码保护');
-    row.title = '此文件夹受 Eagle 密码保护，远程 Viewer 不读取其中内容';
+    row.setAttribute('aria-label', (f.name || 'Folder') + ' · Eagle password-protected');
+    row.title = 'This folder is password-protected in Eagle; the remote viewer won’t read its contents';
   }
 
   div.appendChild(row);
@@ -102,10 +102,10 @@ function expandFolderPathTo(folderId, nodes) {
 function getFolderPathMatches(query, nodes, trail, out) {
   for (var i = 0; i < nodes.length; i++) {
     var node = nodes[i];
-    var nextTrail = trail.concat([node.name || '(未命名)']);
+    var nextTrail = trail.concat([node.name || '(Untitled)']);
     var fullPath = nextTrail.join(' / ');
     if (fullPath.toLowerCase().indexOf(query) >= 0 || String(node.name || '').toLowerCase().indexOf(query) >= 0) {
-      out.push({ id: node.id, path: fullPath, locked: !!node.locked, name: node.name || '(未命名)' });
+      out.push({ id: node.id, path: fullPath, locked: !!node.locked, name: node.name || '(Untitled)' });
     }
     if (node.children && node.children.length) getFolderPathMatches(query, node.children, nextTrail, out);
   }
@@ -133,7 +133,7 @@ function renderTagList() {
     list.appendChild(chip);
   });
   if (!list.children.length) {
-    list.innerHTML = '<span class="content-title">无匹配标签</span>';
+    list.innerHTML = '<span class="content-title">No matching tags</span>';
   }
 }
 
@@ -178,7 +178,7 @@ function syncActiveNavigationState() {
 function findFolderTrailById(folderId, nodes, trail) {
   for (var i = 0; i < (nodes || []).length; i++) {
     var node = nodes[i];
-    var nextTrail = trail.concat([{ id: node.id, name: node.name || '(未命名)' }]);
+    var nextTrail = trail.concat([{ id: node.id, name: node.name || '(Untitled)' }]);
     if (String(node.id) === String(folderId)) return nextTrail;
     var childTrail = findFolderTrailById(folderId, node.children || [], nextTrail);
     if (childTrail) return childTrail;
