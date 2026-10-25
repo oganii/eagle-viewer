@@ -1,10 +1,10 @@
-/* Eagle Vault Viewer — 纯手机端 PWA 逻辑
-   自带轻量数据层（复用后端同一套 /api 接口），不依赖桌面端 api.js。
-   --app-h 由 mobile.html <head> 内联脚本在首帧前设置。 */
+/* Eagle Vault Viewer — スマホ専用 PWA のロジック
+   軽量なデータ層を内蔵し（バックエンドと同じ /api を使う）、デスクトップ版の api.js には依存しない。
+   --app-h は mobile.html の <head> のインラインスクリプトが最初のフレームより前に設定する。 */
 (function () {
   'use strict';
 
-  // ---------- 元素引用 ----------
+  // ---------- 要素の参照 ----------
   const topbar = document.getElementById('topbar');
   const view = document.getElementById('view');
   const viewBody = document.getElementById('viewBody');
@@ -123,9 +123,9 @@
     document.getElementById('pvNext').setAttribute('aria-label', tr('next'));
   }
 
-  // ---------- 跟随桌面端主题选择，并允许手机端独立切换明暗 ----------
-  // 桌面端把 light/dark 存进 localStorage['eagle-viewer-theme']，
-  // 这里复用同一把钥匙，让手机端配色与桌面端保持一致（无选择时沿用系统偏好）。
+  // ---------- デスクトップ版のテーマ選択に従い、スマホ側でも明暗を個別に切りかえられるようにする ----------
+  // デスクトップ版は light/dark を localStorage['eagle-viewer-theme'] に保存するので、
+  // ここでも同じキーを使い、スマホの配色をデスクトップと揃える（未選択ならシステムの設定に従う）。
   function applyMobileTheme(name) {
     try {
       // Migrate legacy keys
@@ -159,8 +159,8 @@
     renderTop();
   }
 
-  // ---------- 缩略图 IndexedDB 缓存（弱网 / 离线复用已浏览缩略图）----------
-  // 只缓存 Eagle 已生成的缩略图，不缓存原文件。容量同时受条目数和总字节数限制。
+  // ---------- サムネイルの IndexedDB キャッシュ（回線が弱いとき / オフラインで、見たサムネイルを再利用）----------
+  // キャッシュするのは Eagle が作ったサムネイルだけで、元ファイルは入れない。容量は件数と合計バイト数の両方で制限する。
   const Thumbs = (function () {
     const DB = 'eagle-viewer-thumbs';
     const STORE = 'blobs';
@@ -321,7 +321,7 @@
     imgs.forEach((img) => io.observe(img));
   }
 
-  // ---------- SVG 片段 ----------
+  // ---------- SVG の断片 ----------
   const chevSVG = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>';
   const backSVG = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg>';
   const folderSVG = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg>';
@@ -329,7 +329,7 @@
   const refreshSVG = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7M21 4v4h-4"/></svg>';
   const lockSVG = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
 
-  // ---------- 状态 ----------
+  // ---------- 状態 ----------
   const S = {
     view: 'library',
     folderStack: [],
@@ -342,7 +342,7 @@
     preview: { list: [], index: 0, open: false, pushed: false, token: 0, thumbObjectUrl: '' },
   };
 
-  // ---------- 数据层 ----------
+  // ---------- データ層 ----------
   const API = {
     async json(path) {
       const options = arguments[1] || {};
@@ -363,7 +363,7 @@
     },
   };
 
-  // ---------- 工具 ----------
+  // ---------- ユーティリティ ----------
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
@@ -399,19 +399,19 @@
     return b >= 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.round(b / 1024) + ' KB';
   }
 
-  // ---------- 顶栏 ----------
-  // 紧凑标题 .ctitle 默认隐藏，内容滚动后由 scroll 监听淡入（与大标题交叉过渡）。
-  // 大标题 .lt 由各渲染函数放进内容区顶部，随滚动上移——这是 iOS 标志性交互。
+  // ---------- 上部バー ----------
+  // 小さい見出し .ctitle は既定で隠し、内容をスクロールすると scroll リスナーでフェードインする（大見出しとクロスフェード）。
+  // 大見出し .lt は各描画関数が内容の上端に置き、スクロールで上へ動く——iOS の代表的な動き。
   function renderTop() {
     let title = '';
     let showBack = false;
     if (S.view === 'folders') {
-      if (S.folderStack.length) showBack = true;      // 子文件夹：面包屑，无标题
-      else title = tr('folders');                      // 根：大标题
+      if (S.folderStack.length) showBack = true;      // サブフォルダ：パンくずで、見出しなし
+      else title = tr('folders');                      // ルート：大見出し
     } else if (S.view === 'status') {
       showBack = true; title = tr('status');
     } else if (S.view === 'search') {
-      title = tr('search');                            // 搜索改为根 Tab，不再有返回键
+      title = tr('search');                            // 検索はルートの Tab にしたので、戻るボタンはもうない
     } else {
       title = tr('vault');
     }
@@ -460,7 +460,7 @@
       else if (S.view === 'status') goStatus();
       else renderLibrary();
     };
-    // 新视图从顶部开始，收回紧凑标题
+    // 新しいビューは上端から始め、小さい見出しを引っこめる
     topbar.classList.remove('top-collapsed');
   }
 
@@ -487,7 +487,7 @@
     scrollTop();
   }
 
-  // ---------- 首页（LIBRARY） ----------
+  // ---------- ホーム（LIBRARY） ----------
   async function renderLibrary(token = S.viewGeneration) {
     renderTop();
     releaseThumbObjectUrls(viewBody);
@@ -521,7 +521,7 @@
     si.addEventListener('keydown', e => { if (e.key === 'Enter') { S.searchQuery = si.value.trim(); switchTab('search'); } });
   }
 
-  // ---------- 目录（FOLDERS） ----------
+  // ---------- フォルダ（FOLDERS） ----------
   async function renderFolders(token = S.viewGeneration) {
     const requestId = ++S.folderRequest;
     const folderKey = S.folderStack.map(item => item.id).join('/');
@@ -628,7 +628,7 @@
     S.folderLoading = false;
   }
 
-  // ---------- 搜索（SEARCH） ----------
+  // ---------- 検索（SEARCH） ----------
   function renderSearch() {
     renderTop();
     disconnectIO();
@@ -742,7 +742,7 @@
     window.__io.observe(s);
   }
 
-  // ---------- 状态页 ----------
+  // ---------- 状態ページ ----------
   async function goStatus() {
     const token = ++S.viewGeneration;
     S.view = 'status';
@@ -791,7 +791,7 @@
     refreshThumbCacheMeta();
   }
 
-  // ---------- 缩略图点击 → 预览 ----------
+  // ---------- サムネイルをタップ → プレビュー ----------
   function bindThumbs(container) {
     container.querySelectorAll('.th:not([data-bound])').forEach(t => {
       t.dataset.bound = '1';
@@ -799,7 +799,7 @@
     });
   }
 
-  // ---------- 预览浮层 + 手势 ----------
+  // ---------- プレビューのオーバーレイ + ジェスチャー ----------
   const g = { mode: null, pointers: new Map(), startX: 0, startY: 0, dx: 0, dy: 0, moved: false, t0: 0, lastTap: 0, scale: 1, baseScale: 1, pinchStart: 0 };
 
   function openPreview(index) {
@@ -892,7 +892,7 @@
     pvOriginal.style.display = image ? '' : 'none';
     pvOriginal.disabled = false;
     document.getElementById('pvOriginalLabel').textContent = tr('showOriginal');
-    // 图片/视频才显示「保存到相册」（iOS 只能通过分享面板「存储到照片」写入相册）。
+    // 「アルバムに保存」は画像/動画のときだけ出す（iOS では共有シートの「写真に保存」からしかアルバムに書き込めない）。
     pvSave.style.display = (image || video) ? '' : 'none';
     pvPrev.disabled = i <= 0;
     pvNext.disabled = i >= list.length - 1;
@@ -940,7 +940,7 @@
   function normExt(ext) { return (ext || '').toLowerCase().replace(/^\./, ''); }
   function isImageExt(ext) { return ['bmp', 'gif', 'heic', 'heif', 'ico', 'jpeg', 'jpg', 'png', 'svg', 'tif', 'tiff', 'webp', 'avif', 'jfif', 'jxl'].includes(normExt(ext)); }
   function isVideoExt(ext) { return ['mp4', 'mov', 'webm', 'm4v', '3gp'].includes(normExt(ext)); }
-  // 取文件 Blob 并通过 Web Share API 以 File 形式分享——iOS 分享面板才会提供「存储到照片 / 存储视频」。
+  // ファイルの Blob を取って Web Share API で File として共有する——そうすると iOS の共有シートに「写真に保存 / ビデオを保存」が出る。
   async function shareFile(it) {
     if (it.size && it.size > 200 * 1024 * 1024) throw new Error('too-large-to-share');
     const url = location.origin + '/api/items/' + it.id + '/file';
@@ -959,7 +959,7 @@
     }
   }
   function preloadAdjacent() {
-    // 预览优先显示当前图的缩略图，避免热点网络同时下载相邻原图。
+    // プレビューはまずいまの画像のサムネイルを出し、テザリング回線で隣の元画像を同時にダウンロードしないようにする。
   }
   function showPreviewItemAnimated(dir) {
     pvImg.style.transition = 'transform .18s ease';
@@ -967,7 +967,7 @@
     setTimeout(showPreviewItem, 170);
   }
   function updatePeeks() {
-    // 预览时保持纯净背景：移除相邻项的探出缩略图，避免透出其它结果干扰查看。
+    // プレビュー中は背景をすっきり保つ：隣の項目のはみ出したサムネイルを外し、他の結果が透けて見づらくならないようにする。
     pvStage.querySelectorAll('.pv-peek').forEach(p => p.remove());
   }
   function applyTransform() { pvImg.style.transform = g.scale > 1 ? 'scale(' + g.scale + ')' : ''; }
@@ -1051,7 +1051,7 @@
     showPreviewItem();
   };
   pvDownload.onclick = (e) => {
-    // 用 Blob 方式触发下载：强制浏览器弹出「存储为…」保存窗口，避免 Safari 把文件内联预览（Finder/Quick Look）。
+    // Blob でダウンロードを起こす：ブラウザに「名前を付けて保存…」の画面を必ず出させ、Safari がファイルをその場でプレビュー（Finder/Quick Look）しないようにする。
     e.preventDefault();
     const it = S.preview.list[S.preview.index];
     if (!it) return;
@@ -1070,11 +1070,11 @@
     const it = S.preview.list[S.preview.index];
     if (!it) return;
     try {
-      // iOS 分享面板会提供「存储到照片 / 存储视频」；用户取消 share 视为正常退出。
+      // iOS の共有シートには「写真に保存 / ビデオを保存」が出る。ユーザーが share をキャンセルしたら正常終了とみなす。
       await shareFile(it);
     } catch (e) {
       if (e && e.name === 'AbortError') return;
-      // 不支持以文件形式分享时，回退为下载到「文件」App（安卓下通常仍能被相册扫描到）。
+      // ファイルとして共有できないときは「ファイル」App へのダウンロードに切りかえる（Android ではふつうアルバムにも拾われる）。
       try {
         const a = document.createElement('a');
         a.href = '/api/items/' + it.id + '/file?download=true';
@@ -1088,7 +1088,7 @@
     const it = S.preview.list[S.preview.index];
     if (!it) return;
     try {
-      // 以文件形式分享，iOS 面板才会提供「存储到照片」；取消分享视为正常。
+      // ファイルとして共有すると iOS のシートに「写真に保存」が出る。共有のキャンセルは正常とみなす。
       await shareFile(it);
     } catch (e) {
       if (e && e.name === 'AbortError') return;
@@ -1107,22 +1107,22 @@
     clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.style.opacity = '0'; }, 1600);
   }
 
-  // ---------- 系统返回手势统一关闭预览 ----------
+  // ---------- システムの戻るジェスチャーでプレビューを閉じる ----------
   window.addEventListener('popstate', () => { if (S.preview.open) closePreviewVisual(); });
 
-  // ---------- Tab 切换 ----------
+  // ---------- Tab の切りかえ ----------
   tabs.addEventListener('click', e => { const b = e.target.closest('.tb'); if (b) switchTab(b.dataset.view); });
 
-  // ---------- 大标题折叠：内容滚动时淡入顶栏紧凑标题 ----------
+  // ---------- 大見出しの折りたたみ：内容をスクロールしたら上部バーの小さい見出しをフェードイン ----------
   view.addEventListener('scroll', () => {
     topbar.classList.toggle('top-collapsed', view.scrollTop > 4);
   }, { passive: true });
 
-  // ---------- 启动 ----------
+  // ---------- 起動 ----------
   applyLanguage();
   switchTab('library');
 
-  // PWA：注册 service worker（若存在）
+  // PWA：service worker を登録する（あれば）
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('/sw.js').catch(() => {});

@@ -301,12 +301,12 @@ def test_manifest_keeps_only_basic_shortcuts():
 def test_theme_and_mobile_navigation_remain_available():
     index = read("app/web/index.html")
     interactions = read_web_assets(INTERACTION_ASSETS)
-    # 右上角主题切换器（浅色 / 深色，统一 Apple 系统蓝强调色）
+    # 右上のテーマ切りかえ（ライト / ダーク。アクセントカラーは Apple のシステムブルーに統一）
     assert 'id="themeSwitcher"' in index
     assert 'class="theme-switcher"' in index
     for name in ("light", "dark"):
         assert f'data-theme-name="{name}"' in index
-    # 主题切换仍写入 data-theme / data-accent
+    # テーマ切りかえは引き続き data-theme / data-accent に書き込む
     assert "setAttribute('data-theme'" in interactions
     assert "setAttribute('data-accent'" in interactions
     for element_id in ("mobileLibraryBtn", "mobileSearchBtn", "mobileMoreBtn"):

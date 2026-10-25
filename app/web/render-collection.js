@@ -649,14 +649,14 @@ function appendItemsToGrid(items) {
 function getGridThumbWidth() {
   var w = gridDensity;
   if (window.innerWidth <= 768) {
-    // 移动端用更紧凑的单元格宽度，密度滑块仍控制相对大小。
+    // モバイルではセル幅をより詰め、密度スライダーは引き続き相対的な大きさを決める。
     w = Math.max(96, Math.min(168, Math.round(w * 0.72)));
   }
   return w;
 }
 
 function applyMasonryColumnCount(masonry, itemCount) {
-  // 统一网格：密度滑块驱动单元格宽度（--thumb-w），列数由 CSS grid 的 auto-fill 自适应。
+  // 共通グリッド：密度スライダーがセル幅（--thumb-w）を決め、列数は CSS grid の auto-fill で自動的に合わせる。
   if (!masonry) return;
   masonry.style.columnCount = '';
   masonry.style.maxWidth = '';

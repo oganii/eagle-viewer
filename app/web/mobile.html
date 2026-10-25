@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#f2f2f7" />
   <script>
-    // 首帧前写入 data-theme，避免主题闪烁。
-    // PWA 外层按物理屏幕高度填满屏幕，CSS 再收回 small viewport 的布局高度，
-    // 保证 iOS 首屏导航文字可见且尾部背景连续。
+    // 最初のフレームより前に data-theme を書き込み、テーマのちらつきを防ぐ。
+    // PWA の外側は物理画面の高さで画面を埋め、CSS で small viewport のレイアウト高さに戻す。
+    // これで iOS の最初の画面でナビゲーションの文字が見え、下の背景も途切れない。
     (function () {
       try {
         var map = {
@@ -24,14 +24,14 @@
         document.documentElement.style.colorScheme = pair[0];
       } catch (e) {}
     })();
-    // iOS 主屏启动标记：独立模式布局视口比物理屏矮（视口单位返回布局视口
-    // 高度），底栏/预览操作条按视口高度贴底即可始终可见；视口外的屏幕底部
-    // 由 CSS 用 html 画布同色背景填充（见 mobile.css 的全局 canvas 规则）。
-    // 注意不要用 screen.height 撑高容器：它是物理全屏高度，大于布局视口，
-    // 会把底栏推出视口之外。
-    // 与主题写入分属独立 try，避免 localStorage 受限时拖垮 standalone 检测。
-    // 部分 iOS 版本 navigator.standalone 不为 true，用 display-mode 媒体查询兜底
-    //（已安装 PWA 可能命中 standalone 或 fullscreen，见 WebKit #264218）。
+    // iOS のホーム画面起動の目印：standalone ではレイアウトビューポートが物理画面より低い（ビューポート単位はレイアウトビューポートの
+    // 高さを返す）。下部バー/プレビュー操作バーはビューポートの高さで下端に付ければ常に見える。ビューポート外の画面下部は
+    // CSS が html キャンバスの同じ色の背景で埋める（mobile.css の全体 canvas ルールを参照）。
+    // screen.height でコンテナを伸ばさないこと：これは物理画面全体の高さで、レイアウトビューポートより大きく、
+    // 下部バーをビューポートの外へ押し出してしまう。
+    // テーマの書き込みとは別の try にして、localStorage が制限されていても standalone の判定が巻き添えにならないようにする。
+    // 一部の iOS バージョンでは navigator.standalone が true にならないので、display-mode メディアクエリで補う
+    //（インストール済み PWA は standalone か fullscreen に一致しうる。WebKit #264218 を参照）。
     (function () {
       try {
         var isStandalone = window.navigator.standalone ||
@@ -63,7 +63,7 @@
 <body>
   <div id="app">
     <header class="top" id="topbar">
-      <!-- 由 JS 渲染：返回键 + 标题 / 面包屑 -->
+      <!-- JS が描画：戻るボタン + タイトル / パンくず -->
     </header>
 
     <main class="bd" id="view">
@@ -88,7 +88,7 @@
     </nav>
   </div>
 
-  <!-- 预览浮层 -->
+  <!-- プレビューのオーバーレイ -->
   <div class="overlay" id="preview" aria-hidden="true">
     <div class="pv-top">
       <button id="pvClose" aria-label="閉じる">

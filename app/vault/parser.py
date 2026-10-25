@@ -16,11 +16,11 @@ from app.vault.models import FolderNode, ItemInfo
 
 logger = logging.getLogger(__name__)
 
-# 应用版本（单一来源 = pyproject.toml），用于前端展示。
+# アプリのバージョン（唯一の出どころ = pyproject.toml）。フロントエンドの表示に使う。
 try:
     from importlib.metadata import version as _pkg_version
     APP_VERSION = _pkg_version("eagle-viewer")
-except Exception:  # pragma: no cover - 未安装包时从 pyproject.toml 读取
+except Exception:  # pragma: no cover - パッケージ未インストール時は pyproject.toml から読む
     import tomllib
     _pyproject = Path(__file__).resolve().parents[2] / "pyproject.toml"
     try:

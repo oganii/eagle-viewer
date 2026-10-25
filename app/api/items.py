@@ -124,8 +124,8 @@ def api_item_file(item_id: str, download: bool = False, request: Request = None)
         raise HTTPException(status_code=404, detail="File not found")
     media_type = mimetypes.guess_type(str(path))[0] or "application/octet-stream"
     filename = f"{item.name}.{item.ext}" if item.ext else path.name
-    # 预览（inline）允许浏览器缓存整图，避免每次左右切换都重新从远端挂载拉全图导致卡顿；
-    # 下载（attachment）不缓存。SW 仍不缓存 /api，此处仅设置 HTTP 响应头，不违反 PWA 契约。
+    # プレビュー（inline）はブラウザに画像全体のキャッシュを許可し、左右に切りかえるたびにリモートのマウントから全体を取り直して引っかかるのを防ぐ。
+    # ダウンロード（attachment）はキャッシュしない。SW は引き続き /api をキャッシュせず、ここは HTTP レスポンスヘッダーを設定するだけなので PWA の契約には反しない。
     size = path.stat().st_size
     range_header = request.headers.get("range") if request else None
     byte_range = _parse_range(range_header, size)

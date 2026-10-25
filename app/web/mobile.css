@@ -1,8 +1,8 @@
-/* Eagle Vault Viewer — 纯手机端 PWA 样式
-   设计语言：Apple HIG（SF Pro + 系统蓝 + 毛玻璃 + 发丝边）。
-   核心组件：可折叠大标题、inset grouped 卡片、iOS 搜索框、capsule 按钮。
-   浅深双主题；强调色为 Apple 系统蓝。
-   主题由 mobile.html 内联脚本在首帧前写入 data-theme。 */
+/* Eagle Vault Viewer — スマホ専用 PWA のスタイル
+   デザイン言語：Apple HIG（SF Pro + システムブルー + すりガラス + ヘアライン）。
+   主なコンポーネント：折りたためる大見出し、inset grouped カード、iOS 検索欄、capsule ボタン。
+   ライト・ダークの2テーマ。アクセントカラーは Apple のシステムブルー。
+   テーマは mobile.html のインラインスクリプトが最初のフレームより前に data-theme に書き込む。 */
 
 :root {
   --tab-h:49px;
@@ -10,7 +10,7 @@
   --font-ui:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
   --font-display:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
   --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
-  /* 浅色为默认（与 [data-theme="light"] 一致），防 data-theme 未就绪 */
+  /* ライトが既定（[data-theme="light"] と同じ）。data-theme がまだ無いときの備え */
   --bg:#f2f2f7; --bg2:#ffffff; --bg3:rgba(118,118,128,.12);
   --bg-fill:#787880;
   --border:rgba(60,60,67,.12);
@@ -53,7 +53,7 @@
 * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 html, body { margin:0; padding:0; height:100%; }
 
-/* ===== 全局：焦点 + 动效降级 ===== */
+/* ===== 全体：フォーカス + モーション軽減 ===== */
 :where(button, a, input, select, textarea, [tabindex], .card):focus-visible {
   outline:2px solid var(--accent);
   outline-offset:2px;
@@ -82,10 +82,10 @@ body {
 button { font-family:inherit; color:inherit; cursor:pointer; }
 a { color:var(--accent-text); }
 
-/* ===== App 容器 =====
-   PWA 外层优先使用物理屏幕高度，内层通过 bottom padding 收回 small viewport
-   的布局高度，避免底部 Tab 文字被裁剪；Safari 普通页面回退到 large viewport，
-   让浏览器自己的底部工具栏占用那段空间。外层背景负责填充两者之间的尾部。 */
+/* ===== App コンテナ =====
+   PWA の外側は物理画面の高さを優先し、内側は bottom padding で small viewport
+   のレイアウト高さに戻して、下部 Tab の文字が切れないようにする。Safari の通常ページは large viewport に戻し、
+   ブラウザ自身の下部ツールバーにその分の場所を使わせる。両者の間の余りは外側の背景で埋める。 */
 #app {
   position:fixed;
   top:0; left:0; right:0;
@@ -98,27 +98,27 @@ a { color:var(--accent-text); }
   background:var(--bg2);
 }
 
-/* iOS 主屏启动（standalone）下 WebKit 的布局视口比物理屏幕矮（实测矮一个
-   状态栏高度，如 iPhone 15 Pro Max 物理 932pt、布局视口 873pt），视口单位
-   返回的是布局视口高度，容器底部会悬空一条物理屏上的背景色空白（普通 Safari
-   里该区域被浏览器工具栏占据所以不可见）。
-   注意：不要用 screen.height 撑高来"填满"物理屏——它返回物理全屏高度
-   （932pt），大于布局视口（873pt），会把底栏/预览操作条整体推出视口之外
-   （iOS 上表现为滚动时短暂露出、松手回弹后消失）。正确做法是保持视口高度
-   （底栏始终贴住布局视口底边），视口外的屏幕底部交给 html 画布同色背景。
-   navigator.standalone 仅在 iOS 主屏启动时为 true，不影响普通 Safari /
-   Android / 桌面。 */
-/* 个别 iOS 版本独立模式下 env(safe-area-inset-bottom) 可能报 0，给 home indicator 留兜底 */
+/* iOS のホーム画面から起動（standalone）すると、WebKit のレイアウトビューポートは物理画面より低い（実測でステータスバー
+   1本分低い。例：iPhone 15 Pro Max で物理 932pt、レイアウトビューポート 873pt）。ビューポート単位が
+   返すのはレイアウトビューポートの高さなので、コンテナの下に物理画面上の背景色の空白が1本残る（通常の Safari
+   ではそこをブラウザのツールバーが占めるので見えない）。
+   注意：screen.height で高さを伸ばして物理画面を「埋め」ないこと——これは物理画面全体の高さ
+   （932pt）を返し、レイアウトビューポート（873pt）より大きいので、下部バー/プレビュー操作バーごとビューポートの外へ押し出してしまう
+   （iOS ではスクロール中だけ一瞬見え、指を離して戻ると消える）。正しくはビューポートの高さを保ち
+   （下部バーは常にレイアウトビューポートの下端に付ける）、ビューポート外の画面下部は html キャンバスの同じ色の背景に任せる。
+   navigator.standalone は iOS のホーム画面から起動したときだけ true なので、通常の Safari /
+   Android / デスクトップには影響しない。 */
+/* 一部の iOS バージョンでは standalone 時に env(safe-area-inset-bottom) が 0 になることがあるので、home indicator 用の最低値を確保する */
 .pwa-standalone .tabs { padding-bottom:max(env(safe-area-inset-bottom), 20px); }
 .pwa-standalone .pv-bottom { padding-bottom:calc(max(env(safe-area-inset-bottom), 20px) + 16px); }
-/* 固定 shell 的布局视口可能短于 iOS standalone 的物理屏幕；视口外的尾部
-   由 html 画布填充。规则必须放在 display-mode 查询外，因为部分 WebKit 版本
-   不会稳定命中 display-mode / navigator.standalone 检测。 */
+/* 固定 shell のレイアウトビューポートは iOS standalone の物理画面より短いことがある。ビューポート外の余りは
+   html キャンバスで埋める。一部の WebKit バージョンは display-mode / navigator.standalone の判定に
+   安定して一致しないので、このルールは display-mode クエリの外に置く必要がある。 */
 html { background:var(--bg2); }
 html.pv-open { background:#0d0c0b; }
 html.pv-open body { background:#0d0c0b; }
 
-/* display-mode 兜底：独立模式下给底部控件保留 Home Indicator 安全区。 */
+/* display-mode での予備：standalone 時に下部コントロール用に Home Indicator のセーフエリアを確保する。 */
 @media (display-mode: standalone), (display-mode: fullscreen) {
   .tabs { padding-bottom:max(env(safe-area-inset-bottom), 20px); }
   .pv-bottom { padding-bottom:calc(max(env(safe-area-inset-bottom), 20px) + 16px); }
@@ -126,9 +126,9 @@ html.pv-open body { background:#0d0c0b; }
 html.pwa-standalone { background:var(--bg2); }
 html.pwa-standalone.pv-open { background:#0d0c0b; }
 
-/* ===== 顶栏（iOS 导航条） =====
-   44pt 内容 + safe-area 顶部 + 毛玻璃。发丝底边仅在折叠态出现。
-   紧凑标题 .ctitle 默认隐藏，内容滚动后淡入，与大标题做交叉过渡。 */
+/* ===== 上部バー（iOS ナビゲーションバー） =====
+   44pt の内容 + safe-area 上部 + すりガラス。ヘアラインの下線は折りたたみ時だけ出る。
+   小さい見出し .ctitle は既定で隠し、内容をスクロールするとフェードインして大見出しとクロスフェードする。 */
 .top {
   flex:0 0 auto;
   min-height:44px;
@@ -194,7 +194,7 @@ html.pwa-standalone.pv-open { background:#0d0c0b; }
 .top .back svg { width:12px; height:21px; fill:none; stroke:currentColor; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
 .iconbtn { display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border:none; background:none; color:var(--text); }
 
-/* ===== 内容滚动区 ===== */
+/* ===== 内容のスクロール領域 ===== */
 .bd {
   flex:1;
   min-height:0;
@@ -206,7 +206,7 @@ html.pwa-standalone.pv-open { background:#0d0c0b; }
 .bd::-webkit-scrollbar { width:0; height:0; }
 .pad { padding:8px 16px calc(env(safe-area-inset-bottom) + 24px); }
 
-/* ===== iOS 大标题（位于内容顶部，随滚动上移） ===== */
+/* ===== iOS 大見出し（内容の上端にあり、スクロールで上へ動く） ===== */
 .lt {
   font-family:var(--font-display);
   font-size:34px;
@@ -217,7 +217,7 @@ html.pwa-standalone.pv-open { background:#0d0c0b; }
   color:var(--text);
 }
 
-/* ===== 区块标签（iOS section header） ===== */
+/* ===== セクション見出し（iOS section header） ===== */
 .lbl {
   margin:28px 4px 8px;
   color:var(--text-muted);
@@ -229,7 +229,7 @@ html.pwa-standalone.pv-open { background:#0d0c0b; }
 }
 .lbl:first-child { margin-top:18px; }
 
-/* ===== inset grouped 卡片 ===== */
+/* ===== inset grouped カード ===== */
 .card {
   background:var(--bg2);
   border-radius:10px;
@@ -237,7 +237,7 @@ html.pwa-standalone.pv-open { background:#0d0c0b; }
 }
 .card + .card { margin-top:8px; }
 
-/* ===== 状态条（首页，单行卡片） ===== */
+/* ===== 状態バー（ホーム、1行カード） ===== */
 .strip {
   min-height:44px;
   margin:0 0 8px;
@@ -261,11 +261,11 @@ html.pwa-standalone.pv-open { background:#0d0c0b; }
 .strip .chev svg { width:7px; height:12px; fill:none; stroke:currentColor; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
 .strip.changed { background:color-mix(in srgb,var(--warn) 10%,var(--bg2)); }
 
-/* ---------- 计数条（保留结构，当前隐藏） ---------- */
+/* ---------- 件数バー（構造は残し、いまは非表示） ---------- */
 .counts { display:none; }
 
-/* ===== 搜索入口（iOS inset search） =====
-   灰色填充、无边框、10px 圆角、17px 字号。 */
+/* ===== 検索の入口（iOS inset search） =====
+   グレーの塗り、枠なし、角丸 10px、文字サイズ 17px。 */
 .srch {
   display:flex; align-items:center; gap:6px;
   height:36px;
@@ -287,7 +287,7 @@ html.pwa-standalone.pv-open { background:#0d0c0b; }
 }
 .srch input::placeholder { color:var(--text-muted); }
 
-/* ===== 瀑布流 ===== */
+/* ===== メイソンリー ===== */
 .mas { columns:2; column-gap:8px; margin:4px 0 0; }
 .th {
   break-inside:avoid;
@@ -393,8 +393,8 @@ html.pwa-standalone.pv-open { background:#0d0c0b; }
   box-shadow:0 1px 2px rgba(0,0,0,.5),0 6px 16px rgba(0,0,0,.25);
 }
 
-/* ===== 文件夹行（inset grouped list） =====
-   发丝分隔线内缩到文字起止位置（越过左侧图标）。 */
+/* ===== フォルダの行（inset grouped list） =====
+   ヘアラインの区切り線は文字の位置まで内側に寄せる（左のアイコンは避ける）。 */
 .fr {
   display:flex; align-items:center; gap:12px;
   padding:11px 16px;
@@ -424,7 +424,7 @@ html.pwa-standalone.pv-open { background:#0d0c0b; }
 .fr .chev { color:var(--text-muted); flex:0 0 auto; opacity:.4; }
 .fr .chev svg { width:7px; height:12px; fill:none; stroke:currentColor; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
 
-/* ===== 面包屑 ===== */
+/* ===== パンくず ===== */
 .crumb {
   font-family:var(--font-ui); font-size:15px; letter-spacing:0;
   color:var(--text-muted); display:flex; flex-wrap:wrap; gap:2px 4px; align-items:center;
@@ -434,7 +434,7 @@ html.pwa-standalone.pv-open { background:#0d0c0b; }
 .crumb .seg.cur { color:var(--text); font-weight:600; }
 .crumb .sep { color:var(--text-muted); opacity:.5; }
 
-/* ===== 搜索结果头 ===== */
+/* ===== 検索結果の見出し ===== */
 .search-page { padding-top:8px; }
 .search-field {
   height:46px;
@@ -475,8 +475,8 @@ html.pwa-standalone.pv-open { background:#0d0c0b; }
 .search-results:not(.mas) { margin:0; }
 .search-results.mas { margin-top:0; }
 
-/* ===== 底部 Tab（iOS tab bar） =====
-   49pt + safe-area + 毛玻璃；无指示线，active 仅靠强调色区分。 */
+/* ===== 下部 Tab（iOS tab bar） =====
+   49pt + safe-area + すりガラス。インジケーター線はなく、active はアクセントカラーだけで区別する。 */
 .tabs {
   flex:0 0 auto;
   min-height:49px;
@@ -519,7 +519,7 @@ html.pwa-standalone.pv-open { background:#0d0c0b; }
 }
 .tb.pointer-focus:focus { outline:none; box-shadow:none; }
 
-/* ===== 状态页（iOS settings list） ===== */
+/* ===== 状態ページ（iOS settings list） ===== */
 .kv {
   display:flex; align-items:baseline; justify-content:space-between; gap:12px;
   padding:11px 16px;
@@ -561,7 +561,7 @@ html.pwa-standalone.pv-open { background:#0d0c0b; }
 .actbtn.ghost { background:var(--bg3); color:var(--text); border:none; }
 .status-cache { color:var(--muted); font-size:12px; margin:8px 2px 0; }
 
-/* ===== 预览浮层 ===== */
+/* ===== プレビューのオーバーレイ ===== */
 .overlay {
   position:fixed; inset:0; z-index:100;
   background:#000;
@@ -586,7 +586,7 @@ html.pwa-standalone.pv-open { background:#0d0c0b; }
   -webkit-backdrop-filter:blur(10px);
 }
 .pv-top button:active { background:rgba(255,255,255,.2); }
-/* SVG 仅有 viewBox 无固有尺寸时，WebKit 会解析为 0×0，图标不可见；显式给定尺寸 */
+/* SVG に viewBox だけで固有サイズがないと、WebKit は 0×0 と解釈してアイコンが見えない。サイズを明示する */
 .pv-top button svg { width:18px; height:18px; }
 .pv-stage {
   flex:1; position:relative; overflow:hidden;
@@ -651,7 +651,7 @@ html.pwa-standalone.pv-open { background:#0d0c0b; }
 .pv-hint span { font-family:var(--mono); font-size:11px; letter-spacing:.08em; }
 .overlay.immersive .pv-top, .overlay.immersive .pv-bottom { opacity:0; pointer-events:none; }
 
-/* ===== 空 / 错误 / 加载 ===== */
+/* ===== 空 / エラー / 読み込み中 ===== */
 .empty, .errbox {
   margin:40px 0; padding:32px 20px; text-align:center;
   border:none; border-radius:16px; background:var(--bg2);
@@ -902,7 +902,7 @@ body { letter-spacing:0; }
 .tb.active { color:var(--accent); }
 .tb.active::before { width:26px; background:var(--accent); }
 .overlay { background:#0d0c0b; }
-/* 状态栏与导航按钮之间留足呼吸空间，避免贴脸 */
+/* ステータスバーとナビゲーションボタンの間に十分な余白をとり、詰まって見えないようにする */
 .pv-top { padding:calc(env(safe-area-inset-top) + 16px) 16px 9px; }
 .pv-top button { border-radius:10px; }
 .pv-bottom { background:linear-gradient(transparent,rgba(13,12,11,.88)); }

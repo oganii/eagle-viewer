@@ -79,7 +79,7 @@ self.addEventListener('fetch', function(event) {
   if (request.method !== 'GET') return;
   var url = new URL(request.url);
   if (url.origin !== location.origin) return;
-  // API 响应不进 service worker 缓存（离线由应用自身快照机制负责）
+  // API のレスポンスは service worker のキャッシュに入れない（オフラインはアプリ自身のスナップショットの仕組みが担う）
   if (url.pathname.startsWith('/api/')) return;
 
   if (request.mode === 'navigate') {

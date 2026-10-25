@@ -17,10 +17,10 @@ from app.vault import APP_VERSION, load_vault, get_cache_stats, get_library_stat
 if VIEWER_PASSWORD and not VIEWER_SECRET_KEY:
     raise RuntimeError("VIEWER_SECRET_KEY must be set when VIEWER_PASSWORD is enabled")
 
-# uvicorn 默认不配置 root logger（app.* 的 effective level 为 WARNING），
-# 导致 parser 等模块的 INFO 日志在默认部署下不可见。这里显式给 root
-# 配置 INFO + StreamHandler；uvicorn 自身的 loggers 经 dictConfig 后
-# propagate=False，不会因此重复输出。
+# uvicorn は既定では root logger を設定しない（app.* の effective level は WARNING）ため、
+# parser などのモジュールの INFO ログが既定のデプロイでは見えない。ここで明示的に root に
+# INFO + StreamHandler を設定する。uvicorn 自身の loggers は dictConfig で
+# propagate=False になっているので、これで二重に出力されることはない。
 logging.basicConfig(level=logging.INFO)
 
 logger = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ def has_valid_api_token(headers: list[tuple[bytes, bytes]], token: str) -> bool:
 
 
 class AuthMiddleware:
-    """未设置密码时放行；设置了密码则校验 session，未登录时 API 返回 401、页面重定向到 /login。"""
+    """パスワード未設定なら通す。設定されていれば session を検証し、未ログインなら API は 401、ページは /login へリダイレクトする。"""
 
     def __init__(self, app: ASGIApp) -> None:
         self.app = app
@@ -62,7 +62,7 @@ class AuthMiddleware:
         if path == "/login":
             await self.app(scope, receive, send)
             return
-        # Session 由 SessionMiddleware 填充，需在 Auth 之前执行
+        # Session は SessionMiddleware が埋めるので、Auth より前に実行する必要がある
         session = scope.get("session") or {}
         if session.get("logged_in"):
             await self.app(scope, receive, send)
@@ -119,7 +119,7 @@ async def lifespan(_app: FastAPI):
 
 app = FastAPI(title="Eagle Vault Viewer", description="Read-only viewer for Eagle library on NAS", lifespan=lifespan)
 
-# 先加 Session，后加 Auth：请求时先执行 Session（解码 cookie 写入 scope），再执行 Auth（校验）
+# Session を先に、Auth を後に追加する：リクエスト時はまず Session（cookie をデコードして scope に書く）、次に Auth（検証）が動く
 if VIEWER_PASSWORD or VIEWER_API_TOKEN:
     app.add_middleware(AuthMiddleware)
 if VIEWER_PASSWORD:
@@ -168,7 +168,7 @@ app.mount("/static", StaticFiles(directory=web_dir, html=False), name="static")
 
 @app.get("/login", response_class=HTMLResponse)
 def login_page(request: Request, error: str = ""):
-    """登录页。"""
+    """ログインページ。"""
     if not VIEWER_PASSWORD:
         return RedirectResponse(url="/", status_code=302)
     if request.session.get("logged_in"):
@@ -183,7 +183,7 @@ def login_page(request: Request, error: str = ""):
 
 @app.post("/login")
 def login_submit(request: Request, password: str = Form(default="")):
-    """校验密码并写入 session，成功后跳转首页。"""
+    """パスワードを検証して session に書き込み、成功したらトップページへ移動する。"""
     if not VIEWER_PASSWORD:
         return RedirectResponse(url="/", status_code=302)
     if hmac.compare_digest(password, VIEWER_PASSWORD):
