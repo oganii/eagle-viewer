@@ -650,6 +650,9 @@ html.pwa-standalone.pv-open { background:#0d0c0b; }
 .pv-hint svg { width:24px; height:24px; opacity:.7; }
 .pv-hint span { font-family:var(--mono); font-size:11px; letter-spacing:.08em; }
 .overlay.immersive .pv-top, .overlay.immersive .pv-bottom { opacity:0; pointer-events:none; }
+/* UI を隠したときは上下のバーを重ねる形にして、画像の領域を画面いっぱいに広げる */
+.overlay.immersive .pv-top { position:absolute; top:0; left:0; right:0; }
+.overlay.immersive .pv-bottom { position:absolute; bottom:0; left:0; right:0; }
 
 /* ===== 空 / エラー / 読み込み中 ===== */
 .empty, .errbox {

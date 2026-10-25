@@ -1057,7 +1057,7 @@
     } else if (!g.moved && elapsed < 300) {
       const now = Date.now();
       if (now - g.lastTap < 280) { g.scale = g.scale > 1 ? 1 : 2; applyTransform(); }
-      else { g.lastTap = now; overlay.classList.toggle('immersive'); }
+      else { g.lastTap = now; overlay.classList.toggle('immersive'); requestAnimationFrame(applyTransform); }
     }
     g.mode = null;
   }
