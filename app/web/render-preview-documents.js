@@ -239,7 +239,7 @@ async function previewItem(item, fileUrl) {
       if (!usingThumbnailFallback && item.id) {
         usingThumbnailFallback = true;
         el.dataset.previewSource = 'thumbnail';
-        setPreviewStatus(overlay, '元画像を開けないため、サムネイルを表示します…');
+        setPreviewStatus(overlay, 'オリジナルを開けないため、サムネイルを表示します…');
         el.src = thumbnailUrl;
         return;
       }

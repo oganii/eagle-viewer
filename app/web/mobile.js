@@ -28,7 +28,7 @@
     ja: {
       library: 'ライブラリ', folders: 'フォルダ', search: '検索', status: '接続状態',
       tabLibrary: 'ライブラリ', tabFolders: 'フォルダ', tabSearch: '検索',
-      close: '閉じる', share: '共有', back: '戻る', download: 'ダウンロード', showOriginal: '元画像を表示', loadingOriginal: '元画像を読み込み中…', originalShown: '元画像を表示中', saveAlbum: '写真に保存',
+      close: '閉じる', share: '共有', back: '戻る', download: 'ダウンロード', showOriginal: 'オリジナルを表示', loadingOriginal: 'オリジナルを読み込み中…', originalShown: 'オリジナルを表示中', saveAlbum: '写真に保存',
       loadFailed: '読み込みに失敗しました：{error}', connectedChanged: '接続中 · リモートに変更あり',
       connected: '接続中', disconnected: '未接続', statusUnknown: '接続状態不明', vault: 'Eagle Vault',
       items: '素材', foldersLabel: 'フォルダ', tags: 'タグ',
@@ -160,7 +160,7 @@
   }
 
   // ---------- サムネイルの IndexedDB キャッシュ（回線が弱いとき / オフラインで、見たサムネイルを再利用）----------
-  // キャッシュするのは Eagle が作ったサムネイルだけで、元ファイルは入れない。容量は件数と合計バイト数の両方で制限する。
+  // キャッシュするのは Eagle が作ったサムネイルだけで、オリジナルは入れない。容量は件数と合計バイト数の両方で制限する。
   const Thumbs = (function () {
     const DB = 'eagle-viewer-thumbs';
     const STORE = 'blobs';
@@ -964,7 +964,7 @@
     }
   }
   function preloadAdjacent() {
-    // プレビューはまずいまの画像のサムネイルを出し、テザリング回線で隣の元画像を同時にダウンロードしないようにする。
+    // プレビューはまずいまの画像のサムネイルを出し、テザリング回線で隣のオリジナルを同時にダウンロードしないようにする。
   }
   function showPreviewItemAnimated(dir) {
     pvImg.style.transition = 'transform .18s ease';

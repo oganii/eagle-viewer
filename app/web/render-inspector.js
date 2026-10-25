@@ -75,7 +75,7 @@ function openInspector(item) {
   }
   actionsHtml += '<details class="inspector-more inspector-action-more"><summary aria-label="その他の操作">その他</summary><div class="inspector-more-menu">';
   var downloadDisabled = isRemoteAccessUnavailableForRender();
-  actionsHtml += '<button type="button" class="btn-download-original' + (downloadDisabled ? ' requires-remote' : '') + '" data-id="' + escapeHtml(item.id) + '"' + (downloadDisabled ? ' disabled title="元ファイルのダウンロードにはリモート Vault への接続が必要です"' : '') + '>' + iconDownload() + ' ' + (downloadDisabled ? 'オフライン' : 'ダウンロード') + '</button>';
+  actionsHtml += '<button type="button" class="btn-download-original' + (downloadDisabled ? ' requires-remote' : '') + '" data-id="' + escapeHtml(item.id) + '"' + (downloadDisabled ? ' disabled title="オリジナルのダウンロードにはリモート Vault への接続が必要です"' : '') + '>' + iconDownload() + ' ' + (downloadDisabled ? 'オフライン' : 'ダウンロード') + '</button>';
   actionsHtml += '<button type="button" class="btn-share-link" data-id="' + escapeHtml(item.id) + '">' + iconExternalLink() + ' リンクを共有</button>';
   if (canCopyImage(item.ext)) actionsHtml += '<button type="button" class="btn-copy" data-id="' + escapeHtml(item.id) + '">' + iconCopy() + ' コピー</button>';
   actionsHtml += '</div></details>';

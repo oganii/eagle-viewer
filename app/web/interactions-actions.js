@@ -43,7 +43,7 @@ function updateQuickActionSheetState(sheet, item) {
     var offline = isRemoteAccessUnavailable();
     download.classList.toggle('requires-remote', offline);
     download.disabled = offline;
-    download.title = offline ? '元ファイルのダウンロードにはリモート Vault への接続が必要です' : '';
+    download.title = offline ? 'オリジナルのダウンロードにはリモート Vault への接続が必要です' : '';
     download.querySelector('span').textContent = offline ? 'オフライン' : 'ダウンロード';
   }
 }
@@ -56,9 +56,9 @@ function updateDesktopContextMenuState(menu, item) {
     var offline = isRemoteAccessUnavailable();
     download.classList.toggle('requires-remote', offline);
     download.disabled = offline;
-    download.title = offline ? '元ファイルのダウンロードにはリモート Vault への接続が必要です' : '';
+    download.title = offline ? 'オリジナルのダウンロードにはリモート Vault への接続が必要です' : '';
     var label = download.querySelector('span');
-    if (label) label.textContent = offline ? 'オフライン' : '元ファイルをダウンロード';
+    if (label) label.textContent = offline ? 'オフライン' : 'オリジナルをダウンロード';
   }
 }
 
@@ -89,7 +89,7 @@ function openDesktopContextMenu(item, x, y, sourceEl) {
     '<button type="button" role="menuitem" data-context-action="share">' + iconExternalLink() + '<span>素材のリンクをコピー</span></button>' +
     (canCopyImage(item.ext) ? '<button type="button" role="menuitem" data-context-action="copy">' + iconCopy() + '<span>画像をコピー</span></button>' : '') +
     '<div class="item-context-separator"></div>' +
-    '<button type="button" role="menuitem" data-context-action="download">' + iconDownload() + '<span>元ファイルをダウンロード</span></button>';
+    '<button type="button" role="menuitem" data-context-action="download">' + iconDownload() + '<span>オリジナルをダウンロード</span></button>';
   document.body.appendChild(menu);
   if (sourceEl) sourceEl.classList.add('context-active');
   updateDesktopContextMenuState(menu, item);
@@ -147,7 +147,7 @@ function openQuickActionSheet(item) {
           '</div>' +
         '</section>' +
         '<section class="quick-action-section output">' +
-          '<div class="quick-action-section-title"><span>書き出し</span><em>リンクをコピー、または元ファイルをダウンロード</em></div>' +
+          '<div class="quick-action-section-title"><span>書き出し</span><em>リンクをコピー、またはオリジナルをダウンロード</em></div>' +
           '<div class="quick-action-grid">' +
             '<button type="button" data-quick-action="share">' + iconExternalLink() + '<span>リンク</span></button>' +
             '<button type="button" data-quick-action="download">' + iconDownload() + '<span>ダウンロード</span></button>' +

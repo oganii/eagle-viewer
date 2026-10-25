@@ -253,7 +253,7 @@ function setPreviewQualityNotice(overlay, offline) {
   notice.dataset.state = offline ? 'offline' : 'fallback';
   notice.setAttribute('role', 'status');
   notice.innerHTML = offline
-    ? '<strong>オフラインのプレビュー</strong><small>キャッシュのサムネイルを表示中 · 元画像は再接続後に表示</small>'
-    : '<strong>サムネイルのプレビュー</strong><small>元画像を読み込めなかったため、低解像度版を表示中</small>';
+    ? '<strong>オフラインのプレビュー</strong><small>キャッシュのサムネイルを表示中 · オリジナルは再接続後に表示</small>'
+    : '<strong>サムネイルのプレビュー</strong><small>オリジナルを読み込めなかったため、低解像度版を表示中</small>';
   if (!notice.parentNode) overlay.appendChild(notice);
 }

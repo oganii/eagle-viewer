@@ -72,16 +72,16 @@ async function shareItemLink(item, button) {
 async function shareItemFile(item, button) {
   if (!item) return;
   if (isRemoteAccessUnavailable()) {
-    showToast('元ファイルの共有にはリモート Vault への接続が必要です', 'error');
+    showToast('オリジナルの共有にはリモート Vault への接続が必要です', 'error');
     return;
   }
   if (!navigator.share || !navigator.canShare || typeof File === 'undefined') {
-    showToast('このブラウザは元ファイルを共有できません。ダウンロードを使ってください', 'error');
+    showToast('このブラウザはオリジナルを共有できません。ダウンロードを使ってください', 'error');
     return;
   }
   var maxShareBytes = 64 * 1024 * 1024;
   if (Number(item.size || 0) > maxShareBytes) {
-    showToast('元ファイルが 64 MB を超えています。ダウンロードするか、ページのリンクを共有してください', 'error');
+    showToast('オリジナルが 64 MB を超えています。ダウンロードするか、ページのリンクを共有してください', 'error');
     return;
   }
   var label = button ? (button.querySelector('span') || button) : null;
@@ -96,9 +96,9 @@ async function shareItemFile(item, button) {
     var response = await fetch(buildItemFileUrl(item), { cache: 'no-store' });
     if (handleAuthResponse(response)) return;
     if (response.status === 503) throw new Error('リモート Vault に接続できません');
-    if (!response.ok) throw new Error('元ファイルを読み込めませんでした');
+    if (!response.ok) throw new Error('オリジナルを読み込めませんでした');
     var blob = await response.blob();
-    if (blob.size > maxShareBytes) throw new Error('元ファイルが 64 MB を超えています。ダウンロードを使ってください');
+    if (blob.size > maxShareBytes) throw new Error('オリジナルが 64 MB を超えています。ダウンロードを使ってください');
     var file = new File([blob], buildItemDownloadName(item), { type: blob.type || 'application/octet-stream' });
     if (!navigator.canShare({ files: [file] })) throw new Error('このブラウザはこの種類のファイルを共有できません。ダウンロードを使ってください');
     await navigator.share({ files: [file], title: item.name || 'Eagle Vault の素材' });
@@ -106,7 +106,7 @@ async function shareItemFile(item, button) {
     closeQuickActionSheet();
   } catch (err) {
     if (err && err.name === 'AbortError') return;
-    showToast((err && err.message) || '元ファイルを共有できませんでした。ダウンロードを使ってください', 'error');
+    showToast((err && err.message) || 'オリジナルを共有できませんでした。ダウンロードを使ってください', 'error');
   } finally {
     if (button && button.isConnected) {
       button.disabled = oldDisabled;
@@ -368,7 +368,7 @@ function runItemAction(item, action, sourceEl) {
     copyItemReference(item, action === 'copy-html' ? 'html' : (action === 'copy-ref' ? 'text' : 'markdown'), sourceEl);
   } else if (action === 'download') {
     if (isRemoteAccessUnavailable()) {
-      showToast('元ファイルのダウンロードにはリモート Vault への接続が必要です', 'error');
+      showToast('オリジナルのダウンロードにはリモート Vault への接続が必要です', 'error');
       return;
     }
     var resetDownloadButton = null;

@@ -266,7 +266,7 @@ function renderListRow(item, tbody) {
   var actHtml = '';
   if (isPreviewable(item.ext)) actHtml += '<a href="' + fileUrl + '" target="_blank" rel="noopener">プレビュー</a>';
   else if (isItemPreviewable(item)) actHtml += '<button type="button" data-list-mobile-action="preview" data-id="' + escapeHtml(item.id) + '">キャッシュでプレビュー</button>';
-  actHtml += '<button type="button" class="btn-download-original list-download-action' + (downloadDisabled ? ' requires-remote' : '') + '" data-id="' + escapeHtml(item.id) + '"' + (downloadDisabled ? ' disabled title="元ファイルのダウンロードにはリモート Vault への接続が必要です"' : '') + '>' + (downloadDisabled ? 'オフライン' : 'ダウンロード') + '</button>';
+  actHtml += '<button type="button" class="btn-download-original list-download-action' + (downloadDisabled ? ' requires-remote' : '') + '" data-id="' + escapeHtml(item.id) + '"' + (downloadDisabled ? ' disabled title="オリジナルのダウンロードにはリモート Vault への接続が必要です"' : '') + '>' + (downloadDisabled ? 'オフライン' : 'ダウンロード') + '</button>';
   if (canCopyImage(item.ext)) actHtml += '<button type="button" class="btn-copy" data-id="' + escapeHtml(item.id) + '">コピー</button>';
   actionsCell.innerHTML = actHtml;
   tr.appendChild(actionsCell);

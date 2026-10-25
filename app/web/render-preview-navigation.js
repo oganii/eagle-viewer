@@ -217,7 +217,7 @@ function getPreviewRemoteNoticeCopy() {
   var snapshot = getPreviewRemoteSnapshotMeta();
   return {
     title: snapshot ? 'スナップショット / キャッシュのプレビューを表示中' : 'リモート Vault に接続できません',
-    meta: snapshot ? ('スナップショット ' + new Date(snapshot.savedAt).toLocaleString(getDateLocale()) + ' · ' + (snapshot.ok || 0) + ' 件。元ファイルのダウンロードには再接続が必要です。') : 'キャッシュ済みの素材はこのまま見られます。元ファイルとキャッシュのないプレビューにはリモート接続が必要です。'
+    meta: snapshot ? ('スナップショット ' + new Date(snapshot.savedAt).toLocaleString(getDateLocale()) + ' · ' + (snapshot.ok || 0) + ' 件。オリジナルのダウンロードには再接続が必要です。') : 'キャッシュ済みの素材はこのまま見られます。オリジナルとキャッシュのないプレビューにはリモート接続が必要です。'
   };
 }
 
@@ -257,8 +257,8 @@ function refreshPreviewMobileActions(bar, item) {
   if (downloadBtn) {
     downloadBtn.classList.toggle('requires-remote', offline);
     downloadBtn.disabled = offline;
-    downloadBtn.title = offline ? '元ファイルのダウンロードにはリモート Vault への接続が必要です' : '';
-    downloadBtn.querySelector('span').textContent = offline ? 'オフライン' : '元ファイルをダウンロード';
+    downloadBtn.title = offline ? 'オリジナルのダウンロードにはリモート Vault への接続が必要です' : '';
+    downloadBtn.querySelector('span').textContent = offline ? 'オフライン' : 'オリジナルをダウンロード';
   }
 }
 
@@ -300,7 +300,7 @@ function addPreviewMobileActions(overlay, item) {
     '<button type="button" data-preview-action="more" aria-expanded="false" aria-controls="previewMobileMoreMenu">' + iconMenu() + '<span>その他</span></button>' +
     '<div class="preview-mobile-more" id="previewMobileMoreMenu" role="menu" aria-label="プレビューのその他の操作" hidden>' +
       '<button type="button" data-preview-more-action="share">' + iconExternalLink() + '<span>ページのリンクを共有</span></button>' +
-      '<button type="button" data-preview-more-action="download">' + iconDownload() + '<span>元ファイルをダウンロード</span></button>' +
+      '<button type="button" data-preview-more-action="download">' + iconDownload() + '<span>オリジナルをダウンロード</span></button>' +
     '</div>';
   refreshPreviewMobileActions(bar, item);
   bar.onclick = function(e) {
