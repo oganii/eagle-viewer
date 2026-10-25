@@ -16,6 +16,8 @@ function renderContent() {
   ctSort.value = state.listSort;
   ctDir.value = state.listDir;
   ctType.value = state.listType;
+  var ctRating = document.getElementById('ctRatingSelect');
+  if (ctRating) ctRating.value = state.listRating;
   updateContentTitle();
 
   body.innerHTML = '';
@@ -25,7 +27,7 @@ function renderContent() {
       var remoteOffline = navigator.onLine === false || (remoteStrip && !remoteStrip.hidden && remoteStrip.dataset.state === 'offline');
       var snapshotMeta = null;
       try {
-        snapshotMeta = JSON.parse(localStorage.getItem('eagle-viewer-offline-snapshot-meta') || 'null');
+        snapshotMeta = JSON.parse(localStorage.getItem(libraryScopedKey('eagle-viewer-offline-snapshot-meta')) || 'null');
       } catch (e) {}
       if (remoteOffline) {
         body.innerHTML =

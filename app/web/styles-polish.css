@@ -1201,3 +1201,36 @@ html[data-theme] .content-crumb[aria-current="page"] {
   justify-content:flex-start;
 }
 .folder-rail + .masonry { margin-top:0; }
+
+/* ===== Library switcher ===== */
+.library-switcher { display:flex; flex-direction:column; gap:6px; }
+.library-switcher[hidden] { display:none; }
+.library-select {
+  width:100%; min-height:32px; padding:4px 8px;
+  border:1px solid var(--border); border-radius:8px;
+  background:var(--bg2); color:var(--text); font:inherit; font-size:13px;
+}
+.library-switcher-state { font-size:11px; color:var(--text-muted); }
+.library-switcher-state:empty { display:none; }
+.library-loading-state .library-progress {
+  width:min(280px,70%); height:4px; border-radius:2px; background:var(--bg3); overflow:hidden;
+}
+.library-loading-state .library-progress i { display:block; height:100%; background:var(--accent-solid); transition:width .3s; }
+
+/* ===== Star rating ===== */
+.card-star { position:absolute; left:8px; bottom:8px; z-index:2; pointer-events:none; }
+.star-badge {
+  display:inline-flex; align-items:center; padding:1px 6px; border-radius:999px;
+  font-size:11px; line-height:16px; font-weight:600; letter-spacing:.02em;
+  color:#ffd257; background:rgba(0,0,0,.55);
+}
+.list-name-wrap .star-badge { margin-left:6px; flex:none; }
+.inspector-rating { margin-top:6px; }
+.star-rating { display:inline-flex; align-items:center; gap:2px; color:var(--text-muted); font-size:18px; line-height:1; }
+.star-rating .star { color:var(--text-muted); opacity:.55; }
+.star-rating .star.on { color:#f5b301; opacity:1; }
+.star-rating button.star {
+  border:0; background:none; padding:2px; margin:0; font:inherit; cursor:pointer; border-radius:4px;
+}
+.star-rating button.star:hover, .star-rating button.star:focus-visible { background:var(--hover); opacity:1; }
+.star-rating .star-none { margin-left:6px; font-size:12px; }

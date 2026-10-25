@@ -34,8 +34,8 @@ function renderItemCard(item, container) {
     thumb.style.aspectRatio = '4/3';
   }
 
-  var thumbUrl = API + '/api/items/' + item.id + '/thumbnail';
-  var fileUrl = API + '/api/items/' + item.id + '/file';
+  var thumbUrl = itemThumbUrl(item.id);
+  var fileUrl = itemFileUrl(item.id);
 
   if (item.hasThumbnail || isImageExt(item.ext)) {
     var img = document.createElement('img');
@@ -53,6 +53,14 @@ function renderItemCard(item, container) {
     thumb.innerHTML = renderFilePlaceholder(item, true);
     thumb.style.aspectRatio = '4/3';
     loadTextSnippet(item, thumb);
+  }
+
+  var starHtml = renderStarBadge(item.star);
+  if (starHtml) {
+    var starWrap = document.createElement('div');
+    starWrap.className = 'card-star';
+    starWrap.innerHTML = starHtml;
+    thumb.appendChild(starWrap);
   }
 
   if (isVideoExt(item.ext)) {
@@ -108,7 +116,7 @@ function renderItemCard(item, container) {
     card.addEventListener('mouseenter', function(ev) {
       state.hoverTimer = setTimeout(function() {
         showHoverPreview(
-          (item.ext || '').toLowerCase() === 'pdf' ? (API + '/api/items/' + item.id + '/file') : thumbUrl,
+          (item.ext || '').toLowerCase() === 'pdf' ? (itemFileUrl(item.id)) : thumbUrl,
           ev,
           (item.ext || '').toLowerCase() === 'pdf' ? 'pdf' : 'image'
         );
@@ -147,8 +155,8 @@ function renderFolderCard(sub, container) {
 
 // ===== List view =====
 function renderListRow(item, tbody) {
-  var fileUrl = API + '/api/items/' + item.id + '/file';
-  var thumbUrl = API + '/api/items/' + item.id + '/thumbnail';
+  var fileUrl = itemFileUrl(item.id);
+  var thumbUrl = itemThumbUrl(item.id);
   var tr = document.createElement('tr');
   tr.className = 'item-row' + (state.selectedIds.has(item.id) ? ' selected' : '');
   tr.dataset.itemId = item.id;
@@ -193,6 +201,7 @@ function renderListRow(item, tbody) {
   if (sourceDomain) mobileMeta.push(sourceDomain);
   nameCell.innerHTML = '<div class="list-name-wrap">' +
     '<span class="list-name-text" title="' + escapeHtml(item.name) + '">' + escapeHtml(item.name) + '</span>' +
+    renderStarBadge(item.star) +
     '</div>' +
     (mobileMeta.length ? '<div class="list-mobile-meta">' + mobileMeta.map(function(part) { return '<span>' + escapeHtml(part) + '</span>'; }).join('') + '</div>' : '') +
     '<div class="list-mobile-actions">' +
@@ -485,6 +494,9 @@ function getMobileWorkbarMeta() {
     var directionKey = state.sortDir === 'asc' ? 'sort_asc' : 'sort_desc';
     parts.push(t(sortKey) + ' · ' + t(directionKey));
   }
+  if (state.listRating && state.listRating !== 'all') {
+    parts.push(state.listRating === 'unrated' ? t('rating_unrated') : tFmt('rating_min', { n: state.listRating }));
+  }
   var filterCount = Object.keys(state.advancedFilters || {}).filter(function(key) {
     return state.advancedFilters[key] !== undefined && state.advancedFilters[key] !== null && state.advancedFilters[key] !== '';
   }).length;
@@ -496,7 +508,7 @@ function getMobileWorkbarRemoteState() {
   var strip = document.getElementById('remoteStatusStrip');
   var snapshot = null;
   try {
-    snapshot = JSON.parse(localStorage.getItem('eagle-viewer-offline-snapshot-meta') || 'null');
+    snapshot = JSON.parse(localStorage.getItem(libraryScopedKey('eagle-viewer-offline-snapshot-meta')) || 'null');
   } catch (e) {}
   if (navigator.onLine === false || (strip && !strip.hidden && strip.dataset.state === 'offline')) {
     return {
@@ -516,7 +528,7 @@ function getMobileWorkbarRemoteState() {
 function getMobileSnapshotLabel() {
   var snapshot = null;
   try {
-    snapshot = JSON.parse(localStorage.getItem('eagle-viewer-offline-snapshot-meta') || 'null');
+    snapshot = JSON.parse(localStorage.getItem(libraryScopedKey('eagle-viewer-offline-snapshot-meta')) || 'null');
   } catch (e) {}
   if (!snapshot || !snapshot.savedAt) return '未保存';
   var diff = Date.now() - Number(snapshot.savedAt || 0);
@@ -609,7 +621,7 @@ function getOfflineSnapshotBannerHtml() {
   var checking = !offline && stripChecking;
   var snapshotMeta = null;
   try {
-    snapshotMeta = JSON.parse(localStorage.getItem('eagle-viewer-offline-snapshot-meta') || 'null');
+    snapshotMeta = JSON.parse(localStorage.getItem(libraryScopedKey('eagle-viewer-offline-snapshot-meta')) || 'null');
   } catch (e) {}
   if (!offline && !checking && !(snapshotMeta && snapshotMeta.savedAt && window.innerWidth <= 768)) return '';
   var stateName = offline ? 'offline' : (checking ? 'checking' : 'ready');

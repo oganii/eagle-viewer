@@ -6,9 +6,139 @@ var apiModule = EagleViewer.modules.api = EagleViewer.modules.api || {};
 var activeListAbortController = null;
 
 async function fetchJson(path, options) {
-  var response = await fetch(API + path, options);
+  var response = await fetch(API + withLib(path), options);
   if (handleAuthResponse(response)) return null;
-  if (!response.ok) throw new Error(response.status === 503 ? 'offline' : 'request');
+  if (!response.ok) throw await buildResponseError(response);
+  return response.json();
+}
+
+// 503 with {detail: {code: 'library-loading'}} means the selected library is still being indexed.
+async function buildResponseError(response) {
+  var error = new Error(response.status === 503 ? 'offline' : 'request');
+  error.status = response.status;
+  try {
+    var body = await response.json();
+    var detail = body && body.detail;
+    if (detail && detail.code === 'library-loading') {
+      error.message = 'library-loading';
+      error.library = detail.library || null;
+    } else if (typeof detail === 'string') {
+      error.detail = detail;
+    }
+  } catch (e) {}
+  return error;
+}
+
+// ===== Libraries =====
+var libraryPollTimer = 0;
+
+async function fetchLibraries() {
+  var response = await fetch(API + '/api/libraries', { cache: 'no-store' });
+  if (handleAuthResponse(response)) return null;
+  if (!response.ok) throw new Error('request');
+  var data = await response.json();
+  state.libraries = data.libraries || [];
+  state.defaultLibrary = data.default || '';
+  return data;
+}
+
+async function initLibraries() {
+  var fromHash = libraryFromHash();
+  try {
+    await fetchLibraries();
+  } catch (e) {
+    state.libraries = [];
+  }
+  state.currentLibrary = chooseLibrary(state.libraries, state.defaultLibrary, fromHash, readStoredLibrary());
+  if (state.currentLibrary) rememberLibrary(state.currentLibrary);
+  if (render.renderLibrarySwitcher) render.renderLibrarySwitcher();
+  return state.currentLibrary;
+}
+
+function libraryDisplayName(libId) {
+  var lib = findLibrary(libId);
+  return lib ? lib.name : (libId || '');
+}
+
+function renderLibraryLoading(lib) {
+  var body = document.getElementById('contentBody');
+  if (!body) return;
+  var name = lib ? lib.name : libraryDisplayName(state.currentLibrary);
+  var failed = lib && lib.state === 'error';
+  var progress = lib && lib.progress && lib.progress.total ? lib.progress : null;
+  var title = failed ? tFmt('library_error', { name: name })
+    : progress ? tFmt('library_loading_progress', { name: name, done: progress.done, total: progress.total })
+    : tFmt('library_loading', { name: name });
+  var percent = progress ? Math.min(100, Math.round(progress.done * 100 / Math.max(1, progress.total))) : 0;
+  body.innerHTML = '<div class="empty-state library-loading-state" data-library-loading="' + escapeHtml(lib ? lib.id : '') + '">' +
+    (failed ? iconFolderOutline() : '<div class="loading-spinner"></div>') +
+    '<strong>' + escapeHtml(title) + '</strong>' +
+    '<span>' + escapeHtml(failed ? (lib.error || '') : t('library_loading_desc')) + '</span>' +
+    (progress ? '<div class="library-progress"><i style="width:' + percent + '%"></i></div>' : '') +
+    '</div>';
+  var toolbar = document.getElementById('contentToolbar');
+  if (toolbar) toolbar.style.display = 'none';
+}
+
+// Poll /api/libraries until the selected library is indexed, showing progress meanwhile.
+async function waitForLibraryReady(libId) {
+  clearTimeout(libraryPollTimer);
+  await fetch(API + '/api/libraries/' + encodeURIComponent(libId) + '/load', { method: 'POST' }).catch(function() {});
+  while (state.currentLibrary === libId) {
+    var data = null;
+    try { data = await fetchLibraries(); } catch (e) { data = null; }
+    var lib = findLibrary(libId);
+    if (render.renderLibrarySwitcher) render.renderLibrarySwitcher();
+    if (lib && lib.state === 'ready') return true;
+    if (data && lib) renderLibraryLoading(lib);
+    await new Promise(function(resolve) { libraryPollTimer = setTimeout(resolve, lib && lib.state === 'error' ? 10000 : 1500); });
+  }
+  return false;
+}
+
+async function ensureLibraryReady() {
+  var lib = findLibrary(state.currentLibrary);
+  if (!lib || lib.state === 'ready') return true;
+  renderLibraryLoading(lib);
+  return waitForLibraryReady(state.currentLibrary);
+}
+
+async function switchLibrary(libId) {
+  if (!libId || libId === state.currentLibrary) return;
+  state.currentLibrary = libId;
+  rememberLibrary(libId);
+  state.currentView = 'all';
+  state.currentFolderId = null;
+  state.currentTagName = null;
+  state.searchQuery = '';
+  state.pendingItemId = '';
+  state.currentItems = [];
+  state.currentSubfolders = [];
+  state.selectedIds = new Set();
+  state.folderExpanded = {};
+  var searchInput = document.getElementById('searchInput');
+  if (searchInput) searchInput.value = '';
+  if (render.closeInspector && state.inspectorItem) render.closeInspector();
+  if (render.renderLibrarySwitcher) render.renderLibrarySwitcher();
+  if (!(await ensureLibraryReady())) return;
+  if (state.currentLibrary !== libId) return;
+  await fetchTree();
+  render.renderSidebar();
+  await fetchTags();
+  render.renderTagList();
+  await loadAllItems(true);
+  if (window.showToast) window.showToast(tFmt('library_switched', { name: libraryDisplayName(libId) }), 'success');
+}
+
+// PUT the rating; resolves to the updated item or throws an Error with .detail (Japanese message).
+async function setItemStar(itemId, star) {
+  var response = await fetch(API + withLib('/api/items/' + encodeURIComponent(itemId) + '/star'), {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ star: star })
+  });
+  if (handleAuthResponse(response)) return null;
+  if (!response.ok) throw await buildResponseError(response);
   return response.json();
 }
 
@@ -39,7 +169,7 @@ async function fetchItemDetail(itemId) {
 }
 
 async function reloadLibrary() {
-  var response = await fetch(API + '/api/library/reload', { method: 'POST' });
+  var response = await fetch(API + withLib('/api/library/reload'), { method: 'POST' });
   if (handleAuthResponse(response)) return null;
   if (!response.ok) throw new Error('reload');
   await fetchTree();
@@ -98,9 +228,10 @@ function findFolderNodeById(folderId, nodes) {
 
 function buildBasicListQuery() {
   var params = new URLSearchParams();
-  params.set('sort', state.sortKey || 'mtime');
-  params.set('dir', state.sortDir || 'desc');
+  params.set('sort', state.listSort || 'mtime');
+  params.set('dir', state.listDir || 'desc');
   params.set('type', state.listType || 'all');
+  if (state.listRating && state.listRating !== 'all') params.set('rating', state.listRating);
   params.set('offset', String(state.incrementalOffset || 0));
   params.set('limit', String(INCREMENTAL_PAGE_SIZE));
   return params.toString();
@@ -154,6 +285,11 @@ async function loadIncrementalView(options) {
     if (error && error.name === 'AbortError') return;
     if (requestId !== state.activeListRequest) return;
     state.incrementalLoading = false;
+    if (error && error.message === 'library-loading') {
+      if (error.library) renderLibraryLoading(error.library);
+      if (await waitForLibraryReady(state.currentLibrary)) refreshCurrentView();
+      return;
+    }
     if (reset) {
       var title = error && error.message === 'offline' ? 'リモート Vault に接続できません' : '読み込みに失敗しました';
       document.getElementById('contentBody').innerHTML = '<div class="empty-state offline-state">' + iconFolderOutline() + '<strong>' + title + '</strong><span>ネットワーク接続、VPN、リモートのマウント状態を確認してください。</span></div>';
@@ -220,6 +356,11 @@ async function loadNextIncrementalPage() {
 }
 
 Object.assign(apiModule, {
+  fetchLibraries: fetchLibraries,
+  initLibraries: initLibraries,
+  ensureLibraryReady: ensureLibraryReady,
+  switchLibrary: switchLibrary,
+  setItemStar: setItemStar,
   fetchTree: fetchTree,
   fetchTags: fetchTags,
   resolveItems: resolveItems,

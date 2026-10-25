@@ -4,6 +4,33 @@ var state = EagleViewer.state;
 var api = EagleViewer.modules.api;
 var renderModule = EagleViewer.modules.render = EagleViewer.modules.render || {};
 
+// ===== Library switcher =====
+function renderLibrarySwitcher() {
+  var wrap = document.getElementById('librarySwitcher');
+  var select = document.getElementById('librarySelect');
+  if (!wrap || !select) return;
+  var libs = state.libraries || [];
+  wrap.hidden = libs.length < 2;
+  var html = libs.map(function(lib) {
+    var suffix = lib.state === 'loading' ? ' …' : (lib.state === 'error' ? ' !' : '');
+    var count = lib.items != null ? ' (' + Number(lib.items).toLocaleString(getDateLocale()) + ')' : '';
+    return '<option value="' + escapeHtml(lib.id) + '">' + escapeHtml(lib.name + count + suffix) + '</option>';
+  }).join('');
+  if (select.dataset.rendered !== html) {
+    select.innerHTML = html;
+    select.dataset.rendered = html;
+  }
+  select.value = state.currentLibrary || '';
+  var current = findLibrary(state.currentLibrary);
+  var stateEl = document.getElementById('librarySwitcherState');
+  if (stateEl) {
+    var progress = current && current.progress;
+    stateEl.textContent = current && current.state === 'loading'
+      ? (progress && progress.total ? tFmt('library_loading_progress', { name: current.name, done: progress.done, total: progress.total }) : tFmt('library_loading', { name: current.name }))
+      : (current && current.state === 'error' ? tFmt('library_error', { name: current.name }) : '');
+  }
+}
+
 // ===== Sidebar rendering =====
 function renderFolder(f, depth) {
   var div = document.createElement('div');

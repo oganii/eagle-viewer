@@ -81,7 +81,10 @@ Object.assign(renderModule, {
   updateContentTitle: updateContentTitle,
   updateMobileWorkbar: updateMobileWorkbar,
   refreshOpenPreviewMobileActions: refreshOpenPreviewMobileActions,
-  appendItemsToGrid: appendItemsToGrid
+  appendItemsToGrid: appendItemsToGrid,
+  renderLibrarySwitcher: renderLibrarySwitcher,
+  changeItemStar: changeItemStar,
+  updateItemStarEverywhere: updateItemStarEverywhere
 });
 renderModule.focusPendingItemWhenLoaded = focusPendingItemWhenLoaded;
 renderModule.returnFocusToItem = returnFocusToItem;

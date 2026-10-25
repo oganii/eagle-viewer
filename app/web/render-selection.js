@@ -39,7 +39,7 @@ function updateBatchBar() {
   if (previewRail) {
     var visibleItems = selectedItems.slice(0, 12);
     previewRail.innerHTML = visibleItems.map(function(item) {
-      var thumbUrl = API + '/api/items/' + item.id + '/thumbnail';
+      var thumbUrl = itemThumbUrl(item.id);
       var label = (item.name || item.id || '素材') + (item.ext ? '.' + item.ext : '');
       var inner = (item.hasThumbnail || isImageExt(item.ext)) ?
         '<img src="' + escapeHtml(thumbUrl) + '" alt="" loading="lazy" decoding="async" />' :

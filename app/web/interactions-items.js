@@ -117,7 +117,7 @@ async function shareItemFile(item, button) {
 }
 
 function buildItemFileUrl(item) {
-  return API + '/api/items/' + item.id + '/file';
+  return itemFileUrl(item.id);
 }
 
 function buildAbsoluteItemFileUrl(item) {
@@ -271,7 +271,7 @@ async function copyItemImage(id, button) {
     return;
   }
   var old = button ? button.innerHTML : '';
-  var url = API + '/api/items/' + id + '/file';
+  var url = itemFileUrl(id);
   try {
     var response = await fetch(url);
     var blob = await response.blob();
@@ -387,7 +387,7 @@ function runItemAction(item, action, sourceEl) {
       };
     }
     var a = document.createElement('a');
-    a.href = fileUrl + '?download=true';
+    a.href = itemFileUrl(item.id, true);
     a.download = buildItemDownloadName(item);
     a.click();
     showToast('ダウンロードを開始しました', 'success');

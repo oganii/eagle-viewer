@@ -289,3 +289,62 @@ test('buildListQuery reflects current sort state', () => {
   assert.strictEqual(core.buildListQuery(), 'sort=mtime&dir=desc&type=video');
   state.listType = 'all'; // restore shared state for later tests
 });
+
+test('library: withLib scopes API URLs and keeps existing query/hash', () => {
+  const state = core.state;
+  state.currentLibrary = '';
+  assert.strictEqual(core.withLib('/api/items'), '/api/items');
+  state.currentLibrary = 'doujin-cgs-manga';
+  assert.strictEqual(core.withLib('/api/items'), '/api/items?lib=doujin-cgs-manga');
+  assert.strictEqual(core.withLib('/api/search?q=a'), '/api/search?q=a&lib=doujin-cgs-manga');
+  assert.strictEqual(core.withLib('/x#frag', 'home'), '/x?lib=home#frag');
+  assert.strictEqual(core.itemThumbUrl('ABC'), '/api/items/ABC/thumbnail?lib=doujin-cgs-manga');
+  assert.strictEqual(core.itemFileUrl('ABC', true), '/api/items/ABC/file?download=true&lib=doujin-cgs-manga');
+  assert.strictEqual(core.libraryScopedKey('snap'), 'snap:doujin-cgs-manga');
+  state.currentLibrary = '';
+  assert.strictEqual(core.libraryScopedKey('snap'), 'snap');
+});
+
+test('library: chooseLibrary prefers hash, then stored choice, then server default', () => {
+  const libs = [{ id: 'comfyui' }, { id: 'home' }, { id: 'erogame' }];
+  assert.strictEqual(core.chooseLibrary(libs, 'comfyui', 'home', 'erogame'), 'home');
+  assert.strictEqual(core.chooseLibrary(libs, 'comfyui', '', 'erogame'), 'erogame');
+  assert.strictEqual(core.chooseLibrary(libs, 'comfyui', 'gone', 'gone-too'), 'comfyui');
+  assert.strictEqual(core.chooseLibrary([], 'comfyui', '', ''), '');
+});
+
+test('library: hash carries lib and rating', () => {
+  assert.strictEqual(core.libraryFromHash('#view=all&lib=home'), 'home');
+  assert.strictEqual(core.libraryFromHash('#view=all'), '');
+  core.applyStateFromHash('#view=all&rating=3&lib=home');
+  assert.strictEqual(core.state.listRating, '3');
+  core.applyStateFromHash('#view=all&rating=bogus');
+  assert.strictEqual(core.state.listRating, 'all');
+  assert.strictEqual(core.getRouteHistoryIdentity(new URLSearchParams('view=all&lib=home')), 'lib=home:all');
+});
+
+test('rating: list query, star helpers and toggle-to-clear', () => {
+  const state = core.state;
+  state.listSort = 'star';
+  state.listDir = 'desc';
+  state.listType = 'all';
+  state.listRating = 'unrated';
+  assert.strictEqual(core.buildListQuery(), 'sort=star&dir=desc&type=all&rating=unrated');
+  state.listRating = 'all';
+  state.listSort = 'mtime';
+  assert.strictEqual(core.buildListQuery(), 'sort=mtime&dir=desc&type=all');
+
+  assert.strictEqual(core.normalizeStar('4'), 4);
+  assert.strictEqual(core.normalizeStar(9), 0);
+  assert.strictEqual(core.nextStarValue(3, 5), 5);
+  assert.strictEqual(core.nextStarValue(3, 3), 0);
+  assert.strictEqual(core.nextStarValue(0, 1), 1);
+  assert.strictEqual(core.renderStarBadge(0), '');
+  assert.match(core.renderStarBadge(4), /★4/);
+  const readonly = core.renderStarRow(2, false);
+  assert.doesNotMatch(readonly, /<button/);
+  assert.strictEqual((readonly.match(/star on/g) || []).length, 2);
+  const editable = core.renderStarRow(0, true);
+  assert.strictEqual((editable.match(/data-star-value=/g) || []).length, 5);
+  assert.match(editable, /未評価/);
+});

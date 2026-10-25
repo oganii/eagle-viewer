@@ -103,8 +103,8 @@ function openCompare(items) {
     '</div>' +
   '</header>' +
   '<main class="compare-grid compare-count-' + eligible.length + '">' + eligible.map(function(item, index) {
-    var fileUrl = API + '/api/items/' + encodeURIComponent(item.id) + '/file';
-    var thumbUrl = API + '/api/items/' + encodeURIComponent(item.id) + '/thumbnail';
+    var fileUrl = itemFileUrl(item.id);
+    var thumbUrl = itemThumbUrl(item.id);
     var dimensions = item.width && item.height ? item.width + ' × ' + item.height : 'サイズ不明';
     return '<article class="compare-pane" data-compare-index="' + index + '">' +
       '<div class="compare-canvas"><img src="' + fileUrl + '" data-fallback="' + thumbUrl + '" alt="' + escapeHtml(item.name || '比較する画像') + '" draggable="false"></div>' +

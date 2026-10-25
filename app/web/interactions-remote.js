@@ -39,7 +39,7 @@ function updateMobileRemoteCard(status, message) {
 
 function getOfflineSnapshotMeta() {
   try {
-    var meta = JSON.parse(localStorage.getItem('eagle-viewer-offline-snapshot-meta') || 'null');
+    var meta = JSON.parse(localStorage.getItem(libraryScopedKey('eagle-viewer-offline-snapshot-meta')) || 'null');
     return meta && meta.savedAt ? meta : null;
   } catch (e) {
     return null;

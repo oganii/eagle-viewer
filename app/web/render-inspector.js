@@ -15,9 +15,9 @@ function openInspector(item) {
   var panel = document.getElementById('inspector');
   var inner = document.getElementById('inspectorInner');
   var actions = document.getElementById('inspectorActions');
-  var thumbUrl = API + '/api/items/' + item.id + '/thumbnail';
-  var fileUrl = API + '/api/items/' + item.id + '/file';
-  var fileUrlDownload = fileUrl + '?download=true';
+  var thumbUrl = itemThumbUrl(item.id);
+  var fileUrl = itemFileUrl(item.id);
+  var fileUrlDownload = itemFileUrl(item.id, true);
   var downloadName = (item.name || 'file') + (item.ext ? '.' + item.ext : '');
 
   var html = '';
@@ -28,6 +28,7 @@ function openInspector(item) {
   html += '<div class="inspector-kind">' + escapeHtml(getInspectorTypeLabel(item)) + '</div>';
   html += '<h2>' + escapeHtml(item.name || '名称未設定の素材') + '</h2>';
   html += '<div class="inspector-file-line">' + escapeHtml(downloadName) + '</div>';
+  html += '<div class="inspector-rating" id="inspectorRating">' + renderStarRow(item.star, isCurrentLibraryEditable()) + '</div>';
   var statusPills = renderInspectorStatusPills(item);
   if (statusPills) html += '<div class="inspector-status-row">' + statusPills + '</div>';
   html += '</div>';
@@ -66,6 +67,7 @@ function openInspector(item) {
   html += '</div>';
   inner.innerHTML = html;
   renderInspectorMobileSummary(item);
+  bindInspectorRating(item);
   renderInspectorPreview(document.getElementById('inspectorPreview'), item, thumbUrl, fileUrl);
   bindInspectorPreviewAction(item, fileUrl);
 
@@ -101,9 +103,72 @@ function openInspector(item) {
   }
 }
 
+// ===== Star rating (inspector) =====
+function bindInspectorRating(item) {
+  var holder = document.getElementById('inspectorRating');
+  if (!holder) return;
+  holder.onclick = function(event) {
+    var button = event.target.closest('[data-star-value]');
+    if (!button || !isCurrentLibraryEditable()) return;
+    changeItemStar(item.id, Number(button.dataset.starValue));
+  };
+}
+
+// Reflect a rating in every rendered place (cards, list rows, inspector, cached item objects).
+function updateItemStarEverywhere(itemId, star) {
+  (state.currentItems || []).forEach(function(candidate) { if (candidate.id === itemId) candidate.star = star; });
+  if (state.inspectorItem && state.inspectorItem.id === itemId) {
+    state.inspectorItem.star = star;
+    var holder = document.getElementById('inspectorRating');
+    if (holder) holder.innerHTML = renderStarRow(star, isCurrentLibraryEditable());
+  }
+  document.querySelectorAll('.card[data-item-id], tr.item-row[data-item-id]').forEach(function(el) {
+    if (el.dataset.itemId !== itemId) return;
+    var old = el.querySelector('.star-badge');
+    var html = renderStarBadge(star);
+    if (el.tagName === 'TR') {
+      var wrap = el.querySelector('.list-name-wrap');
+      if (old) old.remove();
+      if (wrap && html) wrap.insertAdjacentHTML('beforeend', html);
+      return;
+    }
+    var holderEl = el.querySelector('.card-star');
+    if (!html) { if (holderEl) holderEl.remove(); return; }
+    if (!holderEl) {
+      holderEl = document.createElement('div');
+      holderEl.className = 'card-star';
+      var thumb = el.querySelector('.card-thumb');
+      if (thumb) thumb.appendChild(holderEl);
+    }
+    holderEl.innerHTML = html;
+  });
+}
+
+var starWriteGeneration = {};
+
+// Optimistic update; rolls back and shows the server's (Japanese) message on failure.
+async function changeItemStar(itemId, clickedValue) {
+  var current = state.inspectorItem && state.inspectorItem.id === itemId ? state.inspectorItem : (state.currentItems || []).find(function(c) { return c.id === itemId; });
+  var previous = normalizeStar(current && current.star);
+  var next = nextStarValue(previous, clickedValue);
+  var generation = (starWriteGeneration[itemId] || 0) + 1;
+  starWriteGeneration[itemId] = generation;
+  updateItemStarEverywhere(itemId, next);
+  try {
+    var updated = await apiModule.setItemStar(itemId, next);
+    if (starWriteGeneration[itemId] !== generation) return;
+    if (updated) updateItemStarEverywhere(itemId, normalizeStar(updated.star));
+    if (window.showToast) window.showToast(t('rating_saved'), 'success');
+  } catch (error) {
+    if (starWriteGeneration[itemId] !== generation) return;
+    updateItemStarEverywhere(itemId, previous);
+    if (window.showToast) window.showToast((error && error.detail) || t('rating_failed'), 'error');
+  }
+}
+
 window._previewInspectorItem = function() {
   if (state.inspectorItem) {
-    var fileUrl = API + '/api/items/' + state.inspectorItem.id + '/file';
+    var fileUrl = itemFileUrl(state.inspectorItem.id);
     renderModule.previewItem(state.inspectorItem, fileUrl);
   }
 };

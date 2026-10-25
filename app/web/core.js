@@ -164,6 +164,12 @@ var searchQuery = '';
 var listSort = 'mtime';
 var listDir = 'desc';
 var listType = 'all';
+var listRating = 'all';
+var currentLibrary = '';
+var libraries = [];
+var defaultLibrary = '';
+var LIBRARY_STORAGE_KEY = 'eagle-viewer-library';
+var VALID_RATING_FILTERS = ['all', 'unrated', '1', '2', '3', '4', '5'];
 var inspectorItem = null;
 var pendingItemId = '';
 var pendingLaunchAction = '';
@@ -215,6 +221,10 @@ Object.defineProperties(EagleViewer.state, {
   listSort: { get: function() { return listSort; }, set: function(v) { listSort = v; }, enumerable: true },
   listDir: { get: function() { return listDir; }, set: function(v) { listDir = v; }, enumerable: true },
   listType: { get: function() { return listType; }, set: function(v) { listType = v; }, enumerable: true },
+  listRating: { get: function() { return listRating; }, set: function(v) { listRating = VALID_RATING_FILTERS.indexOf(String(v)) >= 0 ? String(v) : 'all'; }, enumerable: true },
+  currentLibrary: { get: function() { return currentLibrary; }, set: function(v) { currentLibrary = v || ''; }, enumerable: true },
+  libraries: { get: function() { return libraries; }, set: function(v) { libraries = v || []; }, enumerable: true },
+  defaultLibrary: { get: function() { return defaultLibrary; }, set: function(v) { defaultLibrary = v || ''; }, enumerable: true },
   inspectorItem: { get: function() { return inspectorItem; }, set: function(v) { inspectorItem = v; }, enumerable: true },
   pendingItemId: { get: function() { return pendingItemId; }, set: function(v) { pendingItemId = v || ''; }, enumerable: true },
   pendingLaunchAction: { get: function() { return pendingLaunchAction; }, set: function(v) { pendingLaunchAction = v || ''; }, enumerable: true },
@@ -242,7 +252,104 @@ function buildListQuery() {
   params.set('sort', listSort);
   params.set('dir', listDir);
   params.set('type', listType);
+  if (listRating && listRating !== 'all') params.set('rating', listRating);
   return params.toString();
+}
+
+// ===== Library selection =====
+// Every API URL carries ?lib=<id> so responses (and the browser HTTP cache) are
+// scoped to one library, even when two libraries share an item id.
+function withLib(path, libId) {
+  var lib = libId === undefined ? currentLibrary : libId;
+  if (!lib) return path;
+  var hashIndex = path.indexOf('#');
+  var hash = hashIndex >= 0 ? path.slice(hashIndex) : '';
+  var base = hashIndex >= 0 ? path.slice(0, hashIndex) : path;
+  return base + (base.indexOf('?') >= 0 ? '&' : '?') + 'lib=' + encodeURIComponent(lib) + hash;
+}
+
+function itemFileUrl(itemId, download) {
+  return withLib(API + '/api/items/' + encodeURIComponent(itemId) + '/file' + (download ? '?download=true' : ''));
+}
+
+function itemThumbUrl(itemId) {
+  return withLib(API + '/api/items/' + encodeURIComponent(itemId) + '/thumbnail');
+}
+
+function readStoredLibrary() {
+  try { return localStorage.getItem(LIBRARY_STORAGE_KEY) || ''; } catch (e) { return ''; }
+}
+
+function rememberLibrary(libId) {
+  try { localStorage.setItem(LIBRARY_STORAGE_KEY, libId || ''); } catch (e) {}
+}
+
+// Pick the library to show: URL hash > last choice > server default (only ids the server knows).
+function chooseLibrary(list, serverDefault, fromHash, stored) {
+  var ids = (list || []).map(function(lib) { return lib.id; });
+  if (fromHash && ids.indexOf(fromHash) >= 0) return fromHash;
+  if (stored && ids.indexOf(stored) >= 0) return stored;
+  if (serverDefault && ids.indexOf(serverDefault) >= 0) return serverDefault;
+  return ids[0] || '';
+}
+
+function findLibrary(libId) {
+  for (var i = 0; i < libraries.length; i++) if (libraries[i].id === libId) return libraries[i];
+  return null;
+}
+
+function isCurrentLibraryEditable() {
+  var lib = findLibrary(currentLibrary);
+  return !!(lib && lib.editable);
+}
+
+// Per-library storage key for client-side caches (offline snapshot meta, thumbnails).
+function libraryScopedKey(base, libId) {
+  var lib = libId === undefined ? currentLibrary : libId;
+  return lib ? base + ':' + lib : base;
+}
+
+function readOfflineSnapshotMeta() {
+  try {
+    var meta = JSON.parse(localStorage.getItem(libraryScopedKey('eagle-viewer-offline-snapshot-meta')) || 'null');
+    return meta && meta.savedAt ? meta : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+// ===== Star rating =====
+function normalizeStar(value) {
+  var n = Math.round(Number(value) || 0);
+  return n >= 1 && n <= 5 ? n : 0;
+}
+
+function renderStarBadge(star) {
+  var n = normalizeStar(star);
+  if (!n) return '';
+  return '<span class="star-badge" title="' + escapeHtml(tFmt('rating_stars', { n: n })) + '" aria-label="' + escapeHtml(tFmt('rating_stars', { n: n })) + '">\u2605' + n + '</span>';
+}
+
+function renderStarRow(star, editable) {
+  var n = normalizeStar(star);
+  var html = '<div class="star-rating' + (editable ? ' is-editable' : '') + '" data-star="' + n + '" role="' + (editable ? 'radiogroup' : 'img') + '" aria-label="' + escapeHtml(n ? tFmt('rating_stars', { n: n }) : t('rating_none')) + '">';
+  for (var i = 1; i <= 5; i++) {
+    var on = i <= n;
+    if (editable) {
+      html += '<button type="button" class="star' + (on ? ' on' : '') + '" data-star-value="' + i + '" role="radio" aria-checked="' + (i === n ? 'true' : 'false') + '" title="' + escapeHtml(i === n ? t('rating_clear') : tFmt('rating_set', { n: i })) + '">' + (on ? '\u2605' : '\u2606') + '</button>';
+    } else {
+      html += '<span class="star' + (on ? ' on' : '') + '" aria-hidden="true">' + (on ? '\u2605' : '\u2606') + '</span>';
+    }
+  }
+  if (!n) html += '<span class="star-none">' + escapeHtml(t('rating_none')) + '</span>';
+  return html + '</div>';
+}
+
+// Clicking the current value clears the rating (0 = unrated).
+function nextStarValue(current, clicked) {
+  var c = normalizeStar(current);
+  var k = normalizeStar(clicked);
+  return k === c ? 0 : k;
 }
 
 function updateUrlFromState() {
@@ -251,6 +358,8 @@ function updateUrlFromState() {
   params.set('sort', listSort);
   params.set('dir', listDir);
   params.set('type', listType);
+  if (listRating && listRating !== 'all') params.set('rating', listRating);
+  if (currentLibrary) params.set('lib', currentLibrary);
   if (currentView === 'folder' && currentFolderId) params.set('id', currentFolderId);
   if (currentView === 'tag' && currentTagName) params.set('tag', currentTagName);
   if (currentView === 'recent') params.set('days', String(recentDays));
@@ -289,7 +398,7 @@ function updateUrlFromState() {
 
 function getRouteHistoryIdentity(params) {
   var view = params.get('view') || 'all';
-  var identity = [view];
+  var identity = params.get('lib') ? ['lib=' + params.get('lib'), view] : [view];
   if (view === 'folder') identity.push(params.get('id') || '');
   else if (view === 'tag') identity.push(params.get('tag') || '');
   else if (view === 'recent') identity.push(params.get('days') || '7');
@@ -325,6 +434,7 @@ function applyStateFromHash(rawHash) {
   listSort = params.get('sort') || 'mtime';
   listDir = params.get('dir') || 'desc';
   listType = params.get('type') || 'all';
+  listRating = VALID_RATING_FILTERS.indexOf(params.get('rating') || 'all') >= 0 ? (params.get('rating') || 'all') : 'all';
   currentFolderId = params.get('id') || null;
   currentTagName = params.get('tag') || null;
   pendingItemId = params.get('item') || '';
@@ -332,6 +442,11 @@ function applyStateFromHash(rawHash) {
   recentDays = parseInt(params.get('days'), 10) || 7;
   searchQuery = params.get('q') || '';
   return true;
+}
+
+function libraryFromHash(rawHash) {
+  var hash = String(rawHash === undefined ? location.hash : rawHash || '').replace(/^#/, '');
+  return hash ? (new URLSearchParams(hash).get('lib') || '') : '';
 }
 
 function applyStateFromUrl() {
@@ -443,7 +558,7 @@ function loadTextSnippet(item, container) {
   var target = container.querySelector('[data-snippet-for="' + item.id + '"]');
   if (!target || target.dataset.loaded) return;
   target.dataset.loaded = '1';
-  fetch(API + '/api/items/' + item.id + '/snippet')
+  fetch(withLib(API + '/api/items/' + encodeURIComponent(item.id) + '/snippet'))
     .then(function(r) {
       if (handleAuthResponse(r)) throw new Error('unauthorized');
       if (!r.ok) throw new Error('snippet');
@@ -537,6 +652,25 @@ var I18N_DATA = {
     sort_name: '名前',
     sort_size: 'サイズ',
     sort_ext: '形式',
+    sort_star: '評価',
+    rating_label: '評価',
+    rating_all: 'すべて',
+    rating_min: '★{n} 以上',
+    rating_exact5: '★5',
+    rating_unrated: '未評価',
+    rating_none: '未評価',
+    rating_stars: '★{n}',
+    rating_set: '★{n} にする',
+    rating_clear: '評価を外す',
+    rating_saved: '評価を保存しました',
+    rating_failed: '評価を保存できませんでした',
+    rating_readonly: 'このライブラリは読み取り専用です',
+    library_label: 'ライブラリ',
+    library_loading: '「{name}」を読み込み中…',
+    library_loading_progress: '「{name}」を読み込み中… {done} / {total}',
+    library_loading_desc: '大きなライブラリは初回に時間がかかります。次からはキャッシュからすぐに開きます。',
+    library_error: '「{name}」を読み込めませんでした',
+    library_switched: '「{name}」に切り替えました',
     sort_desc: '降順',
     sort_asc: '昇順',
     filter_label: '種類',
@@ -646,6 +780,25 @@ var I18N_DATA = {
     sort_name: '名称',
     sort_size: '大小',
     sort_ext: '格式',
+    sort_star: '评分',
+    rating_label: '评分',
+    rating_all: '全部',
+    rating_min: '★{n} 及以上',
+    rating_exact5: '★5',
+    rating_unrated: '未评分',
+    rating_none: '未评分',
+    rating_stars: '★{n}',
+    rating_set: '设为 ★{n}',
+    rating_clear: '清除评分',
+    rating_saved: '评分已保存',
+    rating_failed: '无法保存评分',
+    rating_readonly: '此资源库为只读',
+    library_label: '资源库',
+    library_loading: '正在加载「{name}」…',
+    library_loading_progress: '正在加载「{name}」… {done} / {total}',
+    library_loading_desc: '大型资源库首次加载需要一些时间，之后会从缓存快速打开。',
+    library_error: '无法加载「{name}」',
+    library_switched: '已切换到「{name}」',
     sort_desc: '降序',
     sort_asc: '升序',
     filter_label: '类型',
@@ -755,6 +908,25 @@ var I18N_DATA = {
     sort_name: 'Name',
     sort_size: 'Size',
     sort_ext: 'Format',
+    sort_star: 'Rating',
+    rating_label: 'Rating',
+    rating_all: 'All',
+    rating_min: '★{n} and up',
+    rating_exact5: '★5',
+    rating_unrated: 'Unrated',
+    rating_none: 'Unrated',
+    rating_stars: '★{n}',
+    rating_set: 'Rate ★{n}',
+    rating_clear: 'Clear rating',
+    rating_saved: 'Rating saved',
+    rating_failed: 'Could not save the rating',
+    rating_readonly: 'This library is read-only',
+    library_label: 'Library',
+    library_loading: 'Loading "{name}"…',
+    library_loading_progress: 'Loading "{name}"… {done} / {total}',
+    library_loading_desc: 'Large libraries take a while the first time; later they open from the cache.',
+    library_error: 'Could not load "{name}"',
+    library_switched: 'Switched to "{name}"',
     sort_desc: 'Descending',
     sort_asc: 'Ascending',
     filter_label: 'Type',
@@ -906,6 +1078,11 @@ function applyStaticI18n(root) {
       if (!hasRich) el.textContent = text;
     }
   }
+  // Rating filter options: "★{n} 以上" per language
+  var minEls = root.querySelectorAll('[data-i18n-rating-min]');
+  for (var m = 0; m < minEls.length; m++) {
+    minEls[m].textContent = tFmt('rating_min', { n: minEls[m].getAttribute('data-i18n-rating-min') });
+  }
   // Update aria-label attributes
   var ariaEls = root.querySelectorAll('[data-i18n-aria]');
   for (var j = 0; j < ariaEls.length; j++) {
@@ -947,5 +1124,15 @@ if (typeof module !== 'undefined' && module.exports) {
     applyStateFromHash: applyStateFromHash,
     buildListQuery: buildListQuery,
     applyStaticI18n: applyStaticI18n,
+    withLib: withLib,
+    itemFileUrl: itemFileUrl,
+    itemThumbUrl: itemThumbUrl,
+    chooseLibrary: chooseLibrary,
+    libraryScopedKey: libraryScopedKey,
+    normalizeStar: normalizeStar,
+    renderStarBadge: renderStarBadge,
+    renderStarRow: renderStarRow,
+    nextStarValue: nextStarValue,
+    libraryFromHash: libraryFromHash,
   };
 }

@@ -22,16 +22,16 @@
   <meta name="theme-color" content="#f5f5f7" />
   <title>Eagle Vault Viewer</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23007aff'/%3E%3Cpath d='M17 20h30v7H25v9h18v7H25v1h23v7H17z' fill='white'/%3E%3C/svg%3E" />
-  <link rel="stylesheet" href="/static/styles.css?v=1.155-ja4" />
-  <link rel="stylesheet" href="/static/styles-collection.css?v=1.155-ja4" />
-  <link rel="stylesheet" href="/static/styles-detail.css?v=1.155-ja4" />
-  <link rel="stylesheet" href="/static/styles-desktop.css?v=1.155-ja4" />
-  <link rel="stylesheet" href="/static/styles-mobile-shell.css?v=1.155-ja4" />
-  <link rel="stylesheet" href="/static/styles-mobile-search.css?v=1.155-ja4" />
-  <link rel="stylesheet" href="/static/styles-mobile-preview.css?v=1.155-ja4" />
-  <link rel="stylesheet" href="/static/styles-mobile-actions.css?v=1.155-ja4" />
-  <link rel="stylesheet" href="/static/styles-formats.css?v=1.155-ja4" />
-  <link rel="stylesheet" href="/static/styles-polish.css?v=1.155-ja4" />
+  <link rel="stylesheet" href="/static/styles.css?v=1.155-ja5" />
+  <link rel="stylesheet" href="/static/styles-collection.css?v=1.155-ja5" />
+  <link rel="stylesheet" href="/static/styles-detail.css?v=1.155-ja5" />
+  <link rel="stylesheet" href="/static/styles-desktop.css?v=1.155-ja5" />
+  <link rel="stylesheet" href="/static/styles-mobile-shell.css?v=1.155-ja5" />
+  <link rel="stylesheet" href="/static/styles-mobile-search.css?v=1.155-ja5" />
+  <link rel="stylesheet" href="/static/styles-mobile-preview.css?v=1.155-ja5" />
+  <link rel="stylesheet" href="/static/styles-mobile-actions.css?v=1.155-ja5" />
+  <link rel="stylesheet" href="/static/styles-formats.css?v=1.155-ja5" />
+  <link rel="stylesheet" href="/static/styles-polish.css?v=1.155-ja5" />
   <link rel="manifest" href="/manifest.json" />
   <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png" />
 </head>
@@ -132,6 +132,11 @@
 
     <div class="sidebar-wrap" id="sidebarWrap">
       <aside class="sidebar" id="sidebar">
+        <div class="sidebar-section library-switcher" id="librarySwitcher" hidden>
+          <label class="sidebar-section-title" for="librarySelect" data-i18n="library_label">ライブラリ</label>
+          <select id="librarySelect" class="library-select"></select>
+          <span class="library-switcher-state" id="librarySwitcherState" aria-live="polite"></span>
+        </div>
         <div class="sidebar-section">
           <div class="sidebar-section-title" data-i18n="sidebar_browse">ブラウズ</div>
           <button type="button" class="sidebar-item" id="allItems">
@@ -175,6 +180,7 @@
           <option value="name" data-i18n="sort_name">名前</option>
           <option value="size" data-i18n="sort_size">サイズ</option>
           <option value="ext" data-i18n="sort_ext">形式</option>
+          <option value="star" data-i18n="sort_star">評価</option>
         </select>
         <select id="ctSortDirSelect">
           <option value="desc" data-i18n="sort_desc">降順</option>
@@ -188,6 +194,16 @@
           <option value="document" data-i18n="filter_document">ドキュメント</option>
           <option value="audio" data-i18n="filter_audio">音声</option>
           <option value="other" data-i18n="filter_other">その他</option>
+        </select>
+        <label data-i18n="rating_label">評価</label>
+        <select id="ctRatingSelect">
+          <option value="all" data-i18n="rating_all">すべて</option>
+          <option value="1" data-i18n-rating-min="1">★1 以上</option>
+          <option value="2" data-i18n-rating-min="2">★2 以上</option>
+          <option value="3" data-i18n-rating-min="3">★3 以上</option>
+          <option value="4" data-i18n-rating-min="4">★4 以上</option>
+          <option value="5" data-i18n="rating_exact5">★5</option>
+          <option value="unrated" data-i18n="rating_unrated">未評価</option>
         </select>
         <div class="quick-filters" id="quickFilters">
           <button type="button" class="quick-filter" data-type="all" data-i18n="filter_all">すべて</button>
@@ -270,6 +286,7 @@
         <button type="button" data-mobile-sort="name">名前</button>
         <button type="button" data-mobile-sort="size">サイズ</button>
         <button type="button" data-mobile-sort="ext">形式</button>
+        <button type="button" data-mobile-sort="star">評価</button>
         <button type="button" data-mobile-dir-toggle aria-label="並び順を切り替え">降順 ↓</button>
       </div>
       <div class="mobile-search-view" id="mobileSearchView" aria-label="レイアウト">
@@ -320,27 +337,27 @@
     <button type="button" class="install-coach-close" id="installCoachClose" aria-label="今はしない"></button>
   </aside>
 
-  <script src="/static/core.js?v=1.155-ja4"></script>
-  <script src="/static/render.js?v=1.155-ja4"></script>
-  <script src="/static/render-selection.js?v=1.155-ja4"></script>
-  <script src="/static/render-inspector.js?v=1.155-ja4"></script>
-  <script src="/static/render-collection.js?v=1.155-ja4"></script>
-  <script src="/static/render-content.js?v=1.155-ja4"></script>
-  <script src="/static/render-preview.js?v=1.155-ja4"></script>
-  <script src="/static/render-preview-media.js?v=1.155-ja4"></script>
-  <script src="/static/render-preview-navigation.js?v=1.155-ja4"></script>
-  <script src="/static/render-preview-documents.js?v=1.155-ja4"></script>
-  <script src="/static/render-hover.js?v=1.155-ja4"></script>
-  <script src="/static/api.js?v=1.155-ja4"></script>
-  <script src="/static/interactions.js?v=1.155-ja4"></script>
-  <script src="/static/interactions-filters.js?v=1.155-ja4"></script>
-  <script src="/static/interactions-layout.js?v=1.155-ja4"></script>
-  <script src="/static/interactions-mobile.js?v=1.155-ja4"></script>
-  <script src="/static/interactions-remote.js?v=1.155-ja4"></script>
-  <script src="/static/interactions-install.js?v=1.155-ja4"></script>
-  <script src="/static/interactions-items.js?v=1.155-ja4"></script>
-  <script src="/static/interactions-actions.js?v=1.155-ja4"></script>
-  <script src="/static/interactions-bindings.js?v=1.155-ja4"></script>
-  <script src="/static/bootstrap.js?v=1.155-ja4"></script>
+  <script src="/static/core.js?v=1.155-ja5"></script>
+  <script src="/static/render.js?v=1.155-ja5"></script>
+  <script src="/static/render-selection.js?v=1.155-ja5"></script>
+  <script src="/static/render-inspector.js?v=1.155-ja5"></script>
+  <script src="/static/render-collection.js?v=1.155-ja5"></script>
+  <script src="/static/render-content.js?v=1.155-ja5"></script>
+  <script src="/static/render-preview.js?v=1.155-ja5"></script>
+  <script src="/static/render-preview-media.js?v=1.155-ja5"></script>
+  <script src="/static/render-preview-navigation.js?v=1.155-ja5"></script>
+  <script src="/static/render-preview-documents.js?v=1.155-ja5"></script>
+  <script src="/static/render-hover.js?v=1.155-ja5"></script>
+  <script src="/static/api.js?v=1.155-ja5"></script>
+  <script src="/static/interactions.js?v=1.155-ja5"></script>
+  <script src="/static/interactions-filters.js?v=1.155-ja5"></script>
+  <script src="/static/interactions-layout.js?v=1.155-ja5"></script>
+  <script src="/static/interactions-mobile.js?v=1.155-ja5"></script>
+  <script src="/static/interactions-remote.js?v=1.155-ja5"></script>
+  <script src="/static/interactions-install.js?v=1.155-ja5"></script>
+  <script src="/static/interactions-items.js?v=1.155-ja5"></script>
+  <script src="/static/interactions-actions.js?v=1.155-ja5"></script>
+  <script src="/static/interactions-bindings.js?v=1.155-ja5"></script>
+  <script src="/static/bootstrap.js?v=1.155-ja5"></script>
 </body>
 </html>

@@ -19,7 +19,8 @@ function syncToolbarSelects() {
     'typeSelect': state.listType,
     'ctSortSelect': state.listSort,
     'ctSortDirSelect': state.listDir,
-    'ctTypeSelect': state.listType
+    'ctTypeSelect': state.listType,
+    'ctRatingSelect': state.listRating
   };
   Object.keys(map).forEach(function(id) {
     var el = document.getElementById(id);
@@ -33,6 +34,7 @@ function syncToolbarSelects() {
 function onSortChange(val) { state.listSort = val; interactionModule.syncToolbarSelects(); api.refreshCurrentView(); }
 function onDirChange(val) { state.listDir = val; interactionModule.syncToolbarSelects(); api.refreshCurrentView(); }
 function onTypeChange(val) { state.listType = val; interactionModule.syncToolbarSelects(); api.refreshCurrentView(); }
+function onRatingChange(val) { state.listRating = val; interactionModule.syncToolbarSelects(); api.refreshCurrentView(); }
 
 // ===== Bind events =====
 function bindEvents() {
@@ -263,7 +265,7 @@ function bindEvents() {
     if (!item) return;
     var action = btn.dataset.listMobileAction;
     if (action === 'preview') {
-      var fileUrl = API + '/api/items/' + item.id + '/file';
+      var fileUrl = itemFileUrl(item.id);
       if (isItemPreviewable(item)) render.previewItem(item, fileUrl);
       else window.open(fileUrl, '_blank');
     } else if (action === 'inspect') {
@@ -328,7 +330,7 @@ function bindEvents() {
       }
       if (action === 'preview') {
         if (state.selectedIds.size) return;
-        var fileUrl = API + '/api/items/' + itemId + '/file';
+        var fileUrl = itemFileUrl(itemId);
         if (isItemPreviewable(item)) render.previewItem(item, fileUrl);
         else window.open(fileUrl, '_blank');
       }
@@ -557,11 +559,18 @@ function bindEvents() {
   document.getElementById('ctSortSelect').onchange = function() { onSortChange(this.value); };
   document.getElementById('ctSortDirSelect').onchange = function() { onDirChange(this.value); };
   document.getElementById('ctTypeSelect').onchange = function() { onTypeChange(this.value); };
+  document.getElementById('ctRatingSelect').onchange = function() { onRatingChange(this.value); };
+  var librarySelect = document.getElementById('librarySelect');
+  if (librarySelect) librarySelect.onchange = function() { api.switchLibrary(this.value); };
   document.querySelectorAll('.quick-filter').forEach(function(btn) {
     btn.onclick = function() { onTypeChange(btn.dataset.type || 'all'); };
   });
   // Hash change
   window.addEventListener('hashchange', async function() {
+    var hashLibrary = libraryFromHash();
+    if (hashLibrary && hashLibrary !== state.currentLibrary && findLibrary(hashLibrary)) {
+      await api.switchLibrary(hashLibrary);
+    }
     if (applyStateFromUrl() && state.currentView) {
       if (state.inspectorItem && (!state.pendingItemId || state.inspectorItem.id !== state.pendingItemId)) render.closeInspector();
       syncFilterForm();

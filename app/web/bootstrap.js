@@ -36,6 +36,8 @@ async function init() {
   interactions.bindEvents();
 
   try {
+    await api.initLibraries();
+    await api.ensureLibraryReady();
     await api.fetchTree();
     render.renderSidebar();
     await api.fetchTags();

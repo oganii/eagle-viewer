@@ -226,7 +226,7 @@ async function previewItem(item, fileUrl) {
     addPreviewMobileActions(overlay, item);
     setPreviewStatus(overlay, '画像を読み込み中…');
     el = document.createElement('img');
-    var thumbnailUrl = API + '/api/items/' + encodeURIComponent(item.id || '') + '/thumbnail';
+    var thumbnailUrl = itemThumbUrl(item.id || '');
     var usingThumbnailFallback = false;
     var imageScroll = document.createElement('div');
     imageScroll.className = 'preview-image-scroll';

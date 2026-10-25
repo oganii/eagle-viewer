@@ -302,7 +302,7 @@ function transitionToPreviewItem(item) {
     existing.dataset.suppressReturnFocus = '1';
     existing.dataset.previewTransition = '1';
   });
-  renderModule.previewItem(item, API + '/api/items/' + item.id + '/file');
+  renderModule.previewItem(item, itemFileUrl(item.id));
 }
 
 function getPreviewContentElement(overlay) {
