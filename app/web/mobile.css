@@ -1025,3 +1025,46 @@ button, a {
 @media (min-width:900px) {
   .mas { grid-template-columns:repeat(4,minmax(0,1fr)); }
 }
+
+/* ===== Library switcher / loading ===== */
+.lib-switch {
+  display:flex; align-items:center; gap:10px; margin:12px 0 4px;
+  font-family:var(--font-ui); font-size:13px; color:var(--text-muted);
+}
+.lib-switch select, .list-controls select {
+  flex:1; min-width:0; min-height:36px; padding:4px 10px;
+  border:1px solid var(--border); border-radius:10px;
+  background:var(--bg2); color:var(--text); font:inherit; font-size:15px;
+}
+.lib-loading {
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+  padding:48px 12px; text-align:center; color:var(--text-muted); font-size:13px;
+}
+.lib-loading b { color:var(--text); font-size:15px; }
+.lib-progress { width:70%; height:4px; border-radius:2px; background:var(--bg3); overflow:hidden; }
+.lib-progress i { display:block; height:100%; background:var(--accent); transition:width .3s; }
+
+/* ===== Sort / rating controls ===== */
+.list-controls { display:flex; gap:10px; margin:6px 0 10px; }
+.list-controls label {
+  flex:1; min-width:0; display:flex; flex-direction:column; gap:4px;
+  font-family:var(--font-ui); font-size:11px; color:var(--text-muted);
+}
+
+/* ===== Star rating ===== */
+.th .star-chip {
+  position:absolute; left:8px; bottom:8px; z-index:1;
+  padding:1px 6px; border-radius:999px;
+  background:rgba(0,0,0,.56); color:#ffd257;
+  font-size:11px; font-weight:600; line-height:16px; pointer-events:none;
+}
+.pv-stars { display:flex; align-items:center; gap:2px; margin-top:6px; font-size:20px; line-height:1; }
+.pv-stars[hidden] { display:none; }
+.pv-star { color:rgba(255,255,255,.45); }
+.pv-star.on { color:#ffc533; }
+.pv-stars button.pv-star {
+  border:0; background:none; padding:4px 3px; margin:0; font:inherit; color:rgba(255,255,255,.45);
+  min-width:34px; min-height:34px; -webkit-tap-highlight-color:transparent;
+}
+.pv-stars button.pv-star.on { color:#ffc533; }
+.pv-star-none { margin-left:8px; font-size:13px; color:rgba(255,255,255,.6); }

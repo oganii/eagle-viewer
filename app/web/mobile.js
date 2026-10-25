@@ -22,6 +22,7 @@
   const pvNext = document.getElementById('pvNext');
   const pvShare = document.getElementById('pvShare');
   const pvStage = document.getElementById('pvStage');
+  const pvStars = document.getElementById('pvStars');
 
   // ---------- 日英中 ----------
   const COPY = {
@@ -45,7 +46,12 @@
       thumbnailCache: 'サムネイルのキャッシュ', thumbnailCacheClear: 'サムネイルのキャッシュを削除', thumbnailCacheCleared: 'サムネイルのキャッシュを削除しました',
       previous: '前へ', next: '次へ',
       copied: 'リンクをコピーしました', shareUnavailable: '共有は使えません', language: 'English',
-      lightTheme: 'ライトテーマにする', darkTheme: 'ダークテーマにする'
+      lightTheme: 'ライトテーマにする', darkTheme: 'ダークテーマにする',
+      libraryLabel: 'ライブラリ', libraryLoading: '「{name}」を読み込み中…', libraryLoadingProgress: '「{name}」を読み込み中… {done} / {total}',
+      libraryLoadingDesc: '大きなライブラリは初回に時間がかかります。次からはキャッシュからすぐに開きます。', libraryError: '「{name}」を読み込めませんでした',
+      sortLabel: '並べ替え', sortMtime: '新しい順', sortName: '名前', sortSize: 'サイズ', sortStar: '評価',
+      ratingLabel: '評価', ratingAll: 'すべて', ratingMin: '★{n} 以上', ratingUnrated: '未評価', ratingNone: '未評価',
+      ratingSet: '★{n} にする', ratingClear: '評価を外す', ratingSaved: '評価を保存しました', ratingFailed: '評価を保存できませんでした'
     },
     zh: {
       library: '资源库', folders: '目录', search: '搜索', status: '连接状态',
@@ -67,7 +73,12 @@
       thumbnailCache: '缩略图缓存', thumbnailCacheClear: '清理缩略图缓存', thumbnailCacheCleared: '缩略图缓存已清理',
       previous: '上一个', next: '下一个',
       copied: '链接已复制', shareUnavailable: '分享不可用', language: '日本語',
-      lightTheme: '切换到浅色', darkTheme: '切换到深色'
+      lightTheme: '切换到浅色', darkTheme: '切换到深色',
+      libraryLabel: '资源库', libraryLoading: '正在加载「{name}」…', libraryLoadingProgress: '正在加载「{name}」… {done} / {total}',
+      libraryLoadingDesc: '大型资源库首次加载需要一些时间，之后会从缓存快速打开。', libraryError: '无法加载「{name}」',
+      sortLabel: '排序', sortMtime: '最新', sortName: '名称', sortSize: '大小', sortStar: '评分',
+      ratingLabel: '评分', ratingAll: '全部', ratingMin: '★{n} 及以上', ratingUnrated: '未评分', ratingNone: '未评分',
+      ratingSet: '设为 ★{n}', ratingClear: '清除评分', ratingSaved: '评分已保存', ratingFailed: '无法保存评分'
     },
     en: {
       library: 'Library', folders: 'Folders', search: 'Search', status: 'Connection',
@@ -90,7 +101,12 @@
       previous: 'Previous', next: 'Next',
       saveFailed: 'Could not save', copied: 'Link copied',
       shareUnavailable: 'Sharing is unavailable', language: '中文',
-      lightTheme: 'Use light theme', darkTheme: 'Use dark theme'
+      lightTheme: 'Use light theme', darkTheme: 'Use dark theme',
+      libraryLabel: 'Library', libraryLoading: 'Loading "{name}"…', libraryLoadingProgress: 'Loading "{name}"… {done} / {total}',
+      libraryLoadingDesc: 'Large libraries take a while the first time; later they open from the cache.', libraryError: 'Could not load "{name}"',
+      sortLabel: 'Sort', sortMtime: 'Newest', sortName: 'Name', sortSize: 'Size', sortStar: 'Rating',
+      ratingLabel: 'Rating', ratingAll: 'All', ratingMin: '★{n} and up', ratingUnrated: 'Unrated', ratingNone: 'Unrated',
+      ratingSet: 'Rate ★{n}', ratingClear: 'Clear rating', ratingSaved: 'Rating saved', ratingFailed: 'Could not save the rating'
     }
   };
   const LANG_ORDER = ['ja', 'en', 'zh'];
@@ -264,6 +280,25 @@
         });
       });
     }
+    // Drop only one library's thumbnails (keys are "<lib>:<itemId>").
+    function clearPrefix(prefix) {
+      if (!prefix) return clear();
+      cacheGeneration += 1;
+      return open().then((db) => {
+        if (!db) return;
+        return new Promise((resolve) => {
+          const tx = db.transaction(STORE, 'readwrite');
+          const cur = tx.objectStore(STORE).openCursor();
+          cur.onsuccess = () => {
+            const c = cur.result;
+            if (!c) return;
+            if (String(c.key).indexOf(prefix) === 0) c.delete();
+            c.continue();
+          };
+          tx.oncomplete = resolve; tx.onerror = resolve;
+        });
+      });
+    }
     function stats() {
       return open().then((db) => new Promise((resolve) => {
         if (!db) { resolve({ entries: 0, bytes: 0 }); return; }
@@ -282,11 +317,14 @@
         cur.onerror = () => resolve(out);
       }));
     }
-    return { ok: ok, get: get, put: put, clear: clear, stats: stats };
+    return { ok: ok, get: get, put: put, clear: clear, clearPrefix: clearPrefix, stats: stats };
   })();
 
+  // Thumbnails of different libraries never share a cache entry, even with equal item ids.
+  function thumbKey(id) { return (S.lib || '') + ':' + id; }
+
   function hydrateOne(img) {
-    const id = img.dataset.id;
+    const id = thumbKey(img.dataset.id);
     const url = img.dataset.thumb;
     const apply = (blob) => {
       if (img.src && img.src.indexOf('blob:') === 0) URL.revokeObjectURL(img.src);
@@ -340,25 +378,77 @@
     status: null,
     currentGallery: [],
     preview: { list: [], index: 0, open: false, pushed: false, token: 0, thumbObjectUrl: '' },
+    lib: '', libraries: [], defaultLib: '', libPoll: 0,
+    listSort: readPref('ev:listSort', ['mtime', 'name', 'size', 'star'], 'mtime'),
+    listRating: readPref('ev:listRating', ['all', 'unrated', '1', '2', '3', '4', '5'], 'all'),
   };
+
+  function readPref(key, allowed, fallback) {
+    try {
+      const value = localStorage.getItem(key);
+      return allowed.indexOf(value) >= 0 ? value : fallback;
+    } catch (e) { return fallback; }
+  }
+  function writePref(key, value) { try { localStorage.setItem(key, value); } catch (e) {} }
+
+  // Every API URL carries ?lib=<id> so responses and HTTP caches stay per library.
+  function libUrl(path) {
+    if (!S.lib) return path;
+    return path + (path.indexOf('?') >= 0 ? '&' : '?') + 'lib=' + encodeURIComponent(S.lib);
+  }
+  function itemUrl(id, kind, download) {
+    return libUrl('/api/items/' + encodeURIComponent(id) + '/' + kind + (download ? '?download=true' : ''));
+  }
+  function currentLib() { return S.libraries.find(lib => lib.id === S.lib) || null; }
+  function listQuery() {
+    const dir = S.listSort === 'name' ? 'asc' : 'desc';
+    return '&sort=' + S.listSort + '&dir=' + dir + (S.listRating !== 'all' ? '&rating=' + S.listRating : '');
+  }
 
   // ---------- データ層 ----------
   const API = {
     async json(path) {
       const options = arguments[1] || {};
-      const res = await fetch(path, Object.assign({ credentials: 'same-origin' }, options));
+      const res = await fetch(libUrl(path), Object.assign({ credentials: 'same-origin' }, options));
+      if (res.status === 401) { location.href = '/login'; throw new Error('unauthorized'); }
+      if (!res.ok) throw await API.error(res);
+      return res.json();
+    },
+    // 503 {detail:{code:'library-loading'}} = the library is still being indexed.
+    async error(res) {
+      const err = new Error('HTTP ' + res.status);
+      try {
+        const body = await res.json();
+        const detail = body && body.detail;
+        if (detail && detail.code === 'library-loading') { err.loading = true; err.library = detail.library || null; }
+        else if (typeof detail === 'string') err.detail = detail;
+      } catch (e) {}
+      return err;
+    },
+    status(deep) { return API.json('/api/library/status?deep=' + (deep ? 'true' : 'false')); },
+    tree() { return API.json('/api/tree'); },
+    folderItems(id, offset) { return API.json('/api/folders/' + encodeURIComponent(id) + '/items?offset=' + (offset || 0) + '&limit=120' + listQuery()); },
+    recent() { return API.json('/api/items?sort=mtime&dir=desc&limit=24'); },
+    search(q, offset, signal) { return API.json('/api/search?q=' + encodeURIComponent(q) + '&offset=' + (offset || 0) + '&limit=120' + listQuery(), signal ? { signal: signal } : undefined); },
+    async libraries() {
+      const res = await fetch('/api/libraries', { credentials: 'same-origin', cache: 'no-store' });
       if (res.status === 401) { location.href = '/login'; throw new Error('unauthorized'); }
       if (!res.ok) throw new Error('HTTP ' + res.status);
       return res.json();
     },
-    status(deep) { return API.json('/api/library/status?deep=' + (deep ? 'true' : 'false')); },
-    tree() { return API.json('/api/tree'); },
-    folderItems(id, offset) { return API.json('/api/folders/' + encodeURIComponent(id) + '/items?offset=' + (offset || 0) + '&limit=120'); },
-    recent() { return API.json('/api/items?sort=mtime&dir=desc&limit=24'); },
-    search(q, offset, signal) { return API.json('/api/search?q=' + encodeURIComponent(q) + '&offset=' + (offset || 0) + '&limit=120', signal ? { signal: signal } : undefined); },
-    async reload() {
-      const res = await fetch('/api/library/reload', { method: 'POST', credentials: 'same-origin' });
+    async setStar(id, star) {
+      const res = await fetch(itemUrl(id, 'star'), {
+        method: 'PUT', credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ star: star }),
+      });
       if (res.status === 401) { location.href = '/login'; throw new Error('unauthorized'); }
+      if (!res.ok) throw await API.error(res);
+      return res.json();
+    },
+    async reload() {
+      const res = await fetch(libUrl('/api/library/reload'), { method: 'POST', credentials: 'same-origin' });
+      if (res.status === 401) { location.href = '/login'; throw new Error('unauthorized'); }
+      if (!res.ok) throw await API.error(res);
       return res.json();
     },
   };
@@ -374,12 +464,13 @@
     const imageExt = /^(PNG|JPG|JPEG|GIF|WEBP|AVIF|BMP|SVG|HEIC|HEIF)$/.test(ext);
     const showPreview = !!it.hasThumbnail || imageExt;
     const media = showPreview
-      ? '<img class="im" data-id="' + esc(it.id) + '" data-thumb="/api/items/' + it.id + '/thumbnail" style="' + ar + '" alt="' + esc(it.name) + '" onerror="this.classList.add(\'is-missing\')">'
+      ? '<img class="im" data-id="' + esc(it.id) + '" data-thumb="' + esc(itemUrl(it.id, 'thumbnail')) + '" style="' + ar + '" alt="' + esc(it.name) + '" onerror="this.classList.add(\'is-missing\')">'
       : '<div class="mobile-file-tile"><i></i><i></i><i></i></div>';
     const previewable = imageExt || isVideoExt(ext) || normExt(ext) === 'pdf';
     return '<button type="button" class="th' + (previewable ? '' : ' is-download-only') + '" data-idx="' + idx + '" data-previewable="' + previewable + '" data-kind="' + (imageExt ? 'image' : 'file') + '" data-ext="' + esc(ext.toLowerCase()) + '">' +
       media +
       '<span class="ext">' + esc(ext) + '</span>' +
+      (normStar(it.star) ? '<span class="star-chip">\u2605' + normStar(it.star) + '</span>' : '') +
       '<span class="nm">' + esc(it.name) + '</span>' +
       '</button>';
   }
@@ -397,6 +488,96 @@
   function fmtSize(b) {
     if (!b) return '';
     return b >= 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.round(b / 1024) + ' KB';
+  }
+  function normStar(v) { const n = Math.round(Number(v) || 0); return n >= 1 && n <= 5 ? n : 0; }
+
+  // ---------- ライブラリの切りかえ ----------
+  async function initLibraries() {
+    let data = null;
+    try { data = await API.libraries(); } catch (e) { if (e.message === 'unauthorized') throw e; }
+    S.libraries = (data && data.libraries) || [];
+    S.defaultLib = (data && data.default) || '';
+    const ids = S.libraries.map(lib => lib.id);
+    let fromHash = '';
+    try { fromHash = new URLSearchParams(location.hash.replace(/^#/, '')).get('lib') || ''; } catch (e) {}
+    let stored = '';
+    try { stored = localStorage.getItem('eagle-viewer-library') || ''; } catch (e) {}
+    S.lib = ids.indexOf(fromHash) >= 0 ? fromHash : (ids.indexOf(stored) >= 0 ? stored : (ids.indexOf(S.defaultLib) >= 0 ? S.defaultLib : (ids[0] || '')));
+    if (S.lib) writePref('eagle-viewer-library', S.lib);
+  }
+
+  function libraryControl() {
+    if (S.libraries.length < 2) return '';
+    const options = S.libraries.map(lib => {
+      const count = lib.items != null ? ' (' + Number(lib.items).toLocaleString(DATE_LOCALE[lang] || 'ja-JP') + ')' : '';
+      const mark = lib.state === 'loading' ? ' …' : (lib.state === 'error' ? ' !' : '');
+      return '<option value="' + esc(lib.id) + '"' + (lib.id === S.lib ? ' selected' : '') + '>' + esc(lib.name + count + mark) + '</option>';
+    }).join('');
+    return '<label class="lib-switch"><span>' + esc(tr('libraryLabel')) + '</span><select id="libSelect">' + options + '</select></label>';
+  }
+
+  function bindLibraryControl(root) {
+    const select = root.querySelector('#libSelect');
+    if (select) select.onchange = () => switchLibrary(select.value);
+  }
+
+  function switchLibrary(id) {
+    if (!id || id === S.lib) return;
+    S.lib = id;
+    writePref('eagle-viewer-library', id);
+    S.folderStack = []; S.folderItems = []; S.searchItems = []; S.recents = []; S.status = null;
+    switchTab(S.view === 'status' ? 'library' : S.view);
+  }
+
+  // Show indexing progress and re-render the current tab once the library is ready.
+  function showLibraryLoading(lib) {
+    clearTimeout(S.libPoll);
+    const name = (lib && lib.name) || (currentLib() && currentLib().name) || S.lib;
+    const failed = lib && lib.state === 'error';
+    const progress = lib && lib.progress && lib.progress.total ? lib.progress : null;
+    const title = failed ? tr('libraryError', { name: name })
+      : progress ? tr('libraryLoadingProgress', { name: name, done: progress.done, total: progress.total })
+      : tr('libraryLoading', { name: name });
+    const pct = progress ? Math.min(100, Math.round(progress.done * 100 / Math.max(1, progress.total))) : 0;
+    releaseThumbObjectUrls(viewBody);
+    viewBody.innerHTML = libraryControl() +
+      '<div class="lib-loading">' + (failed ? '' : '<div class="spinner"></div>') +
+      '<b>' + esc(title) + '</b><span>' + esc(failed ? (lib.error || '') : tr('libraryLoadingDesc')) + '</span>' +
+      (progress ? '<div class="lib-progress"><i style="width:' + pct + '%"></i></div>' : '') + '</div>';
+    bindLibraryControl(viewBody);
+    const waitingFor = S.lib;
+    const generation = S.viewGeneration;
+    S.libPoll = setTimeout(async () => {
+      if (S.lib !== waitingFor || S.viewGeneration !== generation) return;
+      let data = null;
+      try { data = await API.libraries(); } catch (e) { data = null; }
+      if (S.lib !== waitingFor || S.viewGeneration !== generation) return;
+      if (data) { S.libraries = data.libraries || []; }
+      const now = currentLib();
+      if (now && now.state === 'ready') switchTab(S.view === 'status' ? 'library' : S.view);
+      else showLibraryLoading(now || lib);
+    }, failed ? 10000 : 1500);
+  }
+
+  // Sort + rating selects for folder item lists and search results.
+  function listControls() {
+    const sorts = [['mtime', 'sortMtime'], ['name', 'sortName'], ['size', 'sortSize'], ['star', 'sortStar']];
+    const ratings = [['all', tr('ratingAll')]].concat(['1', '2', '3', '4'].map(n => [n, tr('ratingMin', { n: n })]), [['5', '★5'], ['unrated', tr('ratingUnrated')]]);
+    return '<div class="list-controls">' +
+      '<label><span>' + esc(tr('sortLabel')) + '</span><select data-list-sort>' +
+        sorts.map(([v, k]) => '<option value="' + v + '"' + (S.listSort === v ? ' selected' : '') + '>' + esc(tr(k)) + '</option>').join('') +
+      '</select></label>' +
+      '<label><span>' + esc(tr('ratingLabel')) + '</span><select data-list-rating>' +
+        ratings.map(([v, label]) => '<option value="' + v + '"' + (S.listRating === v ? ' selected' : '') + '>' + esc(label) + '</option>').join('') +
+      '</select></label>' +
+    '</div>';
+  }
+
+  function bindListControls(root, onChange) {
+    const sort = root.querySelector('[data-list-sort]');
+    const rating = root.querySelector('[data-list-rating]');
+    if (sort) sort.onchange = () => { S.listSort = sort.value; writePref('ev:listSort', S.listSort); onChange(); };
+    if (rating) rating.onchange = () => { S.listRating = rating.value; writePref('ev:listRating', S.listRating); onChange(); };
   }
 
   // ---------- 上部バー ----------
@@ -499,22 +680,26 @@
     if (!recent) {
       const error = results[1].reason;
       if (error && error.message === 'unauthorized') return;
+      if (error && error.loading) { showLibraryLoading(error.library); return; }
       viewBody.innerHTML = '<div class="errbox">' + esc(tr('loadFailed', { error: error && error.message })) + '</div>';
       return;
     }
     S.recents = recent.items || [];
     S.status = status;
     if (status && status.revision) {
-      const saved = localStorage.getItem('ev:thumbRev');
-      if (saved && saved !== status.revision) Thumbs.clear();
-      localStorage.setItem('ev:thumbRev', status.revision);
+      // Per-library revision: a change in one library only drops that library's thumbnails.
+      const revKey = 'ev:thumbRev:' + S.lib;
+      const saved = localStorage.getItem(revKey);
+      if (saved && saved !== status.revision) Thumbs.clearPrefix(S.lib + ':');
+      localStorage.setItem(revKey, status.revision);
     }
     renderTop();
-    viewBody.innerHTML =
+    viewBody.innerHTML = libraryControl() +
       '<div class="srch library-search" id="srchEntry">' + searchSVG + '<input id="srchInput" placeholder="' + esc(tr('searchPlaceholder')) + '" /></div>' +
       '<div class="lbl">' + tr('recent') + '</div>' +
       '<div class="mas" id="recentMas">' + S.recents.map(thumbItem).join('') + '</div>';
     S.currentGallery = S.recents;
+    bindLibraryControl(viewBody);
     bindThumbs(viewBody);
     hydrateThumbs(viewBody);
     const si = document.getElementById('srchInput');
@@ -544,6 +729,7 @@
     } catch (e) {
       if (token !== S.viewGeneration || S.view !== 'folders' || requestId !== S.folderRequest || folderKey !== S.folderStack.map(item => item.id).join('/')) return;
       if (e.message === 'unauthorized') return;
+      if (e.loading) { showLibraryLoading(e.library); return; }
       const msg = e.message === 'HTTP 423' ? tr('locked') : tr('loadFailed', { error: e.message });
       viewBody.innerHTML = '<div class="errbox">' + msg + '</div>';
       return;
@@ -555,7 +741,7 @@
 
     let html = '';
     if (atRoot) {
-      html += '<div class="lt">' + esc(tr('folders')) + '</div>';
+      html += libraryControl() + '<div class="lt">' + esc(tr('folders')) + '</div>';
     }
     if (subfolders.length) {
       const rows = subfolders.map(f =>
@@ -569,8 +755,11 @@
     } else if (atRoot) {
       html += '<div class="empty">' + tr('noFolders') + '</div>';
     }
+    if (!items.length && !atRoot && S.listRating !== 'all') {
+      html += '<div class="lbl">' + tr('items') + '</div>' + listControls() + '<div class="empty">—</div>';
+    }
     if (items.length) {
-      html += '<div class="lbl">' + tr('items') + '</div><div class="mas" id="folderMas">' + items.map(thumbItem).join('') + '</div>';
+      html += '<div class="lbl">' + tr('items') + '</div>' + listControls() + '<div class="mas" id="folderMas">' + items.map(thumbItem).join('') + '</div>';
       if (hasMore) html += '<div class="sentinel" id="folderSentinel"></div>';
     }
     releaseThumbObjectUrls(viewBody);
@@ -583,6 +772,8 @@
       scrollTop();
     });
     S.currentGallery = S.folderItems;
+    bindLibraryControl(viewBody);
+    bindListControls(viewBody, () => { renderFolders(S.viewGeneration); });
     bindThumbs(viewBody);
     hydrateThumbs(viewBody);
     if (hasMore) setupInfinite('folderSentinel', loadFolderMore);
@@ -636,11 +827,13 @@
     viewBody.innerHTML =
       '<div class="search-page">' +
       '<div class="srch search-field">' + searchSVG + '<input id="srchInput2" placeholder="' + esc(tr('searchPlaceholder')) + '" value="' + esc(S.searchQuery) + '" autofocus /></div>' +
+      listControls() +
       '<div class="sr-head" id="srHead"></div>' +
       '<div class="search-results" id="searchMas"></div>' +
       '<div class="sentinel" id="searchSentinel" style="display:none"></div>' +
       '</div>';
     const input = document.getElementById('srchInput2');
+    bindListControls(viewBody, () => { if (S.searchQuery) doSearch(true); });
     let t;
     input.addEventListener('input', () => {
       clearTimeout(t);
@@ -690,6 +883,7 @@
       if (e && e.name === 'AbortError') return;
       if (requestId !== S.searchRequest || q !== S.searchQuery || S.view !== 'search') return;
       if (e.message === 'unauthorized') return;
+      if (e.loading) { showLibraryLoading(e.library); return; }
       if (head) head.textContent = tr('searchFailed', { error: e.message });
       return;
     }
@@ -751,7 +945,7 @@
     disconnectIO();
     viewBody.innerHTML = '<div class="spinner"></div>';
     let st;
-    try { st = await API.status(true); } catch (e) { if (e.message === 'unauthorized') return; if (token === S.viewGeneration && S.view === 'status') viewBody.innerHTML = '<div class="errbox">' + esc(tr('loadFailed', { error: e.message })) + '</div>'; return; }
+    try { st = await API.status(true); } catch (e) { if (e.message === 'unauthorized') return; if (e.loading) { showLibraryLoading(e.library); return; } if (token === S.viewGeneration && S.view === 'status') viewBody.innerHTML = '<div class="errbox">' + esc(tr('loadFailed', { error: e.message })) + '</div>'; return; }
     if (token !== S.viewGeneration || S.view !== 'status') return;
     S.status = st;
     view.scrollTop = 0;
@@ -761,6 +955,7 @@
       '<div class="lt">' + esc(tr('status')) + '</div>' +
       '<div class="card">' +
       '<div class="kv"><span class="k">' + tr('status') + '</span><span class="v ' + (!st.ok ? 'bad' : (st.changed ? 'warn' : 'ok')) + '">' + (st.ok ? (st.changed ? tr('connectedChanged') : tr('connected')) : tr('disconnected')) + '</span></div>' +
+      (currentLib() ? '<div class="kv"><span class="k">' + tr('libraryLabel') + '</span><span class="v">' + esc(currentLib().name) + '</span></div>' : '') +
       '<div class="kv"><span class="k">' + tr('indexedAt') + '</span><span class="v">' + fmtTime(st.loadedAt) + '</span></div>' +
       '<div class="kv"><span class="k">' + tr('items') + '</span><span class="v">' + (stats.items || 0) + '</span></div>' +
       '<div class="kv"><span class="k">' + tr('foldersLabel') + '</span><span class="v">' + (stats.folders || 0) + '</span></div>' +
@@ -843,7 +1038,7 @@
     g.scale = 1; g.tx = 0; g.ty = 0;
     pvIndex.textContent = (i + 1) + ' / ' + list.length;
     const ext = normExt(it.ext);
-    const mediaUrl = '/api/items/' + it.id + '/file';
+    const mediaUrl = itemUrl(it.id, 'file');
     const image = isImageExt(ext);
     const video = isVideoExt(ext);
     const pdf = ext === 'pdf';
@@ -852,9 +1047,9 @@
     if (!image && !video && !pdf) {
       showPreviewUnavailable(tr('unsupportedPreview'));
     } else if (image) {
-      const thumbUrl = '/api/items/' + it.id + '/thumbnail';
+      const thumbUrl = itemUrl(it.id, 'thumbnail');
       pvImg.onerror = () => showPreviewUnavailable(tr('unsupportedPreview'));
-      Thumbs.get(it.id).then((blob) => {
+      Thumbs.get(thumbKey(it.id)).then((blob) => {
         if (blob && S.preview.open && token === S.preview.token && S.preview.list[S.preview.index] === it) {
           if (S.preview.thumbObjectUrl) URL.revokeObjectURL(S.preview.thumbObjectUrl);
           S.preview.thumbObjectUrl = URL.createObjectURL(blob);
@@ -888,7 +1083,8 @@
     const dims = (it.width && it.height) ? it.width + '×' + it.height + ' · ' : '';
     const sz = fmtSize(it.size);
     pvMeta.textContent = dims + (it.ext || '').toUpperCase() + (sz ? ' · ' + sz : '');
-    pvDownload.href = '/api/items/' + it.id + '/file?download=true';
+    pvDownload.href = itemUrl(it.id, 'file', true);
+    renderPreviewStars(it);
     pvOriginal.style.display = image ? '' : 'none';
     pvOriginal.disabled = false;
     document.getElementById('pvOriginalLabel').textContent = tr('showOriginal');
@@ -919,7 +1115,7 @@
     const it = S.preview.list[S.preview.index];
     if (!it || !isImageExt(it.ext)) return;
     const token = S.preview.token;
-    const originalUrl = '/api/items/' + it.id + '/file';
+    const originalUrl = itemUrl(it.id, 'file');
     pvOriginal.disabled = true;
     document.getElementById('pvOriginalLabel').textContent = tr('loadingOriginal');
     try {
@@ -942,13 +1138,75 @@
       }
     }
   }
+  // ---------- プレビューの評価（★）----------
+  function renderPreviewStars(it) {
+    const n = normStar(it.star);
+    const lib = currentLib();
+    const editable = !!(lib && lib.editable);
+    if (!editable && !n) { pvStars.hidden = true; pvStars.innerHTML = ''; return; }
+    pvStars.hidden = false;
+    let html = '';
+    for (let i = 1; i <= 5; i++) {
+      const on = i <= n;
+      html += editable
+        ? '<button type="button" class="pv-star' + (on ? ' on' : '') + '" data-star="' + i + '" aria-label="' + esc(i === n ? tr('ratingClear') : tr('ratingSet', { n: i })) + '">' + (on ? '\u2605' : '\u2606') + '</button>'
+        : '<span class="pv-star' + (on ? ' on' : '') + '" aria-hidden="true">' + (on ? '\u2605' : '\u2606') + '</span>';
+    }
+    if (!n) html += '<span class="pv-star-none">' + esc(tr('ratingNone')) + '</span>';
+    pvStars.innerHTML = html;
+    pvStars.classList.toggle('editable', editable);
+  }
+
+  function applyStar(it, star) {
+    it.star = star;
+    [S.recents, S.folderItems, S.searchItems, S.preview.list].forEach(list => (list || []).forEach(x => { if (x.id === it.id) x.star = star; }));
+    document.querySelectorAll('.th').forEach(btn => {
+      const idx = parseInt(btn.dataset.idx, 10);
+      const item = S.currentGallery[idx];
+      if (!item || item.id !== it.id) return;
+      const chip = btn.querySelector('.star-chip');
+      if (!star) { if (chip) chip.remove(); return; }
+      if (chip) chip.textContent = '\u2605' + star;
+      else btn.querySelector('.ext').insertAdjacentHTML('afterend', '<span class="star-chip">\u2605' + star + '</span>');
+    });
+    if (S.preview.open && S.preview.list[S.preview.index] && S.preview.list[S.preview.index].id === it.id) renderPreviewStars(S.preview.list[S.preview.index]);
+  }
+
+  // Tap a star to set it, tap the current value again to clear (0 = unrated). Optimistic with rollback.
+  pvStars.addEventListener('click', async (e) => {
+    const button = e.target.closest('[data-star]');
+    const it = S.preview.list[S.preview.index];
+    if (!button || !it) return;
+    const lib = currentLib();
+    if (!lib || !lib.editable) return;
+    const previous = normStar(it.star);
+    const clicked = parseInt(button.dataset.star, 10);
+    const next = clicked === previous ? 0 : clicked;
+    const generation = (it._starGen || 0) + 1;
+    it._starGen = generation;
+    applyStar(it, next);
+    try {
+      const updated = await API.setStar(it.id, next);
+      if (it._starGen !== generation) return;
+      applyStar(it, normStar(updated && updated.star));
+      toast(tr('ratingSaved'));
+    } catch (err) {
+      if (err && err.message === 'unauthorized') return;
+      if (it._starGen !== generation) return;
+      applyStar(it, previous);
+      toast((err && err.detail) || tr('ratingFailed'));
+    }
+  });
+  // Keep star taps from reaching the swipe/tap gestures of the stage.
+  pvStars.addEventListener('pointerdown', e => e.stopPropagation());
+
   function normExt(ext) { return (ext || '').toLowerCase().replace(/^\./, ''); }
   function isImageExt(ext) { return ['bmp', 'gif', 'heic', 'heif', 'ico', 'jpeg', 'jpg', 'png', 'svg', 'tif', 'tiff', 'webp', 'avif', 'jfif', 'jxl'].includes(normExt(ext)); }
   function isVideoExt(ext) { return ['mp4', 'mov', 'webm', 'm4v', '3gp'].includes(normExt(ext)); }
   // ファイルの Blob を取って Web Share API で File として共有する——そうすると iOS の共有シートに「写真に保存 / ビデオを保存」が出る。
   async function shareFile(it) {
     if (it.size && it.size > 200 * 1024 * 1024) throw new Error('too-large-to-share');
-    const url = location.origin + '/api/items/' + it.id + '/file';
+    const url = location.origin + itemUrl(it.id, 'file');
     const resp = await fetch(url);
     if (!resp.ok) throw new Error('fetch-failed');
     const blob = await resp.blob();
@@ -1080,7 +1338,7 @@
     e.preventDefault();
     const it = S.preview.list[S.preview.index];
     if (!it) return;
-    const url = '/api/items/' + it.id + '/file?download=true';
+    const url = itemUrl(it.id, 'file', true);
     const fname = (it.name || 'eagle') + '.' + (normExt(it.ext) || 'bin');
     fetch(url).then((r) => r.blob()).then((blob) => {
       const bUrl = URL.createObjectURL(blob);
@@ -1102,7 +1360,7 @@
       // ファイルとして共有できないときは「ファイル」App へのダウンロードに切りかえる（Android ではふつうアルバムにも拾われる）。
       try {
         const a = document.createElement('a');
-        a.href = '/api/items/' + it.id + '/file?download=true';
+        a.href = itemUrl(it.id, 'file', true);
         a.download = (it.name || 'eagle') + '.' + (normExt(it.ext) || '');
         document.body.appendChild(a); a.click(); a.remove();
         toast(tr('downloaded'));
@@ -1117,7 +1375,7 @@
       await shareFile(it);
     } catch (e) {
       if (e && e.name === 'AbortError') return;
-      const url = location.origin + '/api/items/' + it.id + '/file';
+      const url = location.origin + itemUrl(it.id, 'file');
       try { await navigator.clipboard.writeText(url); toast(tr('copied')); }
       catch (e2) { toast(tr('shareUnavailable')); }
     }
@@ -1145,7 +1403,7 @@
 
   // ---------- 起動 ----------
   applyLanguage();
-  switchTab('library');
+  initLibraries().then(() => switchTab('library'), () => {});
 
   // PWA：service worker を登録する（あれば）
   if ('serviceWorker' in navigator) {

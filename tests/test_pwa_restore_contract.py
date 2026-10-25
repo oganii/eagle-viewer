@@ -132,8 +132,11 @@ def test_mobile_preview_and_async_navigation_contracts():
 def test_mobile_preview_uses_existing_thumbnail_and_bounded_cache():
     mobile = read("app/web/mobile.js")
 
-    assert "Thumbs.get(it.id)" in mobile
-    assert "const thumbUrl = '/api/items/' + it.id + '/thumbnail';" in mobile
+    assert "Thumbs.get(thumbKey(it.id))" in mobile
+    assert "const thumbUrl = itemUrl(it.id, 'thumbnail');" in mobile
+    # Thumbnail cache entries and revision markers are scoped per library.
+    assert "function thumbKey(id) { return (S.lib || '') + ':' + id; }" in mobile
+    assert "'ev:thumbRev:' + S.lib" in mobile
     assert "const MAX_BYTES = 100 * 1024 * 1024;" in mobile
     assert "thumbnailCacheClear" in mobile
     assert "showOriginalWhenReady" not in mobile
@@ -429,3 +432,24 @@ def test_pwa_bootstrap_uses_physical_height_only_for_standalone_shell():
     assert "window.screen.height" in html
     assert "--pwa-outer-h" in html
     assert "setPwaOuterHeight();" in html
+
+
+def test_frontend_item_urls_are_library_scoped():
+    # Thumbnail/file URLs must carry ?lib= so caches never mix libraries.
+    desktop = read_web_assets(RENDER_ASSETS + INTERACTION_ASSETS) + read("app/web/api.js")
+    assert "API + '/api/items/'" not in desktop
+    assert "withLib(" in read("app/web/api.js")
+    mobile = read("app/web/mobile.js")
+    assert re.findall(r"'/api/items/' \+", mobile) == ["'/api/items/' +"]  # only inside itemUrl()
+    assert "libraryScopedKey('eagle-viewer-offline-snapshot-meta')" in read("app/web/interactions-remote.js")
+
+
+def test_library_switcher_and_rating_controls_exist():
+    index = read("app/web/index.html")
+    assert 'id="librarySelect"' in index
+    assert 'id="ctRatingSelect"' in index
+    assert '<option value="star" data-i18n="sort_star">' in index
+    mobile = read("app/web/mobile.js")
+    for fragment in ("libraryControl()", "listControls()", "renderPreviewStars(it)", "API.setStar("):
+        assert fragment in mobile
+    assert 'id="pvStars"' in read("app/web/mobile.html")
