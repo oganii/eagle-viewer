@@ -24,8 +24,8 @@ function closeDesktopContextMenu() {
 
 function renderQuickActionStatePills(item) {
   var pills = [];
-  if (state.selectedIds.has(item.id)) pills.push('<span class="quick-action-state-pill selected">' + iconCollection() + ' Selected</span>');
-  if (!pills.length) pills.push('<span class="quick-action-state-pill muted">Not selected</span>');
+  if (state.selectedIds.has(item.id)) pills.push('<span class="quick-action-state-pill selected">' + iconCollection() + ' 選択中</span>');
+  if (!pills.length) pills.push('<span class="quick-action-state-pill muted">未選択</span>');
   return pills.join('');
 }
 
@@ -37,28 +37,28 @@ function updateQuickActionSheetState(sheet, item) {
   if (status) status.innerHTML = renderQuickActionStatePills(item);
   if (select) {
     select.classList.toggle('active', selected);
-    select.querySelector('span').textContent = selected ? 'Deselect' : 'Select';
+    select.querySelector('span').textContent = selected ? '選択を解除' : '選択';
   }
   if (download) {
     var offline = isRemoteAccessUnavailable();
     download.classList.toggle('requires-remote', offline);
     download.disabled = offline;
-    download.title = offline ? 'Downloading originals requires the remote Vault' : '';
-    download.querySelector('span').textContent = offline ? 'Offline' : 'Download';
+    download.title = offline ? '元ファイルのダウンロードにはリモート Vault への接続が必要です' : '';
+    download.querySelector('span').textContent = offline ? 'オフライン' : 'ダウンロード';
   }
 }
 
 function updateDesktopContextMenuState(menu, item) {
   var select = menu.querySelector('[data-context-action="select"] span');
   var download = menu.querySelector('[data-context-action="download"]');
-  if (select) select.textContent = state.selectedIds.has(item.id) ? 'Deselect' : 'Add to Selection';
+  if (select) select.textContent = state.selectedIds.has(item.id) ? '選択を解除' : '選択に追加';
   if (download) {
     var offline = isRemoteAccessUnavailable();
     download.classList.toggle('requires-remote', offline);
     download.disabled = offline;
-    download.title = offline ? 'Downloading originals requires the remote Vault' : '';
+    download.title = offline ? '元ファイルのダウンロードにはリモート Vault への接続が必要です' : '';
     var label = download.querySelector('span');
-    if (label) label.textContent = offline ? 'Offline' : 'Download Original';
+    if (label) label.textContent = offline ? 'オフライン' : '元ファイルをダウンロード';
   }
 }
 
@@ -75,21 +75,21 @@ function openDesktopContextMenu(item, x, y, sourceEl) {
   menu.className = 'item-context-menu';
   menu.dataset.itemId = item.id || '';
   menu.setAttribute('role', 'menu');
-  menu.setAttribute('aria-label', 'Asset menu');
+  menu.setAttribute('aria-label', '素材メニュー');
   menu.innerHTML =
     '<div class="item-context-head">' +
-      '<strong>' + escapeHtml(item.name || 'Untitled asset') + '</strong>' +
-      '<span>' + escapeHtml(meta.join(' · ') || 'Asset') + '</span>' +
+      '<strong>' + escapeHtml(item.name || '名称未設定の素材') + '</strong>' +
+      '<span>' + escapeHtml(meta.join(' · ') || '素材') + '</span>' +
     '</div>' +
-    '<button type="button" role="menuitem" data-context-action="preview">' + iconEye() + '<span>Preview</span><kbd>Enter</kbd></button>' +
-    '<button type="button" role="menuitem" data-context-action="inspect">' + iconInfo() + '<span>View Details</span></button>' +
-    (primaryFolder ? '<button type="button" role="menuitem" data-context-action="folder">' + iconFolder() + '<span>Open Folder</span></button>' : '') +
-    '<button type="button" role="menuitem" data-context-action="select">' + iconCollection() + '<span>Add to Selection</span></button>' +
+    '<button type="button" role="menuitem" data-context-action="preview">' + iconEye() + '<span>プレビュー</span><kbd>Enter</kbd></button>' +
+    '<button type="button" role="menuitem" data-context-action="inspect">' + iconInfo() + '<span>詳細を表示</span></button>' +
+    (primaryFolder ? '<button type="button" role="menuitem" data-context-action="folder">' + iconFolder() + '<span>フォルダを開く</span></button>' : '') +
+    '<button type="button" role="menuitem" data-context-action="select">' + iconCollection() + '<span>選択に追加</span></button>' +
     '<div class="item-context-separator"></div>' +
-    '<button type="button" role="menuitem" data-context-action="share">' + iconExternalLink() + '<span>Copy Asset Link</span></button>' +
-    (canCopyImage(item.ext) ? '<button type="button" role="menuitem" data-context-action="copy">' + iconCopy() + '<span>Copy Image</span></button>' : '') +
+    '<button type="button" role="menuitem" data-context-action="share">' + iconExternalLink() + '<span>素材のリンクをコピー</span></button>' +
+    (canCopyImage(item.ext) ? '<button type="button" role="menuitem" data-context-action="copy">' + iconCopy() + '<span>画像をコピー</span></button>' : '') +
     '<div class="item-context-separator"></div>' +
-    '<button type="button" role="menuitem" data-context-action="download">' + iconDownload() + '<span>Download Original</span></button>';
+    '<button type="button" role="menuitem" data-context-action="download">' + iconDownload() + '<span>元ファイルをダウンロード</span></button>';
   document.body.appendChild(menu);
   if (sourceEl) sourceEl.classList.add('context-active');
   updateDesktopContextMenuState(menu, item);
@@ -125,32 +125,32 @@ function openQuickActionSheet(item) {
   sheet.dataset.itemId = item.id || '';
   sheet.innerHTML =
     '<div class="quick-action-backdrop" data-quick-action="close"></div>' +
-    '<div class="quick-action-sheet" role="dialog" aria-modal="true" aria-label="Asset actions">' +
+    '<div class="quick-action-sheet" role="dialog" aria-modal="true" aria-label="素材の操作">' +
       '<div class="quick-action-grabber"></div>' +
       '<div class="quick-action-head">' +
-        '<strong>' + escapeHtml(item.name || 'Untitled asset') + '</strong>' +
-        '<span>' + escapeHtml(meta.join(' · ') || 'Asset') + '</span>' +
+        '<strong>' + escapeHtml(item.name || '名称未設定の素材') + '</strong>' +
+        '<span>' + escapeHtml(meta.join(' · ') || '素材') + '</span>' +
       '</div>' +
       '<div class="quick-action-sections">' +
         '<section class="quick-action-section primary">' +
-          '<div class="quick-action-section-title"><span>Open</span><em>Preview or view asset info</em></div>' +
+          '<div class="quick-action-section-title"><span>開く</span><em>プレビューまたは情報を表示</em></div>' +
           '<div class="quick-action-grid quick-action-grid-primary">' +
-            '<button type="button" class="primary-action" data-quick-action="preview">' + iconEye() + '<span>Preview</span></button>' +
-            '<button type="button" data-quick-action="inspect">' + iconInfo() + '<span>Details</span></button>' +
-            (primaryFolder ? '<button type="button" data-quick-action="folder">' + iconFolder() + '<span>Folder</span></button>' : '') +
+            '<button type="button" class="primary-action" data-quick-action="preview">' + iconEye() + '<span>プレビュー</span></button>' +
+            '<button type="button" data-quick-action="inspect">' + iconInfo() + '<span>詳細</span></button>' +
+            (primaryFolder ? '<button type="button" data-quick-action="folder">' + iconFolder() + '<span>フォルダ</span></button>' : '') +
           '</div>' +
         '</section>' +
         '<section class="quick-action-section organize">' +
-          '<div class="quick-action-section-title"><span>Actions</span><em>Select this asset</em></div>' +
+          '<div class="quick-action-section-title"><span>操作</span><em>この素材を選択</em></div>' +
           '<div class="quick-action-grid">' +
-            '<button type="button" data-quick-action="select">' + iconCollection() + '<span>Select</span></button>' +
+            '<button type="button" data-quick-action="select">' + iconCollection() + '<span>選択</span></button>' +
           '</div>' +
         '</section>' +
         '<section class="quick-action-section output">' +
-          '<div class="quick-action-section-title"><span>Export</span><em>Copy link or download original</em></div>' +
+          '<div class="quick-action-section-title"><span>書き出し</span><em>リンクをコピー、または元ファイルをダウンロード</em></div>' +
           '<div class="quick-action-grid">' +
-            '<button type="button" data-quick-action="share">' + iconExternalLink() + '<span>Link</span></button>' +
-            '<button type="button" data-quick-action="download">' + iconDownload() + '<span>Download</span></button>' +
+            '<button type="button" data-quick-action="share">' + iconExternalLink() + '<span>リンク</span></button>' +
+            '<button type="button" data-quick-action="download">' + iconDownload() + '<span>ダウンロード</span></button>' +
           '</div>' +
         '</section>' +
       '</div>' +

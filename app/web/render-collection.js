@@ -2,9 +2,9 @@
 
 // ===== Card rendering (masonry) =====
 function renderCardQuickActions(item) {
-  return '<div class="card-quick-actions" aria-label="Card actions">' +
-    '<button type="button" class="card-quick-action" data-card-action="preview" data-id="' + escapeHtml(item.id) + '" title="' + (isItemPreviewable(item) ? 'Preview' : 'Open') + '" aria-label="' + (isItemPreviewable(item) ? 'Preview' : 'Open') + '">' + iconEye() + '</button>' +
-    '<button type="button" class="card-quick-action" data-card-action="inspect" data-id="' + escapeHtml(item.id) + '" title="Details" aria-label="Details">' + iconInfo() + '</button>' +
+  return '<div class="card-quick-actions" aria-label="カードの操作">' +
+    '<button type="button" class="card-quick-action" data-card-action="preview" data-id="' + escapeHtml(item.id) + '" title="' + (isItemPreviewable(item) ? 'プレビュー' : '開く') + '" aria-label="' + (isItemPreviewable(item) ? 'プレビュー' : '開く') + '">' + iconEye() + '</button>' +
+    '<button type="button" class="card-quick-action" data-card-action="inspect" data-id="' + escapeHtml(item.id) + '" title="詳細" aria-label="詳細">' + iconInfo() + '</button>' +
   '</div>';
 }
 
@@ -20,7 +20,7 @@ function renderItemCard(item, container) {
   cb.type = 'checkbox';
   cb.className = 'card-checkbox item-cb';
   cb.dataset.id = item.id;
-  cb.setAttribute('aria-label', 'Select ' + (item.name || 'asset'));
+  cb.setAttribute('aria-label', (item.name || '素材') + ' を選択');
   cb.checked = state.selectedIds.has(item.id);
   cb.onclick = function(e) { e.stopPropagation(); toggleSelect(item.id); };
   card.appendChild(cb);
@@ -82,12 +82,12 @@ function renderItemCard(item, container) {
     if (item.duration) meta.push(formatMediaDuration(item.duration));
     if (item.width && item.height) meta.push(item.width + ' × ' + item.height);
     else if (item.size) meta.push(formatSize(item.size));
-    details.innerHTML = '<div class="card-details-name">' + escapeHtml(item.name || 'Untitled') + '</div>' +
-      '<div class="card-details-meta">' + escapeHtml(meta.join(' · ') || 'Asset') + '</div>' +
+    details.innerHTML = '<div class="card-details-name">' + escapeHtml(item.name || '名称未設定') + '</div>' +
+      '<div class="card-details-meta">' + escapeHtml(meta.join(' · ') || '素材') + '</div>' +
       '<div class="card-details-pills">' +
-        (folderLink && folderLink.id ? '<button type="button" class="card-details-folder" data-item-folder="' + escapeHtml(folderLink.id) + '" data-item-focus-id="' + escapeHtml(item.id) + '" title="Open folder: ' + escapeHtml(folderLink.path || folderLink.label) + '">' + iconFolder() + escapeHtml(folderLink.label) + '</button>' : '') +
-        (item.ext ? '<button type="button" class="card-details-ext" data-item-ext="' + escapeHtml(item.ext) + '" title="Filter by format: ' + escapeHtml(item.ext) + '">' + escapeHtml(String(item.ext).toUpperCase()) + '</button>' : '') +
-        ((item.tags && item.tags.length) ? '<button type="button" class="card-details-tag" data-item-tag="' + escapeHtml(item.tags[0]) + '" title="Open tag: ' + escapeHtml(item.tags[0]) + '"># ' + escapeHtml(item.tags[0]) + '</button>' : '') +
+        (folderLink && folderLink.id ? '<button type="button" class="card-details-folder" data-item-folder="' + escapeHtml(folderLink.id) + '" data-item-focus-id="' + escapeHtml(item.id) + '" title="フォルダを開く: ' + escapeHtml(folderLink.path || folderLink.label) + '">' + iconFolder() + escapeHtml(folderLink.label) + '</button>' : '') +
+        (item.ext ? '<button type="button" class="card-details-ext" data-item-ext="' + escapeHtml(item.ext) + '" title="形式で絞り込み: ' + escapeHtml(item.ext) + '">' + escapeHtml(String(item.ext).toUpperCase()) + '</button>' : '') +
+        ((item.tags && item.tags.length) ? '<button type="button" class="card-details-tag" data-item-tag="' + escapeHtml(item.tags[0]) + '" title="タグを開く: ' + escapeHtml(item.tags[0]) + '"># ' + escapeHtml(item.tags[0]) + '</button>' : '') +
         (sourceDomain ? '<span class="card-details-source">' + iconExternalLink() + escapeHtml(sourceDomain) + '</span>' : '') +
       '</div>';
     card.appendChild(details);
@@ -130,7 +130,7 @@ function renderFolderCard(sub, container) {
   var card = document.createElement('div');
   card.className = 'folder-card' + (sub.locked ? ' locked' : '');
   card.dataset.aspectRatio = '1.4';
-  card.innerHTML = '<span class="folder-card-icon">' + (sub.locked ? iconLock() : iconFolderLarge()) + '</span><span class="folder-card-copy"><span class="folder-card-name">' + escapeHtml(sub.name) + '</span>' + (sub.locked ? '<small>Eagle password-protected</small>' : '') + '</span>';
+  card.innerHTML = '<span class="folder-card-icon">' + (sub.locked ? iconLock() : iconFolderLarge()) + '</span><span class="folder-card-copy"><span class="folder-card-name">' + escapeHtml(sub.name) + '</span>' + (sub.locked ? '<small>Eagle でパスワード保護</small>' : '') + '</span>';
   card.onclick = function() {
     if (sub.locked) {
       showLockedFolderNotice(sub);
@@ -159,7 +159,7 @@ function renderListRow(item, tbody) {
   cb.type = 'checkbox';
   cb.className = 'item-cb';
   cb.dataset.id = item.id;
-  cb.setAttribute('aria-label', 'Select ' + (item.name || 'asset'));
+  cb.setAttribute('aria-label', (item.name || '素材') + ' を選択');
   cb.checked = state.selectedIds.has(item.id);
   cb.onclick = function(e) { e.stopPropagation(); toggleSelect(item.id); };
   checkCell.appendChild(cb);
@@ -196,9 +196,9 @@ function renderListRow(item, tbody) {
     '</div>' +
     (mobileMeta.length ? '<div class="list-mobile-meta">' + mobileMeta.map(function(part) { return '<span>' + escapeHtml(part) + '</span>'; }).join('') + '</div>' : '') +
     '<div class="list-mobile-actions">' +
-      '<button type="button" data-list-mobile-action="preview" data-id="' + escapeHtml(item.id) + '">' + (isItemPreviewable(item) ? 'Preview' : 'Open') + '</button>' +
-      '<button type="button" data-list-mobile-action="inspect" data-id="' + escapeHtml(item.id) + '">Details</button>' +
-      '<button type="button" data-list-mobile-action="select" data-id="' + escapeHtml(item.id) + '" aria-pressed="' + (state.selectedIds.has(item.id) ? 'true' : 'false') + '" class="' + (state.selectedIds.has(item.id) ? 'is-selected' : '') + '">' + (state.selectedIds.has(item.id) ? 'Deselect' : 'Select') + '</button>' +
+      '<button type="button" data-list-mobile-action="preview" data-id="' + escapeHtml(item.id) + '">' + (isItemPreviewable(item) ? 'プレビュー' : '開く') + '</button>' +
+      '<button type="button" data-list-mobile-action="inspect" data-id="' + escapeHtml(item.id) + '">詳細</button>' +
+      '<button type="button" data-list-mobile-action="select" data-id="' + escapeHtml(item.id) + '" aria-pressed="' + (state.selectedIds.has(item.id) ? 'true' : 'false') + '" class="' + (state.selectedIds.has(item.id) ? 'is-selected' : '') + '">' + (state.selectedIds.has(item.id) ? '選択を解除' : '選択') + '</button>' +
     '</div>' +
     (sourceDomain ? '<span class="list-source-domain">' + iconExternalLink() + '<span>' + escapeHtml(sourceDomain) + '</span></span>' : '');
   nameCell.style.cursor = 'pointer';
@@ -221,7 +221,7 @@ function renderListRow(item, tbody) {
   if (folderLinks.length) {
     pathCell.innerHTML = folderLinks.map(function(link) {
       if (!link.id) return '<span class="list-folder-chip muted">' + iconFolder() + '<span>' + escapeHtml(link.label) + '</span></span>';
-      return '<button type="button" class="list-folder-chip" data-item-folder="' + escapeHtml(link.id) + '" data-item-focus-id="' + escapeHtml(item.id) + '" title="Open folder: ' + escapeHtml(link.path || link.label) + '">' + iconFolder() + '<span>' + escapeHtml(link.label) + '</span></button>';
+      return '<button type="button" class="list-folder-chip" data-item-folder="' + escapeHtml(link.id) + '" data-item-focus-id="' + escapeHtml(item.id) + '" title="フォルダを開く: ' + escapeHtml(link.path || link.label) + '">' + iconFolder() + '<span>' + escapeHtml(link.label) + '</span></button>';
     }).join('') + ((Math.max((item.folders || []).length, pathList.length) > folderLinks.length) ? '<span class="list-folder-more">+' + (Math.max((item.folders || []).length, pathList.length) - folderLinks.length) + '</span>' : '');
   } else {
     pathCell.textContent = '—';
@@ -230,7 +230,7 @@ function renderListRow(item, tbody) {
 
   var extCell = document.createElement('td');
   extCell.className = 'col-ext';
-  extCell.innerHTML = item.ext ? '<button type="button" class="list-ext-chip" data-item-ext="' + escapeHtml(item.ext) + '" title="Filter by format: .' + escapeHtml(item.ext) + '">.' + escapeHtml(item.ext) + '</button>' : '—';
+  extCell.innerHTML = item.ext ? '<button type="button" class="list-ext-chip" data-item-ext="' + escapeHtml(item.ext) + '" title="形式で絞り込み: .' + escapeHtml(item.ext) + '">.' + escapeHtml(item.ext) + '</button>' : '—';
   tr.appendChild(extCell);
 
   var dimsCell = document.createElement('td');
@@ -256,7 +256,7 @@ function renderListRow(item, tbody) {
   var tagsCell = document.createElement('td');
   tagsCell.className = 'col-tags';
   tagsCell.innerHTML = (item.tags && item.tags.length) ? item.tags.slice(0, 5).map(function(tag) {
-    return '<button type="button" class="list-tag-chip" data-item-tag="' + escapeHtml(tag) + '" title="Open tag: ' + escapeHtml(tag) + '">#' + escapeHtml(tag) + '</button>';
+    return '<button type="button" class="list-tag-chip" data-item-tag="' + escapeHtml(tag) + '" title="タグを開く: ' + escapeHtml(tag) + '">#' + escapeHtml(tag) + '</button>';
   }).join('') : '';
   tr.appendChild(tagsCell);
 
@@ -264,10 +264,10 @@ function renderListRow(item, tbody) {
   actionsCell.className = 'col-actions';
   var downloadDisabled = isRemoteAccessUnavailableForRender();
   var actHtml = '';
-  if (isPreviewable(item.ext)) actHtml += '<a href="' + fileUrl + '" target="_blank" rel="noopener">Preview</a>';
-  else if (isItemPreviewable(item)) actHtml += '<button type="button" data-list-mobile-action="preview" data-id="' + escapeHtml(item.id) + '">Cached Preview</button>';
-  actHtml += '<button type="button" class="btn-download-original list-download-action' + (downloadDisabled ? ' requires-remote' : '') + '" data-id="' + escapeHtml(item.id) + '"' + (downloadDisabled ? ' disabled title="Downloading originals requires the remote Vault"' : '') + '>' + (downloadDisabled ? 'Offline' : 'Download') + '</button>';
-  if (canCopyImage(item.ext)) actHtml += '<button type="button" class="btn-copy" data-id="' + escapeHtml(item.id) + '">Copy</button>';
+  if (isPreviewable(item.ext)) actHtml += '<a href="' + fileUrl + '" target="_blank" rel="noopener">プレビュー</a>';
+  else if (isItemPreviewable(item)) actHtml += '<button type="button" data-list-mobile-action="preview" data-id="' + escapeHtml(item.id) + '">キャッシュでプレビュー</button>';
+  actHtml += '<button type="button" class="btn-download-original list-download-action' + (downloadDisabled ? ' requires-remote' : '') + '" data-id="' + escapeHtml(item.id) + '"' + (downloadDisabled ? ' disabled title="元ファイルのダウンロードにはリモート Vault への接続が必要です"' : '') + '>' + (downloadDisabled ? 'オフライン' : 'ダウンロード') + '</button>';
+  if (canCopyImage(item.ext)) actHtml += '<button type="button" class="btn-copy" data-id="' + escapeHtml(item.id) + '">コピー</button>';
   actionsCell.innerHTML = actHtml;
   tr.appendChild(actionsCell);
 
@@ -297,7 +297,7 @@ function renderFolderListRow(sub, tbody) {
 
   var nameTd = document.createElement('td');
   nameTd.className = 'col-name';
-  nameTd.innerHTML = '<span>' + escapeHtml(sub.name) + '</span>' + (sub.locked ? '<small class="folder-row-locked">Eagle password-protected</small>' : '');
+  nameTd.innerHTML = '<span>' + escapeHtml(sub.name) + '</span>' + (sub.locked ? '<small class="folder-row-locked">Eagle でパスワード保護</small>' : '');
   tr.appendChild(nameTd);
 
   var pathTd = document.createElement('td');
@@ -324,7 +324,7 @@ function renderFolderListRow(sub, tbody) {
 
   var actTd = document.createElement('td');
   actTd.className = 'col-actions';
-  actTd.textContent = sub.locked ? 'Locked' : 'Open';
+  actTd.textContent = sub.locked ? 'ロック中' : '開く';
   tr.appendChild(actTd);
 
   tr.onclick = function() {
@@ -355,13 +355,13 @@ function showLockedFolderNotice(folder) {
   overlay.className = 'locked-folder-overlay';
   overlay.setAttribute('role', 'dialog');
   overlay.setAttribute('aria-modal', 'true');
-  overlay.setAttribute('aria-label', 'Eagle protected folder');
+  overlay.setAttribute('aria-label', 'Eagle で保護されたフォルダ');
   overlay.innerHTML = '<section class="locked-folder-card">' +
     '<div class="locked-folder-mark"><span>' + iconLock() + '</span><small>REMOTE PRIVACY BOUNDARY</small></div>' +
-    '<div class="locked-folder-copy"><span>EAGLE PROTECTED</span><h2>' + escapeHtml((folder && folder.name) || 'Protected folder') + '</h2><p>This folder is password-protected in Eagle. The remote viewer will not index, search, preview, or transfer any of its assets.</p></div>' +
-    '<div class="locked-folder-rules"><div><strong>0</strong><span>Visible remotely</span></div><div><strong>423</strong><span>API locked response</span></div><div><strong>Read-only</strong><span>Vault unchanged</span></div></div>' +
-    '<div class="locked-folder-note"><i></i><span>To access it, remove the folder password in Eagle on this machine, then reload the Vault in the viewer.</span></div>' +
-    '<button type="button" data-close-locked-folder>Got It</button>' +
+    '<div class="locked-folder-copy"><span>EAGLE PROTECTED</span><h2>' + escapeHtml((folder && folder.name) || '保護されたフォルダ') + '</h2><p>このフォルダは Eagle でパスワード保護されています。リモートビューアは、中の素材のインデックス作成・検索・プレビュー・転送を行いません。</p></div>' +
+    '<div class="locked-folder-rules"><div><strong>0</strong><span>リモートで見える数</span></div><div><strong>423</strong><span>API のロック応答</span></div><div><strong>読み取り専用</strong><span>Vault は変更しません</span></div></div>' +
+    '<div class="locked-folder-note"><i></i><span>見るには、このマシンの Eagle でフォルダのパスワードを外してから、ビューアで Vault を再読み込みしてください。</span></div>' +
+    '<button type="button" data-close-locked-folder>OK</button>' +
   '</section>';
   overlay.onclick = function(e) { if (e.target === overlay || e.target.closest('[data-close-locked-folder]')) closeLockedFolderNotice(); };
   overlay.onkeydown = function(e) { if (e.key === 'Escape') closeLockedFolderNotice(); };
@@ -375,14 +375,14 @@ function showLockedFolderNotice(folder) {
 
 function renderItemsList(subfolders, items, container, emptyMsg) {
   if (!subfolders.length && !items.length) {
-    container.innerHTML = '<div class="empty-state">' + iconFolderOutline() + '<span>' + (emptyMsg || 'No assets') + '</span></div>';
+    container.innerHTML = '<div class="empty-state">' + iconFolderOutline() + '<span>' + (emptyMsg || '素材がありません') + '</span></div>';
     return;
   }
   var itemIds = items.map(function(it) { return it.id; });
   var allChecked = itemIds.length > 0 && itemIds.every(function(id) { return state.selectedIds.has(id); });
   container.innerHTML = '<div class="list-wrap"><table class="list-table"><thead><tr>' +
     '<th class="col-check"><input type="checkbox" id="listSelectAll" ' + (allChecked ? 'checked' : '') + '></th>' +
-    '<th class="col-thumb"></th><th>Name</th><th>Path</th><th>Format</th><th>Dimensions</th><th>Size</th><th>Created</th><th>Modified</th><th>Tags</th><th>Actions</th>' +
+    '<th class="col-thumb"></th><th>名前</th><th>パス</th><th>形式</th><th>寸法</th><th>サイズ</th><th>作成日時</th><th>更新日時</th><th>タグ</th><th>操作</th>' +
     '</tr></thead><tbody></tbody></table></div>';
   var tbody = container.querySelector('tbody');
   subfolders.forEach(function(sub) { renderFolderListRow(sub, tbody); });
@@ -406,7 +406,7 @@ function renderLoadMoreStatus(container) {
   if (existing) existing.remove();
   var status = document.createElement('div');
   status.className = 'load-more-status';
-  status.textContent = state.incrementalLoading ? 'Loading more…' : (state.incrementalHasMore ? 'Scroll down to load more' : 'All items loaded');
+  status.textContent = state.incrementalLoading ? 'さらに読み込み中…' : (state.incrementalHasMore ? '下にスクロールするとさらに読み込みます' : 'すべて読み込みました');
   container.appendChild(status);
 }
 
@@ -436,20 +436,20 @@ function renderViewSummary() {
   });
   var parts = [];
   if (state.incrementalHasMore && ['all', 'recent', 'folder', 'tag', 'search'].indexOf(state.currentView) >= 0) {
-    parts.push(['Loaded', items.length + ' / ' + (state.currentTotal || items.length)]);
+    parts.push(['読み込み済み', items.length + ' / ' + (state.currentTotal || items.length)]);
   }
-  parts.push(['Size', totalSize ? formatSize(totalSize) : '0 B']);
+  parts.push(['サイズ', totalSize ? formatSize(totalSize) : '0 B']);
   [
-    ['Images', counts.image],
-    ['Videos', counts.video],
-    ['Documents', counts.document],
-    ['Audio', counts.audio],
-    ['Other', counts.other]
+    ['画像', counts.image],
+    ['動画', counts.video],
+    ['文書', counts.document],
+    ['音声', counts.audio],
+    ['その他', counts.other]
   ].forEach(function(row) {
     if (row[1]) parts.push(row);
   });
-  if (tagged) parts.push(['Tagged', tagged]);
-  if (sourced) parts.push(['With source', sourced]);
+  if (tagged) parts.push(['タグあり', tagged]);
+  if (sourced) parts.push(['出典あり', sourced]);
   var html = parts.map(function(part) {
     return '<span class="view-summary-pill"><strong>' + escapeHtml(part[0]) + '</strong>' + escapeHtml(String(part[1])) + '</span>';
   }).join('');
@@ -501,16 +501,16 @@ function getMobileWorkbarRemoteState() {
   if (navigator.onLine === false || (strip && !strip.hidden && strip.dataset.state === 'offline')) {
     return {
       state: 'offline',
-      label: snapshot && snapshot.savedAt ? 'Offline snapshot' : 'Remote offline'
+      label: snapshot && snapshot.savedAt ? 'オフライン用スナップショット' : 'リモートがオフライン'
     };
   }
   if (strip && !strip.hidden && strip.dataset.state === 'checking') {
-    return { state: 'checking', label: 'Checking' };
+    return { state: 'checking', label: '確認中' };
   }
   if (snapshot && snapshot.savedAt && window.innerWidth <= 768) {
-    return { state: 'ready', label: 'Snapshot ready' };
+    return { state: 'ready', label: 'スナップショットあり' };
   }
-  return { state: 'online', label: 'Vault online' };
+  return { state: 'online', label: 'Vault に接続中' };
 }
 
 function getMobileSnapshotLabel() {
@@ -518,12 +518,12 @@ function getMobileSnapshotLabel() {
   try {
     snapshot = JSON.parse(localStorage.getItem('eagle-viewer-offline-snapshot-meta') || 'null');
   } catch (e) {}
-  if (!snapshot || !snapshot.savedAt) return 'Not saved';
+  if (!snapshot || !snapshot.savedAt) return '未保存';
   var diff = Date.now() - Number(snapshot.savedAt || 0);
-  if (!isFinite(diff) || diff < 0) return (snapshot.ok || 0) + ' items · just now';
+  if (!isFinite(diff) || diff < 0) return (snapshot.ok || 0) + ' 件 · たった今';
   var minutes = Math.floor(diff / 60000);
-  var age = minutes < 1 ? 'just now' : (minutes < 60 ? minutes + 'm ago' : (minutes < 1440 ? Math.floor(minutes / 60) + 'h ago' : Math.floor(minutes / 1440) + 'd ago'));
-  return (snapshot.ok || 0) + ' items · ' + age;
+  var age = minutes < 1 ? 'たった今' : (minutes < 60 ? minutes + ' 分前' : (minutes < 1440 ? Math.floor(minutes / 60) + ' 時間前' : Math.floor(minutes / 1440) + ' 日前'));
+  return (snapshot.ok || 0) + ' 件 · ' + age;
 }
 
 function updateMobileWorkbar() {
@@ -532,19 +532,19 @@ function updateMobileWorkbar() {
   var remote = getMobileWorkbarRemoteState();
   var filterSpecs = typeof getFilterChipSpecs === 'function' ? getFilterChipSpecs(state.advancedFilters || {}) : [];
   var filterHtml = filterSpecs.length
-    ? '<div class="mobile-workbar-filters" aria-label="Active filters">' +
+    ? '<div class="mobile-workbar-filters" aria-label="適用中のフィルタ">' +
         filterSpecs.map(function(spec) {
           return '<button type="button" data-clear-filter="' + escapeHtml(spec.key) + '">' +
             '<span>' + escapeHtml(spec.label) + '</span><strong>' + escapeHtml(String(spec.value)) + '</strong>' + iconClose() +
           '</button>';
         }).join('') +
-        '<button type="button" class="mobile-workbar-clear" data-clear-all-filters>Clear</button>' +
+        '<button type="button" class="mobile-workbar-clear" data-clear-all-filters>解除</button>' +
       '</div>'
     : '';
   el.hidden = false;
   el.dataset.state = remote.state;
   var backHtml = canNavigateBackInApp()
-    ? '<button type="button" class="mobile-workbar-back" data-mobile-workbar-action="back" aria-label="Back to previous view">' + iconChevronLeft() + '</button>'
+    ? '<button type="button" class="mobile-workbar-back" data-mobile-workbar-action="back" aria-label="前の表示に戻る">' + iconChevronLeft() + '</button>'
     : '';
   el.innerHTML =
     backHtml +
@@ -557,8 +557,8 @@ function updateMobileWorkbar() {
       '<span></span>' + escapeHtml(remote.label) +
     '</div>' +
     '<div class="mobile-workbar-actions">' +
-      '<button type="button" data-mobile-workbar-action="search" aria-label="Open search">' + iconSearch() + '</button>' +
-      '<button type="button" data-mobile-workbar-action="more" aria-label="Open more">' + iconSliders() + '</button>' +
+      '<button type="button" data-mobile-workbar-action="search" aria-label="検索を開く">' + iconSearch() + '</button>' +
+      '<button type="button" data-mobile-workbar-action="more" aria-label="その他を開く">' + iconSliders() + '</button>' +
     '</div>' +
     filterHtml;
 }
@@ -581,7 +581,7 @@ function updateContentTitle() {
   var titleEl = document.getElementById('contentTitle');
   if (!titleEl) return;
   renderContentCrumbs();
-  titleEl.textContent = state.currentTotal >= 0 ? state.currentTotal + ' items' : '';
+  titleEl.textContent = state.currentTotal >= 0 ? state.currentTotal + ' 件' : '';
   renderViewSummary();
   updateMobileWorkbar();
   updateSidebarCounts();
@@ -613,14 +613,14 @@ function getOfflineSnapshotBannerHtml() {
   } catch (e) {}
   if (!offline && !checking && !(snapshotMeta && snapshotMeta.savedAt && window.innerWidth <= 768)) return '';
   var stateName = offline ? 'offline' : (checking ? 'checking' : 'ready');
-  var title = offline ? 'Browsing offline / cached results' : (checking ? 'Checking remote Vault…' : 'Offline snapshot available');
+  var title = offline ? 'オフライン / キャッシュの結果を表示中' : (checking ? 'リモート Vault を確認中…' : 'オフライン用スナップショットがあります');
   var message = snapshotMeta && snapshotMeta.savedAt
-    ? ('Latest snapshot ' + new Date(snapshotMeta.savedAt).toLocaleString('zh-CN') + ' · ' + (snapshotMeta.ok || 0) + ' items; reconnect to refresh the live Vault.')
-    : 'These results may not reflect the live remote Vault; reconnect to refresh the index.';
+    ? ('最新のスナップショット ' + new Date(snapshotMeta.savedAt).toLocaleString(getDateLocale()) + ' · ' + (snapshotMeta.ok || 0) + ' 件。再接続すると最新の Vault に更新されます。')
+    : 'この結果は最新のリモート Vault と違う場合があります。再接続してインデックスを更新してください。';
   return '<div class="offline-snapshot-banner" data-state="' + stateName + '">' +
     '<span class="offline-snapshot-dot"></span>' +
     '<div><strong>' + escapeHtml(title) + '</strong><small>' + escapeHtml(message) + '</small></div>' +
-    '<button type="button" id="offlineBannerRetryBtn">Reconnect</button>' +
+    '<button type="button" id="offlineBannerRetryBtn">再接続</button>' +
   '</div>';
 }
 
@@ -628,7 +628,7 @@ function bindOfflineSnapshotBanner() {
   var retry = document.getElementById('offlineBannerRetryBtn');
   if (retry) retry.onclick = function() {
     if (EagleViewer.modules.interactions && EagleViewer.modules.interactions.checkRemoteStatus) {
-      EagleViewer.modules.interactions.checkRemoteStatus({ reload: false, quietStrip: false, message: 'Checking remote Vault…' });
+      EagleViewer.modules.interactions.checkRemoteStatus({ reload: false, quietStrip: false, message: 'リモート Vault を確認中…' });
     }
   };
 }

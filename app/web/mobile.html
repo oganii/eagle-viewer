@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="ja">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -75,15 +75,15 @@
     <nav class="tabs" id="tabs">
       <button class="tb active" data-view="library">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 12l9 4 9-4M3 17l9 4 9-4"/></svg>
-        <span id="tabLibrary">资料库</span>
+        <span id="tabLibrary">ライブラリ</span>
       </button>
       <button class="tb" data-view="folders">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg>
-        <span id="tabFolders">文件夹</span>
+        <span id="tabFolders">フォルダ</span>
       </button>
       <button class="tb" data-view="search">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-        <span id="tabSearch">搜索</span>
+        <span id="tabSearch">検索</span>
       </button>
     </nav>
   </div>
@@ -91,14 +91,14 @@
   <!-- 预览浮层 -->
   <div class="overlay" id="preview" aria-hidden="true">
     <div class="pv-top">
-      <button id="pvClose" aria-label="关闭">
+      <button id="pvClose" aria-label="閉じる">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
       </button>
-      <button id="pvPrev" class="pv-nav" aria-label="上一个">‹</button>
+      <button id="pvPrev" class="pv-nav" aria-label="前へ">‹</button>
       <span class="ix" id="pvIndex">1 / 1</span>
-      <button id="pvNext" class="pv-nav" aria-label="下一个">›</button>
+      <button id="pvNext" class="pv-nav" aria-label="次へ">›</button>
       <span class="spacer"></span>
-      <button id="pvShare" aria-label="分享">
+      <button id="pvShare" aria-label="共有">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M12 3v13M8 7l4-4 4 4"/></svg>
       </button>
     </div>
@@ -111,15 +111,15 @@
       <div class="pv-actions">
         <a id="pvDownload" class="primary">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg>
-          <span id="pvDownloadLabel">下载</span>
+          <span id="pvDownloadLabel">ダウンロード</span>
         </a>
         <button id="pvOriginal" class="primary" style="display:none">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M4 5h16v14H4z"/><path d="m7 15 3-3 2 2 2-2 3 3"/><circle cx="9" cy="9" r="1.2"/></svg>
-          <span id="pvOriginalLabel">显示原图</span>
+          <span id="pvOriginalLabel">元画像を表示</span>
         </button>
         <button id="pvSave" class="primary" style="display:none">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M5 7h3l2-2h4l2 2h3v12H5z"/><circle cx="12" cy="13" r="3.2"/></svg>
-          <span id="pvSaveLabel">保存相册</span>
+          <span id="pvSaveLabel">写真に保存</span>
         </button>
       </div>
     </div>

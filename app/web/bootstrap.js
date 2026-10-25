@@ -63,12 +63,12 @@ async function init() {
     await restorePendingInspector();
     if (interactions.runPendingLaunchAction) await interactions.runPendingLaunchAction();
     if (standaloneRouteRestore && standaloneRouteRestore.restored && window.showToast) {
-      window.showToast('Restored your last position', 'success');
+      window.showToast('前回見ていた場所に戻りました', 'success');
     } else if (standaloneRouteRestore && standaloneRouteRestore.reason === 'stale' && window.showToast) {
-      window.showToast('Last position expired; opened the library');
+      window.showToast('前回の場所は期限切れのため、ライブラリを開きました');
     }
   } catch (e) {
-    document.getElementById('contentBody').innerHTML = '<div class="empty-state">' + iconFolderOutline() + '<span>Could not load the library. Make sure the Eagle library path is mounted.</span></div>';
+    document.getElementById('contentBody').innerHTML = '<div class="empty-state">' + iconFolderOutline() + '<span>ライブラリを読み込めませんでした。Eagle ライブラリのパスがマウントされているか確認してください。</span></div>';
   }
 }
 
@@ -88,7 +88,7 @@ function renderVersionBadge() {
   if (!badge || !EagleViewer.config || !EagleViewer.config.version) return;
   badge.textContent = 'v' + EagleViewer.config.version;
   if (EagleViewer.config.versionDate) {
-    badge.title = 'Version ' + EagleViewer.config.version + ' · ' + EagleViewer.config.versionDate;
+    badge.title = 'バージョン ' + EagleViewer.config.version + ' · ' + EagleViewer.config.versionDate;
   }
 }
 
@@ -129,7 +129,7 @@ function showPwaUpdatePrompt(registration) {
   if (later) later.onclick = hidePwaUpdatePrompt;
   if (apply) apply.onclick = function() {
     apply.disabled = true;
-    apply.textContent = 'Updating…';
+    apply.textContent = '更新中…';
     pwaReloadRequested = true;
     var waiting = pwaUpdateRegistration && pwaUpdateRegistration.waiting;
     if (waiting) waiting.postMessage({ type: 'SKIP_WAITING' });

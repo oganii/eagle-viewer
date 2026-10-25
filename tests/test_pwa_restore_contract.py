@@ -235,8 +235,8 @@ def test_search_is_plain_keyword_search():
     index = read("app/web/index.html")
     api = read("app/web/api.js")
     interactions = read_web_assets(INTERACTION_ASSETS)
-    assert 'placeholder="Search name, tag or notes…"' in index
-    assert "Search name, tag or notes" in interactions
+    assert 'placeholder="名前・タグ・メモで検索…"' in index
+    assert "名前・タグ・メモで検索" in interactions
     assert "q.charAt(0) === '#'" not in interactions
     assert "q.charAt(0) === '/'" not in interactions
     assert "'/api/search?q=' + encodeURIComponent(query)" in api
@@ -295,7 +295,7 @@ def test_removed_backend_endpoints_are_not_registered():
 def test_manifest_keeps_only_basic_shortcuts():
     manifest = json.loads(read("app/web/manifest.json"))
     names = [shortcut["name"] for shortcut in manifest.get("shortcuts", [])]
-    assert names == ["All assets", "Search Vault"]
+    assert names == ["すべての素材", "Vault を検索"]
 
 
 def test_theme_and_mobile_navigation_remain_available():

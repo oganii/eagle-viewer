@@ -9,30 +9,30 @@ function updateMobileRemoteCard(status, message) {
   var modeChip = document.getElementById('mobileRemoteMode');
   var snapshotChip = document.getElementById('mobileRemoteSnapshot');
   var refresh = document.getElementById('mobileRemoteRefresh');
-  var pwa = isStandaloneDisplay() ? 'PWA' : (isIosLikeDevice() ? 'Safari' : 'Browser');
+  var pwa = isStandaloneDisplay() ? 'PWA' : (isIosLikeDevice() ? 'Safari' : 'ブラウザ');
   var sync = document.getElementById('syncStatus');
-  var syncText = sync ? sync.textContent : 'Local';
+  var syncText = sync ? sync.textContent : 'ローカル';
   card.dataset.state = status || 'checking';
   if (title) {
-    title.textContent = message || (status === 'online' ? 'Remote Vault online' : status === 'changed' ? 'Vault update found' : status === 'offline' ? 'Remote connection unavailable' : 'Checking remote connection…');
+    title.textContent = message || (status === 'online' ? 'リモート Vault に接続中' : status === 'changed' ? 'Vault の更新があります' : status === 'offline' ? 'リモートに接続できません' : 'リモート接続を確認中…');
   }
   if (meta) {
-    meta.textContent = status === 'changed' ? 'Mounted folder changed · position kept after reload' : (navigator.onLine ? 'Network online' : 'System offline') + ' · Read-only mount · ' + pwa + ' · ' + syncText;
+    meta.textContent = status === 'changed' ? 'マウント中のフォルダが変更されました · 再読み込みしても位置はそのまま' : (navigator.onLine ? 'ネットワーク接続中' : 'オフライン') + ' · 読み取り専用 · ' + pwa + ' · ' + syncText;
   }
   if (networkChip) {
-    networkChip.textContent = status === 'offline' ? 'Network · Offline' : (status === 'checking' ? 'Network · Checking' : status === 'changed' ? 'Vault · Updated' : 'Network · Online');
+    networkChip.textContent = status === 'offline' ? 'ネットワーク · オフライン' : (status === 'checking' ? 'ネットワーク · 確認中' : status === 'changed' ? 'Vault · 更新あり' : 'ネットワーク · オンライン');
     networkChip.dataset.state = status === 'offline' ? 'offline' : (status === 'checking' ? 'checking' : 'online');
   }
-  if (refresh) refresh.textContent = status === 'changed' ? 'Load Update' : 'Reconnect';
+  if (refresh) refresh.textContent = status === 'changed' ? '更新を読み込む' : '再接続';
   if (modeChip) {
-    modeChip.textContent = 'Mode · ' + pwa + ' · Read-only';
+    modeChip.textContent = 'モード · ' + pwa + ' · 読み取り専用';
     modeChip.dataset.state = isStandaloneDisplay() ? 'online' : 'checking';
   }
   if (snapshotChip) {
     var snapshot = getOfflineSnapshotMeta();
-    snapshotChip.textContent = snapshot ? ('Snapshot · ' + formatSnapshotAge(snapshot.savedAt) + ' · ' + (snapshot.ok || 0) + ' items') : 'Snapshot · Not saved';
+    snapshotChip.textContent = snapshot ? ('スナップショット · ' + formatSnapshotAge(snapshot.savedAt) + ' · ' + (snapshot.ok || 0) + ' 件') : 'スナップショット · 未保存';
     snapshotChip.dataset.state = snapshot ? 'online' : 'checking';
-    snapshotChip.title = snapshot ? ((snapshot.title || 'Current view') + ' · ' + new Date(snapshot.savedAt).toLocaleString('zh-CN')) : 'No offline snapshot saved yet';
+    snapshotChip.title = snapshot ? ((snapshot.title || '現在の表示') + ' · ' + new Date(snapshot.savedAt).toLocaleString(getDateLocale())) : 'オフライン用スナップショットはまだ保存されていません';
   }
   if (render && render.updateMobileWorkbar) render.updateMobileWorkbar();
 }
@@ -48,21 +48,21 @@ function getOfflineSnapshotMeta() {
 
 function formatSnapshotAge(savedAt) {
   var diff = Date.now() - Number(savedAt || 0);
-  if (!isFinite(diff) || diff < 0) return 'just now';
+  if (!isFinite(diff) || diff < 0) return 'たった今';
   var minutes = Math.floor(diff / 60000);
-  if (minutes < 1) return 'just now';
-  if (minutes < 60) return minutes + 'm ago';
+  if (minutes < 1) return 'たった今';
+  if (minutes < 60) return minutes + ' 分前';
   var hours = Math.floor(minutes / 60);
-  if (hours < 24) return hours + 'h ago';
+  if (hours < 24) return hours + ' 時間前';
   var days = Math.floor(hours / 24);
-  return days + 'd ago';
+  return days + ' 日前';
 }
 
 function getRemoteStatusMeta() {
-  var pwa = isStandaloneDisplay() ? 'PWA' : (isIosLikeDevice() ? 'Safari' : 'Browser');
+  var pwa = isStandaloneDisplay() ? 'PWA' : (isIosLikeDevice() ? 'Safari' : 'ブラウザ');
   var sync = document.getElementById('syncStatus');
-  var syncText = sync ? sync.textContent : 'Local';
-  return (navigator.onLine ? 'Network online' : 'System offline') + ' · Read-only mount · ' + pwa + ' · ' + syncText;
+  var syncText = sync ? sync.textContent : 'ローカル';
+  return (navigator.onLine ? 'ネットワーク接続中' : 'オフライン') + ' · 読み取り専用 · ' + pwa + ' · ' + syncText;
 }
 
 function updateRemoteStatusStrip(status, message) {
@@ -72,14 +72,14 @@ function updateRemoteStatusStrip(status, message) {
   var meta = document.getElementById('remoteStatusMeta');
   var retry = document.getElementById('remoteStatusRetry');
   var stateName = status || 'checking';
-  var text = message || (stateName === 'online' ? 'Remote Vault restored' : stateName === 'changed' ? 'Remote Vault has new content' : stateName === 'offline' ? 'Remote Vault offline' : 'Reconnecting to remote Vault…');
+  var text = message || (stateName === 'online' ? 'リモート Vault に再接続しました' : stateName === 'changed' ? 'リモート Vault に新しい内容があります' : stateName === 'offline' ? 'リモート Vault はオフラインです' : 'リモート Vault に再接続中…');
 
   strip.dataset.state = stateName;
   if (title) title.textContent = text;
-  if (meta) meta.textContent = stateName === 'offline' ? 'Check VPN / NAS / reverse proxy, then reconnect · ' + getRemoteStatusMeta() : stateName === 'changed' ? 'Mounted folder changed · refresh keeps your position' : getRemoteStatusMeta();
+  if (meta) meta.textContent = stateName === 'offline' ? 'VPN / NAS / リバースプロキシを確認してから再接続してください · ' + getRemoteStatusMeta() : stateName === 'changed' ? 'マウント中のフォルダが変更されました · 更新しても位置はそのまま' : getRemoteStatusMeta();
   if (retry) {
     retry.disabled = stateName === 'checking';
-    retry.textContent = stateName === 'changed' ? 'Load Update' : 'Reconnect';
+    retry.textContent = stateName === 'changed' ? '更新を読み込む' : '再接続';
   }
 
   clearTimeout(strip._hideTimer);
@@ -150,8 +150,8 @@ async function checkLibraryChanges(options) {
     var status = await api.fetchLibraryStatus(deep);
     if (!status) return false;
     if (status.changed) {
-      updateRemoteStatusStrip('changed', 'Remote Vault has new content');
-      updateMobileRemoteCard('changed', 'Vault update found');
+      updateRemoteStatusStrip('changed', 'リモート Vault に新しい内容があります');
+      updateMobileRemoteCard('changed', 'Vault の更新があります');
       return true;
     }
     return false;
@@ -165,8 +165,8 @@ async function checkLibraryChanges(options) {
 async function applyDetectedLibraryUpdate() {
   var refreshed = await api.reloadLibrary();
   if (!refreshed) return;
-  updateRemoteStatusStrip('online', 'Remote Vault updated');
-  updateMobileRemoteCard('online', 'Remote Vault online');
+  updateRemoteStatusStrip('online', 'リモート Vault を更新しました');
+  updateMobileRemoteCard('online', 'リモート Vault に接続中');
 }
 
 function setupLibraryChangeMonitor() {
@@ -188,26 +188,26 @@ function setupLibraryChangeMonitor() {
 
 async function checkRemoteStatus(options) {
   var opts = options || {};
-  updateMobileRemoteCard('checking', opts.message || 'Checking remote connection…');
-  if (!opts.quietStrip) updateRemoteStatusStrip('checking', opts.message || 'Reconnecting to remote Vault…');
+  updateMobileRemoteCard('checking', opts.message || 'リモート接続を確認中…');
+  if (!opts.quietStrip) updateRemoteStatusStrip('checking', opts.message || 'リモート Vault に再接続中…');
   var online = navigator.onLine !== false;
   if (!online) {
-    updateMobileRemoteCard('offline', 'Device is offline');
-    updateRemoteStatusStrip('offline', 'Device is offline');
+    updateMobileRemoteCard('offline', '端末がオフラインです');
+    updateRemoteStatusStrip('offline', '端末がオフラインです');
     return false;
   }
   try {
     var response = await fetch(API + '/health', { cache: 'no-store' });
     if (handleAuthResponse(response)) return false;
     if (!response.ok) throw new Error('health failed');
-    updateMobileRemoteCard('online', 'Remote Vault online');
-    if (!opts.quietStrip) updateRemoteStatusStrip('online', 'Remote Vault restored');
+    updateMobileRemoteCard('online', 'リモート Vault に接続中');
+    if (!opts.quietStrip) updateRemoteStatusStrip('online', 'リモート Vault に再接続しました');
     flushPendingViewerState();
     if (opts.reload) api.reloadLibrary();
     return true;
   } catch (err) {
-    updateMobileRemoteCard('offline', 'Remote connection unavailable');
-    updateRemoteStatusStrip('offline', 'Remote connection unavailable');
+    updateMobileRemoteCard('offline', 'リモートに接続できません');
+    updateRemoteStatusStrip('offline', 'リモートに接続できません');
     return false;
   }
 }
@@ -226,21 +226,21 @@ function setupRemoteStatusStrip() {
     else checkRemoteStatus({ reload: true });
   };
 
-  if (navigator.onLine === false) updateRemoteStatusStrip('offline', 'Device is offline');
-  window.addEventListener('online', function() { checkRemoteStatus({ reload: false, message: 'Network restored, checking remote Vault…' }); });
+  if (navigator.onLine === false) updateRemoteStatusStrip('offline', '端末がオフラインです');
+  window.addEventListener('online', function() { checkRemoteStatus({ reload: false, message: 'ネットワークが戻りました。リモート Vault を確認中…' }); });
   window.addEventListener('offline', function() {
-    updateMobileRemoteCard('offline', 'Device is offline');
-    updateRemoteStatusStrip('offline', 'Device is offline');
+    updateMobileRemoteCard('offline', '端末がオフラインです');
+    updateRemoteStatusStrip('offline', '端末がオフラインです');
   });
   window.addEventListener('eagle-viewer-offline-snapshot', function(event) {
-    updateMobileRemoteCard('online', 'Offline snapshot updated');
+    updateMobileRemoteCard('online', 'オフライン用スナップショットを更新しました');
     if (render && render.updateMobileWorkbar) render.updateMobileWorkbar();
     if (render && render.refreshOpenPreviewMobileActions) render.refreshOpenPreviewMobileActions();
     syncMobileMoreHandoff();
     renderMobileSearchQuick();
   });
   window.addEventListener('eagle-viewer-offline-snapshot-cleared', function() {
-    updateMobileRemoteCard(navigator.onLine === false ? 'offline' : 'online', 'Offline data cleared');
+    updateMobileRemoteCard(navigator.onLine === false ? 'offline' : 'online', 'オフライン用データを削除しました');
     if (render && render.updateMobileWorkbar) render.updateMobileWorkbar();
     if (render && render.refreshOpenPreviewMobileActions) render.refreshOpenPreviewMobileActions();
     syncMobileMoreHandoff();

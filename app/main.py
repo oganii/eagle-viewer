@@ -176,7 +176,7 @@ def login_page(request: Request, error: str = ""):
     if not _login_path.exists():
         return HTMLResponse("<h1>Login</h1><p>login.html not found</p>", status_code=500)
     html = _login_path.read_text(encoding="utf-8")
-    error_html = '<p class="error">Wrong password, please try again</p>' if error else ""
+    error_html = '<p class="error">パスワードが違います。もう一度お試しください</p>' if error else ""
     html = html.replace("__ERROR_HTML__", error_html)
     return HTMLResponse(html)
 

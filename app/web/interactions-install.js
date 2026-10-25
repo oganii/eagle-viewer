@@ -69,7 +69,7 @@ function setupMobilePullRefresh() {
   body._pullRefreshBound = true;
   var indicator = document.createElement('div');
   indicator.className = 'pull-refresh';
-  indicator.innerHTML = '<span></span><strong>Pull to refresh</strong>';
+  indicator.innerHTML = '<span></span><strong>引っぱって更新</strong>';
   document.body.appendChild(indicator);
 
   var startY = 0;
@@ -91,7 +91,7 @@ function setupMobilePullRefresh() {
     indicator.classList.toggle('ready', !!ready);
     indicator.classList.toggle('refreshing', !!refreshing);
     indicator.style.transform = 'translate3d(-50%,' + Math.min(42, Math.round(distance * 0.48)) + 'px,0)';
-    indicator.querySelector('strong').textContent = refreshing ? 'Refreshing' : (ready ? 'Release to refresh' : 'Pull to refresh');
+    indicator.querySelector('strong').textContent = refreshing ? '更新中' : (ready ? '離して更新' : '引っぱって更新');
   }
 
   function resetIndicator() {

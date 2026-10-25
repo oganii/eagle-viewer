@@ -2,8 +2,8 @@
 
 // ===== Theme (Apple: light/dark + system blue) =====
 var THEMES = {
-  light: { theme: 'light', accent: 'blue', meta: '#f5f5f7', label: 'Light' },
-  dark:  { theme: 'dark',  accent: 'blue', meta: '#000000', label: 'Dark' }
+  light: { theme: 'light', accent: 'blue', meta: '#f5f5f7', label: 'ライト' },
+  dark:  { theme: 'dark',  accent: 'blue', meta: '#000000', label: 'ダーク' }
 };
 // Migrate legacy theme keys to the new light/dark system.
 function _migrateThemeName(name) {
@@ -123,20 +123,20 @@ function getFilterChipSpecs(filters) {
     if (value === null || value === undefined || value === '') return;
     specs.push({ key: key, label: label, value: value });
   }
-  add('min_width', 'Width', f.min_width ? '≥ ' + f.min_width + 'px' : '');
-  add('min_height', 'Height', f.min_height ? '≥ ' + f.min_height + 'px' : '');
-  add('min_size', 'Size', f.min_size ? '≥ ' + Math.round(f.min_size / mb) + 'MB' : '');
-  add('max_size', 'Size', f.max_size ? '≤ ' + Math.round(f.max_size / mb) + 'MB' : '');
-  var shapeLabels = { landscape: 'Landscape', portrait: 'Portrait', square: 'Square' };
-  add('shape', 'Shape', shapeLabels[f.shape] || f.shape || '');
-  var tagLabels = { tagged: 'Tagged', untagged: 'Untagged' };
-  add('tag_state', 'Tags', tagLabels[f.tag_state] || f.tag_state || '');
-  var annotationLabels = { annotated: 'Has notes', unannotated: 'No notes' };
-  add('annotation_state', 'Notes', annotationLabels[f.annotation_state] || f.annotation_state || '');
-  var sourceLabels = { sourced: 'Has source', unsourced: 'No source' };
-  add('source_state', 'Source', sourceLabels[f.source_state] || f.source_state || '');
-  add('source_domain', 'Source site', f.source_domain || '');
-  add('ext', 'Format', f.ext ? '.' + f.ext : '');
+  add('min_width', '幅', f.min_width ? '≥ ' + f.min_width + 'px' : '');
+  add('min_height', '高さ', f.min_height ? '≥ ' + f.min_height + 'px' : '');
+  add('min_size', 'サイズ', f.min_size ? '≥ ' + Math.round(f.min_size / mb) + 'MB' : '');
+  add('max_size', 'サイズ', f.max_size ? '≤ ' + Math.round(f.max_size / mb) + 'MB' : '');
+  var shapeLabels = { landscape: '横長', portrait: '縦長', square: '正方形' };
+  add('shape', '形', shapeLabels[f.shape] || f.shape || '');
+  var tagLabels = { tagged: 'タグあり', untagged: 'タグなし' };
+  add('tag_state', 'タグ', tagLabels[f.tag_state] || f.tag_state || '');
+  var annotationLabels = { annotated: 'メモあり', unannotated: 'メモなし' };
+  add('annotation_state', 'メモ', annotationLabels[f.annotation_state] || f.annotation_state || '');
+  var sourceLabels = { sourced: '出典あり', unsourced: '出典なし' };
+  add('source_state', '出典', sourceLabels[f.source_state] || f.source_state || '');
+  add('source_domain', '出典サイト', f.source_domain || '');
+  add('ext', '形式', f.ext ? '.' + f.ext : '');
   return specs;
 }
 
@@ -149,7 +149,7 @@ function renderActiveFilterChips() {
     return '<button type="button" class="active-filter-chip" data-clear-filter="' + escapeHtml(spec.key) + '">' +
       '<span>' + escapeHtml(spec.label) + '</span><strong>' + escapeHtml(String(spec.value)) + '</strong>' + iconClose() +
     '</button>';
-  }).join('') + (specs.length > 1 ? '<button type="button" class="active-filter-clear" data-clear-all-filters>Clear</button>' : '');
+  }).join('') + (specs.length > 1 ? '<button type="button" class="active-filter-clear" data-clear-all-filters>解除</button>' : '');
 }
 
 function renderAdvancedFilterSummary(filters, pending) {
@@ -158,13 +158,13 @@ function renderAdvancedFilterSummary(filters, pending) {
   var specs = getFilterChipSpecs(filters || {});
   box.dataset.state = specs.length ? (pending ? 'pending' : 'active') : 'empty';
   if (!specs.length) {
-    box.innerHTML = '<span>Rules</span><strong>No advanced filters</strong><small>Set size, status, source, or color, then save as a smart view.</small>';
+    box.innerHTML = '<span>条件</span><strong>詳細フィルタはありません</strong><small>サイズ・状態・出典・色を設定して、スマートビューとして保存できます。</small>';
     return;
   }
   box.innerHTML =
-    '<span>' + (pending ? 'Pending rules' : 'Applied rules') + ' · ' + specs.length + '</span>' +
+    '<span>' + (pending ? '未適用の条件' : '適用中の条件') + ' · ' + specs.length + '</span>' +
     '<strong>' + specs.slice(0, 3).map(function(spec) { return escapeHtml(spec.label + ' ' + spec.value); }).join(' · ') + (specs.length > 3 ? ' · +' + (specs.length - 3) : '') + '</strong>' +
-    '<small>' + (pending ? 'Click “Apply Filters” to refresh the current view.' : 'The current view is filtered by these rules; you can save it as a smart view.') + '</small>';
+    '<small>' + (pending ? '「フィルタを適用」をクリックすると、現在の表示が更新されます。' : '現在の表示はこの条件で絞り込まれています。スマートビューとして保存できます。') + '</small>';
 }
 
 function clearAdvancedFilter(key) {
@@ -224,7 +224,7 @@ function buildCurrentViewUrl() {
 }
 
 function copyCurrentViewLink(button) {
-  copyTextToClipboard(buildCurrentViewUrl(), 'Current view link', button);
+  copyTextToClipboard(buildCurrentViewUrl(), '現在の表示のリンク', button);
 }
 
 async function shareCurrentViewLink(button) {
@@ -233,7 +233,7 @@ async function shareCurrentViewLink(button) {
   try {
     if (navigator.share && window.innerWidth <= 768) {
       await navigator.share({ title: title, text: title, url: url });
-      showToast('Opened system share', 'success');
+      showToast('共有メニューを開きました', 'success');
       return;
     }
   } catch (err) {
@@ -253,7 +253,7 @@ async function runPendingLaunchAction() {
       var searchInput = document.getElementById('searchInput');
       if (searchInput) searchInput.focus();
     }
-    if (window.showToast) window.showToast('Opened Vault search');
+    if (window.showToast) window.showToast('Vault の検索を開きました');
     return true;
   }
   return false;
@@ -319,9 +319,9 @@ function syncMobileTabbar() {
 function getSearchSuggestItems(query) {
   var q = String(query || '').trim();
   if (!q) {
-    return [{ title: 'Type a keyword', hint: 'Search name, tag or notes', type: 'hint' }];
+    return [{ title: 'キーワードを入力', hint: '名前・タグ・メモで検索', type: 'hint' }];
   }
-  return [{ title: q, hint: 'Search keyword', type: 'search', value: q }];
+  return [{ title: q, hint: 'キーワードで検索', type: 'search', value: q }];
 }
 
 function closeSearchSuggest() {

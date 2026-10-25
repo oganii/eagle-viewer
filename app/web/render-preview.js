@@ -28,12 +28,12 @@ function createPreviewOverlay() {
   overlay.className = 'preview-overlay';
   overlay.setAttribute('role', 'dialog');
   overlay.setAttribute('aria-modal', 'true');
-  overlay.setAttribute('aria-label', 'Full-screen asset preview');
+  overlay.setAttribute('aria-label', '素材の全画面プレビュー');
   overlay._cleanup = [];
   overlay.onclick = function(e) { if (e.target === overlay) closePreviewOverlay(overlay); };
   var close = document.createElement('button');
   close.className = 'preview-close';
-  close.setAttribute('aria-label', 'Close full-screen preview');
+  close.setAttribute('aria-label', '全画面プレビューを閉じる');
   close.innerHTML = iconClose();
   close.onclick = function() { closePreviewOverlay(overlay); };
   overlay.appendChild(close);
@@ -76,10 +76,10 @@ function getCompareImageItems(items) {
 function openCompare(items) {
   var eligible = getCompareImageItems(items);
   if (eligible.length < 2) {
-    if (window.showToast) window.showToast('Select at least 2 images to compare', 'error');
+    if (window.showToast) window.showToast('比較するには画像を 2 枚以上選んでください', 'error');
     return;
   }
-  if (eligible.length > 4 && window.showToast) window.showToast('Loaded the first 4 images for comparison');
+  if (eligible.length > 4 && window.showToast) window.showToast('最初の 4 枚を比較に読み込みました');
   eligible = eligible.slice(0, 4);
   document.querySelectorAll('.compare-overlay').forEach(function(existing) { closeCompareOverlay(existing); });
   document.querySelectorAll('.preview-overlay').forEach(function(existing) { closePreviewOverlay(existing); });
@@ -88,30 +88,30 @@ function openCompare(items) {
   overlay.className = 'compare-overlay';
   overlay.setAttribute('role', 'dialog');
   overlay.setAttribute('aria-modal', 'true');
-  overlay.setAttribute('aria-label', 'Image comparison');
+  overlay.setAttribute('aria-label', '画像の比較');
   overlay._cleanup = [];
   overlay.innerHTML = '<header class="compare-head">' +
-    '<div class="compare-title"><span>' + iconCompare() + '</span><div><small>VISUAL COMPARE</small><strong>Image Compare</strong></div><b>' + eligible.length + ' UP</b></div>' +
-    '<div class="compare-tools" role="toolbar" aria-label="Compare tools">' +
-      '<button type="button" data-compare-action="sync" class="active" aria-pressed="true">Sync</button>' +
-      '<button type="button" data-compare-action="zoom-out" aria-label="Zoom out">−</button>' +
+    '<div class="compare-title"><span>' + iconCompare() + '</span><div><small>VISUAL COMPARE</small><strong>画像を比較</strong></div><b>' + eligible.length + ' UP</b></div>' +
+    '<div class="compare-tools" role="toolbar" aria-label="比較のツール">' +
+      '<button type="button" data-compare-action="sync" class="active" aria-pressed="true">連動</button>' +
+      '<button type="button" data-compare-action="zoom-out" aria-label="縮小">−</button>' +
       '<output data-compare-zoom>100%</output>' +
-      '<button type="button" data-compare-action="zoom-in" aria-label="Zoom in">＋</button>' +
-      '<button type="button" data-compare-action="fit">Fit</button>' +
+      '<button type="button" data-compare-action="zoom-in" aria-label="拡大">＋</button>' +
+      '<button type="button" data-compare-action="fit">全体</button>' +
       '<button type="button" data-compare-action="actual">1:1</button>' +
-      '<button type="button" data-compare-action="close" class="compare-close" aria-label="Close compare">' + iconClose() + '</button>' +
+      '<button type="button" data-compare-action="close" class="compare-close" aria-label="比較を閉じる">' + iconClose() + '</button>' +
     '</div>' +
   '</header>' +
   '<main class="compare-grid compare-count-' + eligible.length + '">' + eligible.map(function(item, index) {
     var fileUrl = API + '/api/items/' + encodeURIComponent(item.id) + '/file';
     var thumbUrl = API + '/api/items/' + encodeURIComponent(item.id) + '/thumbnail';
-    var dimensions = item.width && item.height ? item.width + ' × ' + item.height : 'Unknown size';
+    var dimensions = item.width && item.height ? item.width + ' × ' + item.height : 'サイズ不明';
     return '<article class="compare-pane" data-compare-index="' + index + '">' +
-      '<div class="compare-canvas"><img src="' + fileUrl + '" data-fallback="' + thumbUrl + '" alt="' + escapeHtml(item.name || 'Comparison image') + '" draggable="false"></div>' +
-      '<footer><span>' + String(index + 1).padStart(2, '0') + '</span><div><strong>' + escapeHtml(item.name || 'Untitled asset') + '</strong><small>' + escapeHtml((item.ext || 'IMAGE').toUpperCase() + ' · ' + dimensions) + '</small></div><b data-compare-pane-zoom>100%</b></footer>' +
+      '<div class="compare-canvas"><img src="' + fileUrl + '" data-fallback="' + thumbUrl + '" alt="' + escapeHtml(item.name || '比較する画像') + '" draggable="false"></div>' +
+      '<footer><span>' + String(index + 1).padStart(2, '0') + '</span><div><strong>' + escapeHtml(item.name || '名称未設定の素材') + '</strong><small>' + escapeHtml((item.ext || 'IMAGE').toUpperCase() + ' · ' + dimensions) + '</small></div><b data-compare-pane-zoom>100%</b></footer>' +
     '</article>';
   }).join('') + '</main>' +
-  '<div class="compare-mobile-hint">Swipe to switch · Double-tap to reset</div>';
+  '<div class="compare-mobile-hint">スワイプで切り替え · ダブルタップで元に戻す</div>';
 
   document.body.appendChild(overlay);
   document.body.classList.add('compare-open');
@@ -253,7 +253,7 @@ function setPreviewQualityNotice(overlay, offline) {
   notice.dataset.state = offline ? 'offline' : 'fallback';
   notice.setAttribute('role', 'status');
   notice.innerHTML = offline
-    ? '<strong>Offline Preview</strong><small>Showing cached thumbnail · reconnect for original</small>'
-    : '<strong>Thumbnail Preview</strong><small>Original failed to load · showing low-resolution version</small>';
+    ? '<strong>オフラインのプレビュー</strong><small>キャッシュのサムネイルを表示中 · 元画像は再接続後に表示</small>'
+    : '<strong>サムネイルのプレビュー</strong><small>元画像を読み込めなかったため、低解像度版を表示中</small>';
   if (!notice.parentNode) overlay.appendChild(notice);
 }

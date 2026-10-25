@@ -40,8 +40,8 @@ function getTopSourceDomainQuickItems(limit) {
       key: 'source:' + domain,
       group: 'source',
       title: domain,
-      hint: counts[domain] + ' items · current view',
-      meta: 'Source',
+      hint: counts[domain] + ' 件 · 現在の表示',
+      meta: '出典',
       run: function() { openSourceDomainView(domain); }
     };
   });
@@ -61,7 +61,7 @@ function openSourceDomainView(domain) {
 
 function getMobileSearchQuickItems() {
   return [
-    { key: 'recent7', group: 'browse', title: 'Last 7 Days', hint: 'New assets', run: function() { api.loadRecentItems(7); } }
+    { key: 'recent7', group: 'browse', title: '過去 7 日間', hint: '新しい素材', run: function() { api.loadRecentItems(7); } }
   ];
 }
 
@@ -69,8 +69,8 @@ function renderMobileSearchQuick() {
   var quick = document.getElementById('mobileSearchQuick');
   if (!quick) return;
   var groups = [
-    { key: 'continue', title: 'Continue', hint: 'Back to recent content' },
-    { key: 'browse', title: 'Quick Browse', hint: 'Shortcuts' }
+    { key: 'continue', title: '続きから', hint: '最近の表示に戻る' },
+    { key: 'browse', title: 'クイックブラウズ', hint: 'ショートカット' }
   ];
   var items = getMobileSearchQuickItems();
   quick.innerHTML = renderMobileSearchStatusCard() + groups.map(function(group) {
@@ -97,15 +97,15 @@ function renderMobileSearchStatusCard() {
   var offline = navigator.onLine === false || stripState === 'offline';
   var checking = stripState === 'checking';
   if (!offline && !checking && !snapshot) return '';
-  var title = offline ? (snapshot ? 'Using available snapshot' : 'Remote Vault unreachable') : (checking ? 'Checking remote connection' : 'Offline snapshot ready');
+  var title = offline ? (snapshot ? '保存済みのスナップショットを使用中' : 'リモート Vault に接続できません') : (checking ? 'リモート接続を確認中' : 'オフライン用スナップショットあり');
   var meta = offline
-    ? (snapshot ? ('Latest snapshot · ' + formatSnapshotAge(snapshot.savedAt) + ' · ' + (snapshot.ok || 0) + ' items') : 'No snapshot available; save one when back on LAN or VPN')
-    : (checking ? 'You can browse cached content while checking' : ('Saved ' + formatSnapshotAge(snapshot.savedAt) + ' · ' + (snapshot.ok || 0) + ' items'));
+    ? (snapshot ? ('最新のスナップショット · ' + formatSnapshotAge(snapshot.savedAt) + ' · ' + (snapshot.ok || 0) + ' 件') : 'スナップショットはありません。LAN か VPN につながったときに保存してください')
+    : (checking ? '確認中もキャッシュ済みの内容は見られます' : (formatSnapshotAge(snapshot.savedAt) + 'に保存 · ' + (snapshot.ok || 0) + ' 件'));
   return '<div class="mobile-search-status-card" data-state="' + (offline ? 'offline' : (checking ? 'checking' : 'ready')) + '">' +
     '<span></span>' +
     '<div><strong>' + escapeHtml(title) + '</strong><small>' + escapeHtml(meta) + '</small></div>' +
-    '<button type="button" data-mobile-search-status-action="reconnect">' + (offline ? 'Reconnect' : 'Check') + '</button>' +
-    '<button type="button" data-mobile-search-status-action="snapshot">Save</button>' +
+    '<button type="button" data-mobile-search-status-action="reconnect">' + (offline ? '再接続' : '確認') + '</button>' +
+    '<button type="button" data-mobile-search-status-action="snapshot">保存</button>' +
   '</div>';
 }
 
@@ -130,7 +130,7 @@ function syncMobileSearchSort() {
   var dirBtn = wrap.querySelector('[data-mobile-dir-toggle]');
   if (dirBtn) {
     var asc = state.listDir === 'asc';
-    dirBtn.textContent = asc ? 'Asc ↑' : 'Desc ↓';
+    dirBtn.textContent = asc ? '昇順 ↑' : '降順 ↓';
     dirBtn.classList.toggle('active', true);
     dirBtn.setAttribute('aria-pressed', asc ? 'true' : 'false');
   }
@@ -168,12 +168,12 @@ function getMobileSearchResults(query) {
     });
   } else {
     state.tagData.slice(0, 8).forEach(function(tag) {
-      push('tag', '#' + tag.name, (tag.count || 0) + ' items · tag', tag.name);
+      push('tag', '#' + tag.name, (tag.count || 0) + ' 件 · タグ', tag.name);
     });
     var folders = [];
     getFolderPathMatches('', state.treeData, [], folders);
     folders.slice(0, 8).forEach(function(folder) {
-      push('folder', folder.path, 'Folder', folder.id);
+      push('folder', folder.path, 'フォルダ', folder.id);
     });
   }
   return results.slice(0, 16);
@@ -189,15 +189,15 @@ function renderMobileSearchResults() {
   if (!results.length) {
     list.innerHTML =
       '<div class="mobile-search-empty">' +
-        '<strong>No matches</strong>' +
-        '<span>Try an asset name, tag, or note.</span>' +
+        '<strong>見つかりませんでした</strong>' +
+        '<span>素材の名前・タグ・メモで探してみてください。</span>' +
         '<div class="mobile-search-empty-actions">' +
-          '<button type="button" data-mobile-search-template="">Keyword</button>' +
+          '<button type="button" data-mobile-search-template="">キーワード</button>' +
         '</div>' +
       '</div>';
     return;
   }
-  var groupLabels = { tag: 'Tags', folder: 'Folders', search: 'Suggestions' };
+  var groupLabels = { tag: 'タグ', folder: 'フォルダ', search: '候補' };
   var groupOrder = ['tag', 'folder', 'search'];
   var groups = {};
   groupOrder.forEach(function(type) { groups[type] = []; });
@@ -212,7 +212,7 @@ function renderMobileSearchResults() {
       groups[type].map(function(entry) {
         var item = entry.item;
         var idx = entry.idx;
-        var kicker = item.type === 'tag' ? 'Tag' : item.type === 'folder' ? 'Folder' : 'Search';
+        var kicker = item.type === 'tag' ? 'タグ' : item.type === 'folder' ? 'フォルダ' : '検索';
         return '<button type="button" class="mobile-search-result" data-result-type="' + escapeHtml(item.type) + '" data-mobile-search-index="' + idx + '">' +
           '<span>' + escapeHtml(kicker) + '</span><strong>' + escapeHtml(item.title) + '</strong><small>' + escapeHtml(item.hint) + '</small>' +
         '</button>';
@@ -376,7 +376,7 @@ function setupMobileSearchSheet() {
     var statusAction = e.target.closest('[data-mobile-search-status-action]');
     if (statusAction) {
       var status = statusAction.dataset.mobileSearchStatusAction;
-      if (status === 'reconnect') checkRemoteStatus({ reload: false, quietStrip: false, message: 'Checking remote Vault…' });
+      if (status === 'reconnect') checkRemoteStatus({ reload: false, quietStrip: false, message: 'リモート Vault を確認中…' });
       else if (status === 'snapshot') api.warmCurrentOfflineSnapshot();
       return;
     }
@@ -507,7 +507,7 @@ function setupMobileMoreSheet() {
       return;
     }
     if (e.target.closest('#mobileRemoteRefresh')) {
-      checkRemoteStatus({ reload: false, quietStrip: false, message: 'Checking remote Vault…' });
+      checkRemoteStatus({ reload: false, quietStrip: false, message: 'リモート Vault を確認中…' });
       return;
     }
     var actionEl = e.target.closest('[data-mobile-more-action]');

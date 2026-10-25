@@ -30,22 +30,22 @@ function renderContent() {
       if (remoteOffline) {
         body.innerHTML =
           '<div class="empty-state offline-state">' + iconFolderOutline() +
-            '<strong>' + (snapshotMeta && snapshotMeta.savedAt ? 'No snapshot for this view' : 'Remote Vault unreachable') + '</strong>' +
-            '<span>' + (snapshotMeta && snapshotMeta.savedAt ? ('A snapshot was saved ' + new Date(snapshotMeta.savedAt).toLocaleString('zh-CN') + ', but this view isn’t cached yet.') : 'The library isn’t empty; check your VPN, NAS, or reverse proxy, then reconnect.') + '</span>' +
-            '<div class="empty-actions"><button type="button" id="offlineEmptyRetryBtn">Reconnect</button><button type="button" id="offlineEmptySnapshotBtn">Save Snapshot</button></div>' +
+            '<strong>' + (snapshotMeta && snapshotMeta.savedAt ? 'この表示のスナップショットはありません' : 'リモート Vault に接続できません') + '</strong>' +
+            '<span>' + (snapshotMeta && snapshotMeta.savedAt ? (new Date(snapshotMeta.savedAt).toLocaleString(getDateLocale()) + ' にスナップショットを保存しましたが、この表示はまだキャッシュされていません。') : 'ライブラリは空ではありません。VPN・NAS・リバースプロキシを確認してから再接続してください。') + '</span>' +
+            '<div class="empty-actions"><button type="button" id="offlineEmptyRetryBtn">再接続</button><button type="button" id="offlineEmptySnapshotBtn">スナップショットを保存</button></div>' +
           '</div>';
         var retryBtn = document.getElementById('offlineEmptyRetryBtn');
         var snapshotBtn = document.getElementById('offlineEmptySnapshotBtn');
         if (retryBtn) retryBtn.onclick = function() {
           if (EagleViewer.modules.interactions && EagleViewer.modules.interactions.checkRemoteStatus) {
-            EagleViewer.modules.interactions.checkRemoteStatus({ reload: false, quietStrip: false, message: 'Checking remote Vault…' });
+            EagleViewer.modules.interactions.checkRemoteStatus({ reload: false, quietStrip: false, message: 'リモート Vault を確認中…' });
           }
         };
         if (snapshotBtn) snapshotBtn.onclick = function() {
           if (api && api.warmCurrentOfflineSnapshot) api.warmCurrentOfflineSnapshot();
         };
       } else {
-        body.innerHTML = '<div class="empty-state">' + iconFolderOutline() + '<span>' + (state.currentEmptyMsg || 'No assets') + '</span></div>';
+        body.innerHTML = '<div class="empty-state">' + iconFolderOutline() + '<span>' + (state.currentEmptyMsg || '素材がありません') + '</span></div>';
       }
     return;
   }
@@ -105,7 +105,7 @@ function appendSubfoldersHint(container) {
   if (state.currentView !== 'folder' || state.currentItems.length || !state.currentSubfolders.length) return;
   var hint = document.createElement('div');
   hint.className = 'folder-hint';
-  hint.textContent = 'This folder only contains subfolders; click a card to open it';
+  hint.textContent = 'このフォルダにはサブフォルダだけがあります。カードをクリックして開いてください';
   container.appendChild(hint);
 }
 
@@ -118,7 +118,7 @@ function showEmptyState() {
   state.currentTitle = '';
   state.currentTotal = 0;
   var body = document.getElementById('contentBody');
-  body.innerHTML = '<div class="empty-state" id="emptyState">' + iconFolderOutline() + '<span>Select a folder from the sidebar</span></div>';
+  body.innerHTML = '<div class="empty-state" id="emptyState">' + iconFolderOutline() + '<span>サイドバーからフォルダを選んでください</span></div>';
   document.getElementById('contentToolbar').style.display = 'none';
   renderModule.closeInspector();
   updateUrlFromState();

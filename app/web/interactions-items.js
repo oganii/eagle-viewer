@@ -39,32 +39,32 @@ function buildItemShareUrl(item) {
 async function shareItemLink(item, button) {
   if (!item) return;
   var url = buildItemShareUrl(item);
-  var title = item.name || 'Eagle Vault asset';
+  var title = item.name || 'Eagle Vault の素材';
   try {
     if (navigator.share && window.innerWidth <= 768) {
       await navigator.share({ title: title, text: title, url: url });
-      showToast('Opened system share', 'success');
+      showToast('共有メニューを開きました', 'success');
     } else if (navigator.clipboard && navigator.clipboard.writeText) {
       await navigator.clipboard.writeText(url);
-      showToast('Asset link copied', 'success');
+      showToast('素材のリンクをコピーしました', 'success');
       if (button) {
         var label = button.querySelector('span') || button;
         var old = label.textContent;
-        label.textContent = 'Copied';
+        label.textContent = 'コピーしました';
         setTimeout(function() { label.textContent = old; }, 1200);
       }
     } else {
-      window.prompt('Copy asset link', url);
-      showToast('Asset link ready to copy');
+      window.prompt('素材のリンクをコピー', url);
+      showToast('素材のリンクをコピーできます');
     }
   } catch (err) {
     if (err && err.name === 'AbortError') return;
     if (navigator.clipboard && navigator.clipboard.writeText) {
       await navigator.clipboard.writeText(url);
-      showToast('Asset link copied', 'success');
+      showToast('素材のリンクをコピーしました', 'success');
     } else {
-      window.prompt('Copy asset link', url);
-      showToast('Asset link ready to copy');
+      window.prompt('素材のリンクをコピー', url);
+      showToast('素材のリンクをコピーできます');
     }
   }
 }
@@ -72,16 +72,16 @@ async function shareItemLink(item, button) {
 async function shareItemFile(item, button) {
   if (!item) return;
   if (isRemoteAccessUnavailable()) {
-    showToast('Sharing originals requires the remote Vault', 'error');
+    showToast('元ファイルの共有にはリモート Vault への接続が必要です', 'error');
     return;
   }
   if (!navigator.share || !navigator.canShare || typeof File === 'undefined') {
-    showToast('This browser can’t share original files; use Download instead', 'error');
+    showToast('このブラウザは元ファイルを共有できません。ダウンロードを使ってください', 'error');
     return;
   }
   var maxShareBytes = 64 * 1024 * 1024;
   if (Number(item.size || 0) > maxShareBytes) {
-    showToast('Original exceeds 64 MB; use Download or share the page link', 'error');
+    showToast('元ファイルが 64 MB を超えています。ダウンロードするか、ページのリンクを共有してください', 'error');
     return;
   }
   var label = button ? (button.querySelector('span') || button) : null;
@@ -91,22 +91,22 @@ async function shareItemFile(item, button) {
     button.disabled = true;
     button.classList.add('is-loading');
   }
-  if (label) label.textContent = 'Preparing…';
+  if (label) label.textContent = '準備中…';
   try {
     var response = await fetch(buildItemFileUrl(item), { cache: 'no-store' });
     if (handleAuthResponse(response)) return;
-    if (response.status === 503) throw new Error('Remote Vault unreachable');
-    if (!response.ok) throw new Error('Failed to read original file');
+    if (response.status === 503) throw new Error('リモート Vault に接続できません');
+    if (!response.ok) throw new Error('元ファイルを読み込めませんでした');
     var blob = await response.blob();
-    if (blob.size > maxShareBytes) throw new Error('Original exceeds 64 MB; use Download instead');
+    if (blob.size > maxShareBytes) throw new Error('元ファイルが 64 MB を超えています。ダウンロードを使ってください');
     var file = new File([blob], buildItemDownloadName(item), { type: blob.type || 'application/octet-stream' });
-    if (!navigator.canShare({ files: [file] })) throw new Error('This browser can’t share this file type; use Download instead');
-    await navigator.share({ files: [file], title: item.name || 'Eagle Vault asset' });
-    showToast('Sent to system share', 'success');
+    if (!navigator.canShare({ files: [file] })) throw new Error('このブラウザはこの種類のファイルを共有できません。ダウンロードを使ってください');
+    await navigator.share({ files: [file], title: item.name || 'Eagle Vault の素材' });
+    showToast('共有メニューに送りました', 'success');
     closeQuickActionSheet();
   } catch (err) {
     if (err && err.name === 'AbortError') return;
-    showToast((err && err.message) || 'Failed to share original; use Download instead', 'error');
+    showToast((err && err.message) || '元ファイルを共有できませんでした。ダウンロードを使ってください', 'error');
   } finally {
     if (button && button.isConnected) {
       button.disabled = oldDisabled;
@@ -202,29 +202,29 @@ async function copyTextToClipboard(text, title, button) {
   try {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       await navigator.clipboard.writeText(text);
-      showToast((title || 'Text') + ' copied', 'success');
+      showToast((title || 'テキスト') + 'をコピーしました', 'success');
       if (button) {
         var label = button.querySelector('span') || button;
         var old = label.textContent;
-        label.textContent = 'Copied';
+        label.textContent = 'コピーしました';
         setTimeout(function() { label.textContent = old; }, 1200);
       }
     } else {
-      window.prompt(title || 'Copy text', text);
-      showToast((title || 'Text') + ' ready to copy');
+      window.prompt(title || 'テキストをコピー', text);
+      showToast((title || 'テキスト') + 'をコピーできます');
     }
   } catch (err) {
-    window.prompt(title || 'Copy text', text);
-    showToast((title || 'Text') + ' ready to copy');
+    window.prompt(title || 'テキストをコピー', text);
+    showToast((title || 'テキスト') + 'をコピーできます');
   }
 }
 
 function copyItemInfo(item, button) {
-  copyTextToClipboard(buildItemInfoText(item), 'Asset info', button);
+  copyTextToClipboard(buildItemInfoText(item), '素材の情報', button);
 }
 
 function copyItemReference(item, format, button) {
-  var title = format === 'html' ? 'HTML reference' : (format === 'text' ? 'Plain-text reference' : 'Markdown reference');
+  var title = format === 'html' ? 'HTML 形式の参照' : (format === 'text' ? 'テキスト形式の参照' : 'Markdown 形式の参照');
   copyTextToClipboard(buildItemReferenceText(item, format), title, button);
 }
 
@@ -249,25 +249,25 @@ function buildBatchReferencesText(items) {
 function copySelectedLinks(button) {
   var items = getSelectedItems();
   if (!items.length) return;
-  copyTextToClipboard(buildBatchLinksText(items), 'Asset links', button);
+  copyTextToClipboard(buildBatchLinksText(items), '素材のリンク', button);
 }
 
 function copySelectedInfo(button) {
   var items = getSelectedItems();
   if (!items.length) return;
-  copyTextToClipboard(buildBatchInfoText(items), 'Asset info', button);
+  copyTextToClipboard(buildBatchInfoText(items), '素材の情報', button);
 }
 
 function copySelectedReferences(button) {
   var items = getSelectedItems();
   if (!items.length) return;
-  copyTextToClipboard(buildBatchReferencesText(items), 'Asset references', button);
+  copyTextToClipboard(buildBatchReferencesText(items), '素材の参照', button);
 }
 
 async function copyItemImage(id, button) {
   if (!id) return;
   if (!navigator.clipboard || typeof navigator.clipboard.write !== 'function') {
-    showToast('Copying images isn’t supported here; use HTTPS', 'error');
+    showToast('ここでは画像をコピーできません。HTTPS で開いてください', 'error');
     return;
   }
   var old = button ? button.innerHTML : '';
@@ -278,13 +278,13 @@ async function copyItemImage(id, button) {
     var type = blob.type || 'image/png';
     if (!type.startsWith('image/')) type = 'image/png';
     await navigator.clipboard.write([new ClipboardItem({ [type]: blob })]);
-    showToast('Image copied to clipboard', 'success');
+    showToast('画像をクリップボードにコピーしました', 'success');
     if (button) {
-      button.innerHTML = iconCopy() + ' Copied';
+      button.innerHTML = iconCopy() + ' コピーしました';
       setTimeout(function() { button.innerHTML = old; }, 1500);
     }
   } catch (err) {
-    showToast('Failed to copy image; use HTTPS or a supported browser', 'error');
+    showToast('画像をコピーできませんでした。HTTPS か対応ブラウザで開いてください', 'error');
   }
 }
 
@@ -318,7 +318,7 @@ function openFolderAndFocus(folderId, itemId) {
 function openItemFolder(item) {
   var folder = getPrimaryItemFolder(item);
   if (!folder || !folder.id) {
-    showToast('This asset isn’t in any folder', 'error');
+    showToast('この素材はどのフォルダにも入っていません', 'error');
     return;
   }
   closeQuickActionSheet();
@@ -344,7 +344,7 @@ function runItemAction(item, action, sourceEl) {
   } else if (action === 'source') {
     var sourceDomain = getItemSourceDomain(item);
     if (!sourceDomain) {
-      showToast('This asset has no source site', 'error');
+      showToast('この素材には出典サイトがありません', 'error');
       return;
     }
     closeQuickActionSheet();
@@ -368,7 +368,7 @@ function runItemAction(item, action, sourceEl) {
     copyItemReference(item, action === 'copy-html' ? 'html' : (action === 'copy-ref' ? 'text' : 'markdown'), sourceEl);
   } else if (action === 'download') {
     if (isRemoteAccessUnavailable()) {
-      showToast('Downloading originals requires the remote Vault', 'error');
+      showToast('元ファイルのダウンロードにはリモート Vault への接続が必要です', 'error');
       return;
     }
     var resetDownloadButton = null;
@@ -378,7 +378,7 @@ function runItemAction(item, action, sourceEl) {
       sourceEl.disabled = true;
       var label = sourceEl.querySelector('span');
       var oldLabel = label ? label.textContent : '';
-      if (label) label.textContent = 'Downloading';
+      if (label) label.textContent = 'ダウンロード中';
       resetDownloadButton = function() {
         if (!sourceEl.isConnected) return;
         sourceEl.classList.remove('is-loading');
@@ -390,7 +390,7 @@ function runItemAction(item, action, sourceEl) {
     a.href = fileUrl + '?download=true';
     a.download = buildItemDownloadName(item);
     a.click();
-    showToast('Download started', 'success');
+    showToast('ダウンロードを開始しました', 'success');
     if (resetDownloadButton) setTimeout(resetDownloadButton, 1200);
     closeQuickActionSheet();
   }

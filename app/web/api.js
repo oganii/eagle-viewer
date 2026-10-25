@@ -78,7 +78,7 @@ function getPreferredViewMode() {
 function findFolderPathById(folderId, nodes, trail) {
   for (var i = 0; i < (nodes || []).length; i++) {
     var node = nodes[i];
-    var next = trail.concat(node.name || 'Folder');
+    var next = trail.concat(node.name || 'フォルダ');
     if (String(node.id) === String(folderId)) return next.join(' / ');
     var child = findFolderPathById(folderId, node.children || [], next);
     if (child) return child;
@@ -126,7 +126,7 @@ async function loadIncrementalView(options) {
   if (reset && activeListAbortController) activeListAbortController.abort();
   if (reset && typeof AbortController !== 'undefined') activeListAbortController = new AbortController();
   if (reset) {
-    document.getElementById('contentBody').innerHTML = '<div class="loading-spinner">Loading…</div>';
+    document.getElementById('contentBody').innerHTML = '<div class="loading-spinner">読み込み中…</div>';
     document.getElementById('contentToolbar').style.display = 'flex';
   }
   try {
@@ -155,8 +155,8 @@ async function loadIncrementalView(options) {
     if (requestId !== state.activeListRequest) return;
     state.incrementalLoading = false;
     if (reset) {
-      var title = error && error.message === 'offline' ? 'Remote Vault unreachable' : 'Failed to load';
-      document.getElementById('contentBody').innerHTML = '<div class="empty-state offline-state">' + iconFolderOutline() + '<strong>' + title + '</strong><span>Check your network connection, VPN, or remote mount.</span></div>';
+      var title = error && error.message === 'offline' ? 'リモート Vault に接続できません' : '読み込みに失敗しました';
+      document.getElementById('contentBody').innerHTML = '<div class="empty-state offline-state">' + iconFolderOutline() + '<strong>' + title + '</strong><span>ネットワーク接続、VPN、リモートのマウント状態を確認してください。</span></div>';
     }
   } finally {
     if (reset && requestId === state.activeListRequest) activeListAbortController = null;
@@ -164,17 +164,17 @@ async function loadIncrementalView(options) {
 }
 
 function loadAllItems(reset) {
-  return loadIncrementalView({ view: 'all', apiPath: '/api/items', title: 'All Items', emptyMsg: 'No assets in this library', reset: reset });
+  return loadIncrementalView({ view: 'all', apiPath: '/api/items', title: 'すべて', emptyMsg: 'このライブラリには素材がありません', reset: reset });
 }
 
 function loadRecentItems(days, reset) {
   days = Number(days) === 30 ? 30 : 7;
   setRecentActive(days);
-  return loadIncrementalView({ view: 'recent', apiPath: '/api/recent?days=' + days, title: 'Last ' + days + ' days', emptyMsg: 'No recent assets', reset: reset, days: days });
+  return loadIncrementalView({ view: 'recent', apiPath: '/api/recent?days=' + days, title: '過去 ' + days + ' 日間', emptyMsg: '最近の素材はありません', reset: reset, days: days });
 }
 
 function loadTagItems(tagName, reset) {
-  return loadIncrementalView({ view: 'tag', apiPath: '/api/tags/' + encodeURIComponent(tagName) + '/items', title: 'Tag “' + tagName + '”', emptyMsg: 'No assets with this tag', reset: reset, tagName: tagName });
+  return loadIncrementalView({ view: 'tag', apiPath: '/api/tags/' + encodeURIComponent(tagName) + '/items', title: 'タグ「' + tagName + '」', emptyMsg: 'このタグの素材はありません', reset: reset, tagName: tagName });
 }
 
 function loadFolderItems(folderId, reset) {
@@ -187,8 +187,8 @@ function loadFolderItems(folderId, reset) {
   return loadIncrementalView({
     view: 'folder',
     apiPath: '/api/folders/' + encodeURIComponent(folderId) + '/items',
-    title: findFolderPathById(folderId, state.treeData, []) || 'Folder',
-    emptyMsg: 'This folder is empty',
+    title: findFolderPathById(folderId, state.treeData, []) || 'フォルダ',
+    emptyMsg: 'このフォルダには素材がありません',
     reset: reset,
     folderId: folderId,
     getSubfolders: function(data) { return data.subfolders || []; }
@@ -199,7 +199,7 @@ function doSearch(reset) {
   var input = document.getElementById('searchInput');
   var query = String((input && input.value) || state.searchQuery || '').trim();
   if (!query) return loadAllItems(true);
-  return loadIncrementalView({ view: 'search', apiPath: '/api/search?q=' + encodeURIComponent(query), title: 'Search “' + query + '”', emptyMsg: 'No matching assets', reset: reset, searchQuery: query });
+  return loadIncrementalView({ view: 'search', apiPath: '/api/search?q=' + encodeURIComponent(query), title: '「' + query + '」の検索結果', emptyMsg: '一致する素材はありません', reset: reset, searchQuery: query });
 }
 
 function maybeLoadMoreIncrementalView() {

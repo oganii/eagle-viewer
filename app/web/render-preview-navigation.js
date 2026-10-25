@@ -19,7 +19,7 @@ function addPreviewNavigation(overlay, item) {
     prev.className = 'preview-nav preview-prev';
     prev.disabled = prevDisabled;
     prev.innerHTML = iconChevronLeft();
-    prev.setAttribute('aria-label', 'Previous');
+    prev.setAttribute('aria-label', '前へ');
     prev.onclick = function(e) {
       e.stopPropagation();
       previewSibling(item, -1);
@@ -31,7 +31,7 @@ function addPreviewNavigation(overlay, item) {
     next.className = 'preview-nav preview-next';
     next.disabled = nextDisabled;
     next.innerHTML = iconChevronRight();
-    next.setAttribute('aria-label', 'Next');
+    next.setAttribute('aria-label', '次へ');
     next.onclick = function(e) {
       e.stopPropagation();
       previewSibling(item, 1);
@@ -168,7 +168,7 @@ function addPreviewInfoHud(overlay, item) {
   if (item.duration) meta.push(pill(escapeHtml(formatMediaDuration(item.duration))));
   if (item.width && item.height) meta.push(pill(escapeHtml(item.width + ' × ' + item.height)));
   if (item.size) meta.push(pill(escapeHtml(formatSize(item.size))));
-  var folderLabel = 'Unfiled';
+  var folderLabel = '未分類';
   var folderId = '';
   if (item.folderPaths && item.folderPaths.length) {
     var firstPath = item.folderPaths[0] || '';
@@ -177,18 +177,18 @@ function addPreviewInfoHud(overlay, item) {
     folderId = (item.folders || [])[0] || '';
   }
   if (folderLabel && folderId) {
-    meta.push('<button type="button" data-preview-folder="' + escapeHtml(folderId) + '" data-item-focus-id="' + escapeHtml(item.id || '') + '" title="Open folder: ' + escapeHtml(folderLabel) + '">' + iconFolder() + '<span>' + escapeHtml(folderLabel) + '</span></button>');
+    meta.push('<button type="button" data-preview-folder="' + escapeHtml(folderId) + '" data-item-focus-id="' + escapeHtml(item.id || '') + '" title="フォルダを開く: ' + escapeHtml(folderLabel) + '">' + iconFolder() + '<span>' + escapeHtml(folderLabel) + '</span></button>');
   } else if (folderLabel) {
     meta.push(pill(iconFolder() + '<span>' + escapeHtml(folderLabel) + '</span>'));
   }
   (item.tags || []).slice(0, 2).forEach(function(tag) {
-    meta.push('<button type="button" data-preview-tag="' + escapeHtml(tag) + '" title="Open tag: ' + escapeHtml(tag) + '">#' + escapeHtml(tag) + '</button>');
+    meta.push('<button type="button" data-preview-tag="' + escapeHtml(tag) + '" title="タグを開く: ' + escapeHtml(tag) + '">#' + escapeHtml(tag) + '</button>');
   });
-  if ((item.tags || []).length > 2) meta.push(pill('+' + ((item.tags || []).length - 2) + ' tags'));
+  if ((item.tags || []).length > 2) meta.push(pill('+' + ((item.tags || []).length - 2) + ' タグ'));
 
   var hud = document.createElement('div');
   hud.className = 'preview-info-hud';
-  hud.innerHTML = '<strong title="' + escapeHtml(item.name || 'Untitled asset') + '">' + escapeHtml(item.name || 'Untitled asset') + '</strong>' +
+  hud.innerHTML = '<strong title="' + escapeHtml(item.name || '名称未設定の素材') + '">' + escapeHtml(item.name || '名称未設定の素材') + '</strong>' +
     '<div class="preview-info-meta">' + meta.join('') + '</div>';
   overlay.appendChild(hud);
 }
@@ -216,8 +216,8 @@ function getPreviewRemoteNoticeCopy() {
   if (!offline) return null;
   var snapshot = getPreviewRemoteSnapshotMeta();
   return {
-    title: snapshot ? 'Browsing snapshot / cached preview' : 'Remote Vault unreachable',
-    meta: snapshot ? ('Snapshot ' + new Date(snapshot.savedAt).toLocaleString('zh-CN') + ' · ' + (snapshot.ok || 0) + ' items; reconnect to download originals.') : 'You can keep browsing cached assets; originals and uncached previews need the remote connection.'
+    title: snapshot ? 'スナップショット / キャッシュのプレビューを表示中' : 'リモート Vault に接続できません',
+    meta: snapshot ? ('スナップショット ' + new Date(snapshot.savedAt).toLocaleString(getDateLocale()) + ' · ' + (snapshot.ok || 0) + ' 件。元ファイルのダウンロードには再接続が必要です。') : 'キャッシュ済みの素材はこのまま見られます。元ファイルとキャッシュのないプレビューにはリモート接続が必要です。'
   };
 }
 
@@ -234,15 +234,15 @@ function refreshPreviewRemoteNotice(overlay) {
   notice.innerHTML =
     '<span class="preview-remote-dot"></span>' +
     '<div><strong>' + escapeHtml(copy.title) + '</strong><small>' + escapeHtml(copy.meta) + '</small></div>' +
-    '<button type="button" data-preview-remote-action="reconnect">Reconnect</button>' +
-    '<button type="button" data-preview-remote-action="snapshot">Save</button>';
+    '<button type="button" data-preview-remote-action="reconnect">再接続</button>' +
+    '<button type="button" data-preview-remote-action="snapshot">保存</button>';
   notice.onclick = function(e) {
     var btn = e.target.closest('[data-preview-remote-action]');
     if (!btn) return;
     e.preventDefault();
     e.stopPropagation();
     if (btn.dataset.previewRemoteAction === 'reconnect' && EagleViewer.modules.interactions && EagleViewer.modules.interactions.checkRemoteStatus) {
-      EagleViewer.modules.interactions.checkRemoteStatus({ reload: false, quietStrip: false, message: 'Checking remote Vault…' });
+      EagleViewer.modules.interactions.checkRemoteStatus({ reload: false, quietStrip: false, message: 'リモート Vault を確認中…' });
     } else if (btn.dataset.previewRemoteAction === 'snapshot' && api && api.warmCurrentOfflineSnapshot) {
       api.warmCurrentOfflineSnapshot();
     }
@@ -257,8 +257,8 @@ function refreshPreviewMobileActions(bar, item) {
   if (downloadBtn) {
     downloadBtn.classList.toggle('requires-remote', offline);
     downloadBtn.disabled = offline;
-    downloadBtn.title = offline ? 'Downloading originals requires the remote Vault' : '';
-    downloadBtn.querySelector('span').textContent = offline ? 'Offline' : 'Download Original';
+    downloadBtn.title = offline ? '元ファイルのダウンロードにはリモート Vault への接続が必要です' : '';
+    downloadBtn.querySelector('span').textContent = offline ? 'オフライン' : '元ファイルをダウンロード';
   }
 }
 
@@ -296,11 +296,11 @@ function addPreviewMobileActions(overlay, item) {
   var bar = document.createElement('div');
   bar.className = 'preview-mobile-actions';
   bar.innerHTML =
-    '<button type="button" data-preview-action="inspect">' + iconInfo() + '<span>Details</span></button>' +
-    '<button type="button" data-preview-action="more" aria-expanded="false" aria-controls="previewMobileMoreMenu">' + iconMenu() + '<span>More</span></button>' +
-    '<div class="preview-mobile-more" id="previewMobileMoreMenu" role="menu" aria-label="More preview actions" hidden>' +
-      '<button type="button" data-preview-more-action="share">' + iconExternalLink() + '<span>Share Page Link</span></button>' +
-      '<button type="button" data-preview-more-action="download">' + iconDownload() + '<span>Download Original</span></button>' +
+    '<button type="button" data-preview-action="inspect">' + iconInfo() + '<span>詳細</span></button>' +
+    '<button type="button" data-preview-action="more" aria-expanded="false" aria-controls="previewMobileMoreMenu">' + iconMenu() + '<span>その他</span></button>' +
+    '<div class="preview-mobile-more" id="previewMobileMoreMenu" role="menu" aria-label="プレビューのその他の操作" hidden>' +
+      '<button type="button" data-preview-more-action="share">' + iconExternalLink() + '<span>ページのリンクを共有</span></button>' +
+      '<button type="button" data-preview-more-action="download">' + iconDownload() + '<span>元ファイルをダウンロード</span></button>' +
     '</div>';
   refreshPreviewMobileActions(bar, item);
   bar.onclick = function(e) {

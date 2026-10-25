@@ -14,8 +14,8 @@ function updateBatchBar() {
   var removeCollectionBtn = document.getElementById('batchRemoveCollectionBtn');
   var selectedItems = getSelectedItems();
   var selectedSize = selectedItems.reduce(function(sum, item) { return sum + (item.size || 0); }, 0);
-  if (countEl) countEl.textContent = n + ' selected';
-  if (metaEl) metaEl.textContent = (selectedSize > 0 ? formatSize(selectedSize) : '0 B') + ' total';
+  if (countEl) countEl.textContent = n + ' 件選択中';
+  if (metaEl) metaEl.textContent = '合計 ' + (selectedSize > 0 ? formatSize(selectedSize) : '0 B');
   if (breakdownEl) {
     var counts = {};
     selectedItems.forEach(function(item) {
@@ -23,35 +23,35 @@ function updateBatchBar() {
       counts[kind] = (counts[kind] || 0) + 1;
     });
     var parts = Object.keys(counts).sort().map(function(kind) {
-      var label = kind === 'image' ? 'Images' : kind === 'video' ? 'Videos' : kind === 'pdf' ? 'PDF' : kind === 'text' ? 'TXT' : kind === 'document' ? 'Docs' : 'Other';
+      var label = kind === 'image' ? '画像' : kind === 'video' ? '動画' : kind === 'pdf' ? 'PDF' : kind === 'text' ? 'TXT' : kind === 'document' ? '文書' : 'その他';
       return label + ' ' + counts[kind];
     });
-    breakdownEl.textContent = 'Types ' + (parts.length ? parts.join(' · ') : '-');
+    breakdownEl.textContent = '種類 ' + (parts.length ? parts.join(' · ') : '-');
   }
   if (scopeEl) {
     var selectedInView = selectedItems.length;
     var loadedTotal = state.currentItems.length;
-    scopeEl.textContent = loadedTotal ? ('Current view ' + selectedInView + '/' + loadedTotal + ' loaded') : 'Current view';
+    scopeEl.textContent = loadedTotal ? ('現在の表示 ' + selectedInView + '/' + loadedTotal + ' 件（読み込み済み）') : '現在の表示';
   }
   if (hintEl && !(bar && bar.dataset.batchFeedback === 'true')) {
-    hintEl.textContent = window.innerWidth <= 768 ? 'Selection mode · tap assets to select more' : '⌘/Ctrl+A Select all · Shift Range · Esc Cancel';
+    hintEl.textContent = window.innerWidth <= 768 ? '選択モード · タップして追加で選択' : '⌘/Ctrl+A すべて選択 · Shift 範囲選択 · Esc 解除';
   }
   if (previewRail) {
     var visibleItems = selectedItems.slice(0, 12);
     previewRail.innerHTML = visibleItems.map(function(item) {
       var thumbUrl = API + '/api/items/' + item.id + '/thumbnail';
-      var label = (item.name || item.id || 'Asset') + (item.ext ? '.' + item.ext : '');
+      var label = (item.name || item.id || '素材') + (item.ext ? '.' + item.ext : '');
       var inner = (item.hasThumbnail || isImageExt(item.ext)) ?
         '<img src="' + escapeHtml(thumbUrl) + '" alt="" loading="lazy" decoding="async" />' :
         '<span>' + escapeHtml((item.ext || '?').slice(0, 4).toUpperCase()) + '</span>';
-      return '<button type="button" class="batch-preview-thumb" data-selected-preview-id="' + escapeHtml(item.id) + '" title="' + escapeHtml(label) + '" aria-label="Locate selected asset ' + escapeHtml(label) + '">' + inner + '</button>';
+      return '<button type="button" class="batch-preview-thumb" data-selected-preview-id="' + escapeHtml(item.id) + '" title="' + escapeHtml(label) + '" aria-label="選択した素材の位置へ移動 ' + escapeHtml(label) + '">' + inner + '</button>';
     }).join('') + (selectedItems.length > visibleItems.length ? '<span class="batch-preview-more">+' + (selectedItems.length - visibleItems.length) + '</span>' : '');
   }
   if (compareBtn) {
     var comparableCount = selectedItems.filter(function(item) { return isImageExt(item.ext); }).length;
     compareBtn.disabled = comparableCount < 2;
-    compareBtn.textContent = comparableCount > 4 ? 'Compare First 4' : ('Compare' + (comparableCount ? ' ' + comparableCount : ''));
-    compareBtn.title = comparableCount < 2 ? 'Select at least 2 images' : 'Review 2–4 images side by side';
+    compareBtn.textContent = comparableCount > 4 ? '最初の 4 枚を比較' : ('比較' + (comparableCount ? ' ' + comparableCount : ''));
+    compareBtn.title = comparableCount < 2 ? '画像を 2 枚以上選んでください' : '2〜4 枚の画像を並べて比較';
   }
   if (n) bar.classList.add('visible'); else bar.classList.remove('visible');
   if (n > 1 && state.inspectorItem) renderModule.closeInspector();
@@ -125,7 +125,7 @@ function updateCheckboxesInView() {
   });
   document.querySelectorAll('[data-list-mobile-action="select"]').forEach(function(btn) {
     var selected = state.selectedIds.has(btn.dataset.id);
-    btn.textContent = selected ? 'Deselect' : 'Select';
+    btn.textContent = selected ? '選択を解除' : '選択';
     btn.classList.toggle('is-selected', selected);
     btn.setAttribute('aria-pressed', selected ? 'true' : 'false');
   });
@@ -171,7 +171,7 @@ function updateReturnToCurrentItemButton() {
   var label = state.lastFocusedItemName || '\u5F53\u524D\u7D20\u6750';
   btn.title = target ? ('\u56DE\u5230\u7D20\u6750\uFF1A' + label) : ('\u7EE7\u7EED\u52A0\u8F7D\u5E76\u5B9A\u4F4D\uFF1A' + label);
   var strong = btn.querySelector('strong');
-  if (strong) strong.textContent = target ? 'Back to Current' : 'Locate Current';
+  if (strong) strong.textContent = target ? '表示中に戻る' : '表示中の素材を探す';
 }
 
 function rememberFocusedItem(item) {
@@ -204,7 +204,7 @@ function focusPendingItemWhenLoaded() {
     setTimeout(function() { target.classList.remove('located-item'); }, 1600);
     state.pendingFocusItemId = '';
     state.pendingFocusLoads = 0;
-    if (window.showToast) window.showToast('Asset located', 'success');
+    if (window.showToast) window.showToast('素材の位置に移動しました', 'success');
     updateReturnToCurrentItemButton();
     return true;
   }
@@ -216,7 +216,7 @@ function focusPendingItemWhenLoaded() {
   if (!state.incrementalHasMore) {
     state.pendingFocusItemId = '';
     state.pendingFocusLoads = 0;
-    if (window.showToast) window.showToast('Folder opened, but the asset couldn’t be located in the current sort', 'error');
+    if (window.showToast) window.showToast('フォルダを開きましたが、今の並び順では素材が見つかりませんでした', 'error');
     updateReturnToCurrentItemButton();
   }
   return false;
@@ -450,9 +450,9 @@ function renderInspectorFolderLinks(item) {
   var folderIds = item.folders || [];
   return paths.map(function(path, idx) {
     var folderId = folderIds[idx] || '';
-    var label = path || folderId || 'Untitled folder';
+    var label = path || folderId || '名称未設定のフォルダ';
     if (!folderId) return '<span class="inspector-path-chip muted">' + escapeHtml(label) + '</span>';
-    return '<button type="button" class="inspector-path-chip" data-inspector-folder="' + escapeHtml(folderId) + '" data-item-focus-id="' + escapeHtml(item.id || '') + '" title="Open folder: ' + escapeHtml(label) + '">' +
+    return '<button type="button" class="inspector-path-chip" data-inspector-folder="' + escapeHtml(folderId) + '" data-item-focus-id="' + escapeHtml(item.id || '') + '" title="フォルダを開く: ' + escapeHtml(label) + '">' +
       iconFolder() + '<span>' + escapeHtml(label) + '</span>' +
     '</button>';
   }).join('');
@@ -469,7 +469,7 @@ function getItemFolderLinks(item, limit) {
     var path = paths[i] || folderId || '';
     if (!path && !folderId) continue;
     var parts = String(path).split(' / ').filter(Boolean);
-    var label = parts.length ? parts[parts.length - 1] : (path || 'Untitled folder');
+    var label = parts.length ? parts[parts.length - 1] : (path || '名称未設定のフォルダ');
     links.push({
       id: folderId,
       path: path,
@@ -481,7 +481,7 @@ function getItemFolderLinks(item, limit) {
 
 function renderInspectorTagLinks(tags) {
   return (tags || []).map(function(tag) {
-    return '<button type="button" class="tag-chip inspector-tag-chip" data-inspector-tag="' + escapeHtml(tag) + '" title="Open tag: ' + escapeHtml(tag) + '">' + escapeHtml(tag) + '</button>';
+    return '<button type="button" class="tag-chip inspector-tag-chip" data-inspector-tag="' + escapeHtml(tag) + '" title="タグを開く: ' + escapeHtml(tag) + '">' + escapeHtml(tag) + '</button>';
   }).join('');
 }
 
@@ -520,19 +520,19 @@ function getViewMediaKind(item) {
 function getInspectorTypeLabel(item) {
   var ext = (item.ext || '').toLowerCase();
   var kind = getViewMediaKind(item);
-  if (kind === 'image') return 'Image asset';
-  if (kind === 'video') return 'Video asset';
-  if (kind === 'audio') return 'Audio asset';
-  if (ext === 'pdf') return 'PDF document';
-  if (ext === 'txt') return 'Text asset';
-  if (kind === 'document') return 'Document asset';
-  return 'Generic file';
+  if (kind === 'image') return '画像';
+  if (kind === 'video') return '動画';
+  if (kind === 'audio') return '音声';
+  if (ext === 'pdf') return 'PDF 文書';
+  if (ext === 'txt') return 'テキスト';
+  if (kind === 'document') return '文書';
+  return 'ファイル';
 }
 
 function renderInspectorStatusPills(item) {
   var pills = [];
-  if (item.tags && item.tags.length) pills.push('<span class="inspector-status-pill"># ' + escapeHtml(item.tags.length + ' tags') + '</span>');
-  if (item.url) pills.push('<span class="inspector-status-pill sourced">' + iconExternalLink() + ' Has source</span>');
+  if (item.tags && item.tags.length) pills.push('<span class="inspector-status-pill"># ' + escapeHtml(item.tags.length + ' タグ') + '</span>');
+  if (item.url) pills.push('<span class="inspector-status-pill sourced">' + iconExternalLink() + ' 出典あり</span>');
   return pills.join('');
 }
 
@@ -542,8 +542,8 @@ function getInspectorMetaLine(item) {
   if (item.width && item.height) meta.push(item.width + ' × ' + item.height);
   else if (item.size) meta.push(formatSize(item.size));
   if (item.duration) meta.push(formatMediaDuration(item.duration));
-  if (item.tags && item.tags.length) meta.push(item.tags.length + ' tags');
-  if (item.url) meta.push(getItemSourceDomain(item) || 'Has source');
+  if (item.tags && item.tags.length) meta.push(item.tags.length + ' タグ');
+  if (item.url) meta.push(getItemSourceDomain(item) || '出典あり');
   return meta.join(' · ') || getInspectorTypeLabel(item);
 }
 
@@ -551,10 +551,10 @@ function renderInspectorMobileSummary(item) {
   var summary = document.getElementById('inspectorMobileSummary');
   if (!summary) return;
   summary.innerHTML = '<div class="inspector-mobile-summary-main">' +
-      '<strong>' + escapeHtml(item.name || 'Untitled asset') + '</strong>' +
+      '<strong>' + escapeHtml(item.name || '名称未設定の素材') + '</strong>' +
       '<span>' + escapeHtml(getInspectorMetaLine(item)) + '</span>' +
     '</div>' +
-    '<div class="inspector-mobile-summary-hint">Swipe up to expand · down to close</div>';
+    '<div class="inspector-mobile-summary-hint">上にスワイプで広げる · 下で閉じる</div>';
 }
 
 function bindInspectorPreviewAction(item, fileUrl) {
@@ -582,9 +582,9 @@ function getInspectorShape(item) {
 }
 
 function getInspectorShapeLabel(shape) {
-  if (shape === 'landscape') return 'Landscape';
-  if (shape === 'portrait') return 'Portrait';
-  if (shape === 'square') return 'Square';
+  if (shape === 'landscape') return '横長';
+  if (shape === 'portrait') return '縦長';
+  if (shape === 'square') return '正方形';
   return '';
 }
 
@@ -597,20 +597,20 @@ function renderInspectorRelatedLinks(item) {
   var links = [];
   var ext = (item.ext || '').toLowerCase();
   var type = getInspectorRelatedType(item);
-  var typeLabel = getInspectorTypeLabel(item).replace(' asset', '').replace('document', 'document');
+  var typeLabel = getInspectorTypeLabel(item);
   if (ext) {
-    links.push('<button type="button" class="inspector-related-chip" data-inspector-related="ext" data-query="' + escapeHtml(ext) + '"><span>Same format</span><strong>.' + escapeHtml(ext) + '</strong></button>');
+    links.push('<button type="button" class="inspector-related-chip" data-inspector-related="ext" data-query="' + escapeHtml(ext) + '"><span>同じ形式</span><strong>.' + escapeHtml(ext) + '</strong></button>');
   }
   if (type && type !== 'all') {
-    links.push('<button type="button" class="inspector-related-chip" data-inspector-related="type" data-type="' + escapeHtml(type) + '"><span>Same type</span><strong>' + escapeHtml(typeLabel) + '</strong></button>');
+    links.push('<button type="button" class="inspector-related-chip" data-inspector-related="type" data-type="' + escapeHtml(type) + '"><span>同じ種類</span><strong>' + escapeHtml(typeLabel) + '</strong></button>');
   }
   var shape = getInspectorShape(item);
   var shapeLabel = getInspectorShapeLabel(shape);
   if (shape) {
-    links.push('<button type="button" class="inspector-related-chip" data-inspector-related="shape" data-type="' + escapeHtml(type) + '" data-shape="' + escapeHtml(shape) + '"><span>Same shape</span><strong>' + escapeHtml(shapeLabel) + '</strong></button>');
+    links.push('<button type="button" class="inspector-related-chip" data-inspector-related="shape" data-type="' + escapeHtml(type) + '" data-shape="' + escapeHtml(shape) + '"><span>同じ形</span><strong>' + escapeHtml(shapeLabel) + '</strong></button>');
   }
   if (item.width && item.height) {
-    links.push('<button type="button" class="inspector-related-chip wide" data-inspector-related="min-dimensions" data-type="' + escapeHtml(type) + '" data-min-width="' + escapeHtml(String(item.width)) + '" data-min-height="' + escapeHtml(String(item.height)) + '"><span>At least this size</span><strong>' + escapeHtml(item.width + ' × ' + item.height) + '</strong></button>');
+    links.push('<button type="button" class="inspector-related-chip wide" data-inspector-related="min-dimensions" data-type="' + escapeHtml(type) + '" data-min-width="' + escapeHtml(String(item.width)) + '" data-min-height="' + escapeHtml(String(item.height)) + '"><span>このサイズ以上</span><strong>' + escapeHtml(item.width + ' × ' + item.height) + '</strong></button>');
   }
   return links.length ? '<div class="inspector-related-grid">' + links.join('') + '</div>' : '';
 }

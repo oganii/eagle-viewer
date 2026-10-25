@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-theme="light">
+<html lang="ja" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
@@ -40,8 +40,8 @@
   <!-- Toolbar -->
   <div class="toolbar">
       <div class="toolbar-left">
-        <button type="button" class="menu-btn" id="menuBtn" aria-label="Menu"></button>
-        <a class="brand" href="/" aria-label="Eagle Vault Viewer Home">
+        <button type="button" class="menu-btn" id="menuBtn" aria-label="メニュー"></button>
+        <a class="brand" href="/" aria-label="Eagle Vault Viewer ホーム">
           <span class="brand-mark" aria-hidden="true">
             <svg viewBox="0 0 28 28" width="22" height="22" focusable="false">
               <rect class="ev-tile" x="1.5" y="1.5" width="25" height="25" rx="8"/>
@@ -50,12 +50,12 @@
           </span>
           <span class="brand-name">Eagle <b>Vault</b></span>
         </a>
-        <span class="version-badge toolbar-version-badge" id="appVersionBadge" aria-label="Current version"></span>
+        <span class="version-badge toolbar-version-badge" id="appVersionBadge" aria-label="現在のバージョン"></span>
       </div>
     <div class="toolbar-center">
       <div class="search-box">
         <span id="searchIcon"></span>
-        <input type="search" id="searchInput" placeholder="Search name, tag or notes…" autocomplete="off" data-i18n="search_placeholder" />
+        <input type="search" id="searchInput" placeholder="名前・タグ・メモで検索…" autocomplete="off" data-i18n="search_placeholder" />
         <div class="search-suggest" id="searchSuggest" role="listbox" data-i18n-aria="search_suggest"></div>
       </div>
     </div>
@@ -69,15 +69,15 @@
         <div class="appearance-popover">
           <div class="appearance-heading">
             <span>APPEARANCE</span>
-            <strong data-i18n="appearance_title">Appearance</strong>
+            <strong data-i18n="appearance_title">外観</strong>
           </div>
           <div class="theme-switcher" id="themeSwitcher" role="group" data-i18n-aria="theme_group_aria">
-            <button type="button" class="theme-swatch theme-swatch-light" data-theme-name="light" data-i18n-title="theme_light" data-i18n-aria="theme_light"><i></i><span data-i18n="theme_light">Light</span></button>
-            <button type="button" class="theme-swatch theme-swatch-dark" data-theme-name="dark" data-i18n-title="theme_dark" data-i18n-aria="theme_dark"><i></i><span data-i18n="theme_dark">Dark</span></button>
+            <button type="button" class="theme-swatch theme-swatch-light" data-theme-name="light" data-i18n-title="theme_light" data-i18n-aria="theme_light"><i></i><span data-i18n="theme_light">ライト</span></button>
+            <button type="button" class="theme-swatch theme-swatch-dark" data-theme-name="dark" data-i18n-title="theme_dark" data-i18n-aria="theme_dark"><i></i><span data-i18n="theme_dark">ダーク</span></button>
           </div>
           <div class="appearance-footer">
-            <span class="sync-status" id="syncStatus" data-state="local">Local</span>
-            <button type="button" class="lang-btn" id="langBtn" data-i18n-title="lang_en" data-i18n-aria="lang_en">EN</button>
+            <span class="sync-status" id="syncStatus" data-state="local">ローカル</span>
+            <button type="button" class="lang-btn" id="langBtn" data-i18n-title="lang_en" data-i18n-aria="lang_en">JA</button>
           </div>
         </div>
       </details>
@@ -87,27 +87,27 @@
   <div class="remote-status-strip" id="remoteStatusStrip" data-state="online" hidden aria-live="polite">
     <span class="remote-status-orb" aria-hidden="true"></span>
     <div class="remote-status-copy">
-      <strong id="remoteStatusTitle" data-i18n="remote_online">Remote Vault Online</strong>
-      <span id="remoteStatusMeta" data-i18n="remote_readonly">Eagle Vault · Read-only</span>
+      <strong id="remoteStatusTitle" data-i18n="remote_online">リモート Vault に接続中</strong>
+      <span id="remoteStatusMeta" data-i18n="remote_readonly">Eagle Vault · 読み取り専用</span>
     </div>
-    <button type="button" id="remoteStatusRetry" data-i18n="remote_retry">Reconnect</button>
+    <button type="button" id="remoteStatusRetry" data-i18n="remote_retry">再接続</button>
   </div>
 
   <!-- Batch action bar -->
   <div class="batch-bar" id="batchBar">
     <div class="batch-summary">
-      <span class="batch-count" id="selectedCount" data-i18n="batch_selected">0 selected</span>
-      <span class="batch-meta" id="selectedMeta" data-i18n="batch_total">0 B total</span>
-      <span class="batch-breakdown" id="selectedBreakdown" data-i18n="batch_type_dist">Types -</span>
-      <span class="batch-scope" id="selectedScope" data-i18n="batch_current_view">Current view</span>
-      <span class="batch-hint" id="selectedHint" data-i18n="batch_select_hint">⌘/Ctrl+A Select all · Shift Range · Esc Cancel</span>
+      <span class="batch-count" id="selectedCount" data-i18n="batch_selected">0 件選択中</span>
+      <span class="batch-meta" id="selectedMeta" data-i18n="batch_total">合計 0 B</span>
+      <span class="batch-breakdown" id="selectedBreakdown" data-i18n="batch_type_dist">種類 -</span>
+      <span class="batch-scope" id="selectedScope" data-i18n="batch_current_view">現在の表示</span>
+      <span class="batch-hint" id="selectedHint" data-i18n="batch_select_hint">⌘/Ctrl+A すべて選択 · Shift 範囲選択 · Esc 解除</span>
     </div>
-    <div class="batch-preview-rail" id="selectedPreviewRail" aria-label="Selected assets preview"></div>
-    <div class="batch-actions" aria-label="Batch actions">
-      <button type="button" id="selectAllBtn" class="batch-control" data-i18n="batch_sel_all">Select All</button>
-      <button type="button" id="invertSelectBtn" class="batch-control" data-i18n="batch_invert">Invert</button>
-      <button type="button" id="clearSelectBtn" class="batch-control" data-i18n="batch_clear">Clear</button>
-      <button type="button" id="batchCopyLinksBtn" class="batch-output" data-i18n="batch_copy_links">Copy Links</button>
+    <div class="batch-preview-rail" id="selectedPreviewRail" aria-label="選択した素材のプレビュー"></div>
+    <div class="batch-actions" aria-label="まとめて操作">
+      <button type="button" id="selectAllBtn" class="batch-control" data-i18n="batch_sel_all">すべて選択</button>
+      <button type="button" id="invertSelectBtn" class="batch-control" data-i18n="batch_invert">選択を反転</button>
+      <button type="button" id="clearSelectBtn" class="batch-control" data-i18n="batch_clear">解除</button>
+      <button type="button" id="batchCopyLinksBtn" class="batch-output" data-i18n="batch_copy_links">リンクをコピー</button>
     </div>
   </div>
 
@@ -117,12 +117,12 @@
     <div class="pwa-update-mark" aria-hidden="true"><span></span></div>
     <div class="pwa-update-copy">
       <span>VAULT UPDATE</span>
-      <strong data-i18n="pwa_new_version">New version ready</strong>
-      <small data-i18n="pwa_new_desc">Update downloaded in background. Refresh returns to your current position.</small>
+      <strong data-i18n="pwa_new_version">新しいバージョンの準備ができました</strong>
+      <small data-i18n="pwa_new_desc">更新はバックグラウンドでダウンロード済みです。再読み込みしても今の位置に戻ります。</small>
     </div>
     <div class="pwa-update-actions">
-      <button type="button" id="pwaUpdateLater" data-i18n="pwa_update_later">Later</button>
-      <button type="button" id="pwaUpdateApply" class="primary" data-i18n="pwa_update_now">Update Now</button>
+      <button type="button" id="pwaUpdateLater" data-i18n="pwa_update_later">あとで</button>
+      <button type="button" id="pwaUpdateApply" class="primary" data-i18n="pwa_update_now">今すぐ更新</button>
     </div>
   </aside>
 
@@ -133,31 +133,31 @@
     <div class="sidebar-wrap" id="sidebarWrap">
       <aside class="sidebar" id="sidebar">
         <div class="sidebar-section">
-          <div class="sidebar-section-title" data-i18n="sidebar_browse">Browse</div>
+          <div class="sidebar-section-title" data-i18n="sidebar_browse">ブラウズ</div>
           <button type="button" class="sidebar-item" id="allItems">
             <span class="sidebar-item-icon" id="iconAllItems"></span>
-            <span class="sidebar-item-name" data-i18n="sidebar_all">All Items</span>
+            <span class="sidebar-item-name" data-i18n="sidebar_all">すべて</span>
             <span class="sidebar-item-count" id="allItemsCount"></span>
           </button>
         </div>
         <div class="sidebar-section">
-          <div class="sidebar-section-title" data-i18n="sidebar_recent">Recent</div>
+          <div class="sidebar-section-title" data-i18n="sidebar_recent">最近追加</div>
           <button type="button" class="sidebar-item" id="recent7" data-days="7">
             <span class="sidebar-item-icon" id="iconRecent7"></span>
-            <span class="sidebar-item-name" data-i18n="sidebar_7d">Last 7 Days</span>
+            <span class="sidebar-item-name" data-i18n="sidebar_7d">過去 7 日間</span>
           </button>
           <button type="button" class="sidebar-item" id="recent30" data-days="30">
             <span class="sidebar-item-icon" id="iconRecent30"></span>
-            <span class="sidebar-item-name" data-i18n="sidebar_30d">Last 30 Days</span>
+            <span class="sidebar-item-name" data-i18n="sidebar_30d">過去 30 日間</span>
           </button>
         </div>
         <div class="sidebar-section" id="folderSection">
-          <div class="sidebar-section-title" data-i18n="sidebar_folders">Folders</div>
+          <div class="sidebar-section-title" data-i18n="sidebar_folders">フォルダ</div>
           <div id="folderTree"></div>
         </div>
         <div class="sidebar-section" id="tagSection" style="display:none;">
-          <div class="sidebar-section-title" data-i18n="sidebar_tags">Tags</div>
-          <input type="search" id="tagSearchInput" class="tag-search" placeholder="Search tags…" autocomplete="off" data-i18n="tag_search_placeholder" />
+          <div class="sidebar-section-title" data-i18n="sidebar_tags">タグ</div>
+          <input type="search" id="tagSearchInput" class="tag-search" placeholder="タグを検索…" autocomplete="off" data-i18n="tag_search_placeholder" />
           <div class="tag-list" id="tagList"></div>
         </div>
       </aside>
@@ -168,62 +168,62 @@
 
     <main class="main" id="mainArea">
       <div id="contentToolbar" class="content-toolbar" style="display:none;">
-        <label data-i18n="sort_label">Sort</label>
+        <label data-i18n="sort_label">並べ替え</label>
         <select id="ctSortSelect">
-          <option value="mtime" data-i18n="sort_mtime">Date Modified</option>
-          <option value="btime" data-i18n="sort_btime">Date Created</option>
-          <option value="name" data-i18n="sort_name">Name</option>
-          <option value="size" data-i18n="sort_size">Size</option>
-          <option value="ext" data-i18n="sort_ext">Format</option>
+          <option value="mtime" data-i18n="sort_mtime">更新日時</option>
+          <option value="btime" data-i18n="sort_btime">作成日時</option>
+          <option value="name" data-i18n="sort_name">名前</option>
+          <option value="size" data-i18n="sort_size">サイズ</option>
+          <option value="ext" data-i18n="sort_ext">形式</option>
         </select>
         <select id="ctSortDirSelect">
-          <option value="desc" data-i18n="sort_desc">Descending</option>
-          <option value="asc" data-i18n="sort_asc">Ascending</option>
+          <option value="desc" data-i18n="sort_desc">降順</option>
+          <option value="asc" data-i18n="sort_asc">昇順</option>
         </select>
-        <label data-i18n="filter_label">Type</label>
+        <label data-i18n="filter_label">種類</label>
         <select id="ctTypeSelect">
-          <option value="all" data-i18n="filter_all">All</option>
-          <option value="image" data-i18n="filter_image">Image</option>
-          <option value="video" data-i18n="filter_video">Video</option>
-          <option value="document" data-i18n="filter_document">Document</option>
-          <option value="audio" data-i18n="filter_audio">Audio</option>
-          <option value="other" data-i18n="filter_other">Other</option>
+          <option value="all" data-i18n="filter_all">すべて</option>
+          <option value="image" data-i18n="filter_image">画像</option>
+          <option value="video" data-i18n="filter_video">動画</option>
+          <option value="document" data-i18n="filter_document">ドキュメント</option>
+          <option value="audio" data-i18n="filter_audio">音声</option>
+          <option value="other" data-i18n="filter_other">その他</option>
         </select>
         <div class="quick-filters" id="quickFilters">
-          <button type="button" class="quick-filter" data-type="all" data-i18n="filter_all">All</button>
-          <button type="button" class="quick-filter" data-type="image" data-i18n="filter_image">Image</button>
-          <button type="button" class="quick-filter" data-type="document" data-i18n="filter_document">Document</button>
-          <button type="button" class="quick-filter" data-type="video" data-i18n="filter_video">Video</button>
+          <button type="button" class="quick-filter" data-type="all" data-i18n="filter_all">すべて</button>
+          <button type="button" class="quick-filter" data-type="image" data-i18n="filter_image">画像</button>
+          <button type="button" class="quick-filter" data-type="document" data-i18n="filter_document">ドキュメント</button>
+          <button type="button" class="quick-filter" data-type="video" data-i18n="filter_video">動画</button>
         </div>
-        <div class="active-filter-chips" id="activeFilterChips" aria-label="Active advanced filters" hidden></div>
+        <div class="active-filter-chips" id="activeFilterChips" aria-label="適用中の詳細フィルタ" hidden></div>
         <div class="content-context" id="contentContext">
-          <nav class="content-crumbs" id="contentCrumbs" aria-label="Current location"></nav>
+          <nav class="content-crumbs" id="contentCrumbs" aria-label="現在の場所"></nav>
           <span class="content-title" id="contentTitle"></span>
         </div>
       </div>
-      <div class="mobile-workbar" id="mobileWorkbar" aria-label="Current view status" hidden></div>
+      <div class="mobile-workbar" id="mobileWorkbar" aria-label="現在の表示の状態" hidden></div>
       <div class="content-body" id="contentBody">
         <div class="empty-state" id="emptyState">
           <span id="emptyIcon"></span>
-          <span data-i18n="empty_sidebar">Select a folder from the sidebar</span>
+          <span data-i18n="empty_sidebar">サイドバーからフォルダを選んでください</span>
         </div>
       </div>
-      <button type="button" class="return-current-item" id="returnToCurrentItemBtn" hidden aria-label="Back to current asset">
+      <button type="button" class="return-current-item" id="returnToCurrentItemBtn" hidden aria-label="表示中の素材に戻る">
         <span id="returnCurrentIcon"></span>
-        <strong>Current Asset</strong>
+        <strong>表示中の素材</strong>
       </button>
     </main>
 
-    <button type="button" class="inspector-mobile-backdrop" id="inspectorMobileBackdrop" aria-label="Close details panel"></button>
+    <button type="button" class="inspector-mobile-backdrop" id="inspectorMobileBackdrop" aria-label="詳細パネルを閉じる"></button>
     <div class="inspector" id="inspector">
-      <button type="button" class="inspector-sheet-handle" id="inspectorSheetHandle" aria-label="Expand or collapse details panel"></button>
+      <button type="button" class="inspector-sheet-handle" id="inspectorSheetHandle" aria-label="詳細パネルを開閉"></button>
       <div class="inspector-header">
         <div class="inspector-header-left">
           <div class="inspector-nav">
-            <button type="button" class="inspector-nav-btn" id="inspectorPrev" aria-label="Previous"></button>
-            <button type="button" class="inspector-nav-btn" id="inspectorNext" aria-label="Next"></button>
+            <button type="button" class="inspector-nav-btn" id="inspectorPrev" aria-label="前へ"></button>
+            <button type="button" class="inspector-nav-btn" id="inspectorNext" aria-label="次へ"></button>
           </div>
-          <span class="inspector-header-title">Details</span>
+          <span class="inspector-header-title">詳細</span>
         </div>
         <button type="button" class="inspector-close" id="inspectorClose"></button>
       </div>
@@ -234,79 +234,79 @@
   </div>
 
   <nav class="mobile-tabbar" data-i18n-aria="mobile_tab_library">
-    <button type="button" class="mobile-tab active" id="mobileLibraryBtn"><span id="iconMobileLibrary"></span><span data-i18n="mobile_tab_library">Library</span></button>
-    <button type="button" class="mobile-tab" id="mobileSearchBtn"><span id="iconMobileSearch"></span><span data-i18n="mobile_tab_search">Search</span></button>
-    <button type="button" class="mobile-tab" id="mobileMoreBtn"><span id="iconMobileMore"></span><span data-i18n="mobile_tab_more">More</span><em class="mobile-tab-badge" id="mobileMoreBadge"></em></button>
+    <button type="button" class="mobile-tab active" id="mobileLibraryBtn"><span id="iconMobileLibrary"></span><span data-i18n="mobile_tab_library">ライブラリ</span></button>
+    <button type="button" class="mobile-tab" id="mobileSearchBtn"><span id="iconMobileSearch"></span><span data-i18n="mobile_tab_search">検索</span></button>
+    <button type="button" class="mobile-tab" id="mobileMoreBtn"><span id="iconMobileMore"></span><span data-i18n="mobile_tab_more">その他</span><em class="mobile-tab-badge" id="mobileMoreBadge"></em></button>
   </nav>
 
   <div class="mobile-search-overlay" id="mobileSearchOverlay" aria-hidden="true">
     <div class="mobile-search-backdrop" data-mobile-search-close></div>
-    <section class="mobile-search-sheet" role="dialog" aria-modal="true" aria-label="Mobile Search">
+    <section class="mobile-search-sheet" role="dialog" aria-modal="true" aria-label="モバイル検索">
       <div class="quick-action-grabber"></div>
       <div class="mobile-search-head">
         <span>SEARCH VAULT</span>
-        <strong data-i18n="mobile_search_heading">Search Vault</strong>
-        <button type="button" class="mobile-search-close" data-mobile-search-close aria-label="Close Search"></button>
+        <strong data-i18n="mobile_search_heading">Vault を検索</strong>
+        <button type="button" class="mobile-search-close" data-mobile-search-close aria-label="検索を閉じる"></button>
       </div>
       <div class="mobile-search-box">
         <span id="iconMobileSearchSheet"></span>
-        <input type="search" id="mobileSearchInput" placeholder="Search name, tag or notes…" autocomplete="off" />
-        <button type="button" id="mobileSearchSubmit">Search</button>
+        <input type="search" id="mobileSearchInput" placeholder="名前・タグ・メモで検索…" autocomplete="off" />
+        <button type="button" id="mobileSearchSubmit">検索</button>
       </div>
-      <div class="mobile-search-guides" aria-label="Search tips">
-        <button type="button" data-mobile-search-template="">Keyword</button>
+      <div class="mobile-search-guides" aria-label="検索のヒント">
+        <button type="button" data-mobile-search-template="">キーワード</button>
       </div>
-      <div class="mobile-search-types" id="mobileSearchTypes" aria-label="Type filter">
-        <button type="button" data-mobile-type="all">All</button>
-        <button type="button" data-mobile-type="image">Images</button>
-        <button type="button" data-mobile-type="video">Videos</button>
-        <button type="button" data-mobile-type="audio">Audio</button>
-        <button type="button" data-mobile-type="document">Docs</button>
-        <button type="button" data-mobile-type="other">Other</button>
+      <div class="mobile-search-types" id="mobileSearchTypes" aria-label="種類で絞り込み">
+        <button type="button" data-mobile-type="all">すべて</button>
+        <button type="button" data-mobile-type="image">画像</button>
+        <button type="button" data-mobile-type="video">動画</button>
+        <button type="button" data-mobile-type="audio">音声</button>
+        <button type="button" data-mobile-type="document">文書</button>
+        <button type="button" data-mobile-type="other">その他</button>
       </div>
-      <div class="mobile-search-sort" id="mobileSearchSort" aria-label="Sort">
-        <span>Sort</span>
-        <button type="button" data-mobile-sort="mtime">Recent</button>
-        <button type="button" data-mobile-sort="name">Name</button>
-        <button type="button" data-mobile-sort="size">Size</button>
-        <button type="button" data-mobile-sort="ext">Format</button>
-        <button type="button" data-mobile-dir-toggle aria-label="Toggle sort order">Desc ↓</button>
+      <div class="mobile-search-sort" id="mobileSearchSort" aria-label="並べ替え">
+        <span>並べ替え</span>
+        <button type="button" data-mobile-sort="mtime">新しい順</button>
+        <button type="button" data-mobile-sort="name">名前</button>
+        <button type="button" data-mobile-sort="size">サイズ</button>
+        <button type="button" data-mobile-sort="ext">形式</button>
+        <button type="button" data-mobile-dir-toggle aria-label="並び順を切り替え">降順 ↓</button>
       </div>
-      <div class="mobile-search-view" id="mobileSearchView" aria-label="Layout">
-        <span>Layout</span>
-        <button type="button" data-mobile-view="grid">Masonry</button>
-        <button type="button" data-mobile-view="list">List</button>
-        <button type="button" data-mobile-density="116">Small</button>
-        <button type="button" data-mobile-density="164">Medium</button>
-        <button type="button" data-mobile-density="260">Large</button>
+      <div class="mobile-search-view" id="mobileSearchView" aria-label="レイアウト">
+        <span>レイアウト</span>
+        <button type="button" data-mobile-view="grid">タイル</button>
+        <button type="button" data-mobile-view="list">リスト</button>
+        <button type="button" data-mobile-density="116">小</button>
+        <button type="button" data-mobile-density="164">中</button>
+        <button type="button" data-mobile-density="260">大</button>
       </div>
-      <div class="mobile-search-quick" id="mobileSearchQuick" aria-label="Shortcuts"></div>
-      <div class="mobile-search-results" id="mobileSearchResults" aria-label="Search suggestions"></div>
+      <div class="mobile-search-quick" id="mobileSearchQuick" aria-label="ショートカット"></div>
+      <div class="mobile-search-results" id="mobileSearchResults" aria-label="検索候補"></div>
     </section>
   </div>
 
   <div class="mobile-more-overlay" id="mobileMoreOverlay" aria-hidden="true">
     <div class="mobile-more-backdrop" data-mobile-more-close></div>
-    <section class="mobile-more-sheet" role="dialog" aria-modal="true" aria-label="More settings">
+    <section class="mobile-more-sheet" role="dialog" aria-modal="true" aria-label="その他の設定">
       <div class="quick-action-grabber"></div>
       <div class="mobile-more-head">
-        <strong data-i18n="mobile_more_settings">Remote Vault Settings</strong>
-        <span data-i18n="mobile_more_sub">Browse, display &amp; appearance</span>
+        <strong data-i18n="mobile_more_settings">リモート Vault の設定</strong>
+        <span data-i18n="mobile_more_sub">ブラウズ・表示・外観</span>
       </div>
       <div class="mobile-remote-card" id="mobileRemoteCard" data-state="checking">
         <div class="mobile-remote-orb"></div>
         <div class="mobile-remote-copy">
-          <strong id="mobileRemoteTitle">Checking connection…</strong>
-          <span id="mobileRemoteMeta">Eagle Vault · Read-only</span>
+          <strong id="mobileRemoteTitle">接続を確認中…</strong>
+          <span id="mobileRemoteMeta">Eagle Vault · 読み取り専用</span>
         </div>
-        <button type="button" id="mobileRemoteRefresh">Reconnect</button>
+        <button type="button" id="mobileRemoteRefresh">再接続</button>
 
       </div>
 
       <div class="mobile-more-grid">
-        <button type="button" data-mobile-more-action="sidebar"><span id="iconMobileMoreSidebar"></span><strong>Sidebar</strong><small>Folders and tags</small></button>
-        <button type="button" data-mobile-more-action="refresh"><span id="iconMobileMoreRefresh"></span><strong>Refresh</strong><small>Rescan the Vault</small></button>
-        <button type="button" data-mobile-more-action="theme"><span id="iconMobileMoreTheme"></span><strong>Appearance</strong><small>Light or dark</small></button>
+        <button type="button" data-mobile-more-action="sidebar"><span id="iconMobileMoreSidebar"></span><strong>サイドバー</strong><small>フォルダとタグ</small></button>
+        <button type="button" data-mobile-more-action="refresh"><span id="iconMobileMoreRefresh"></span><strong>更新</strong><small>Vault を再スキャン</small></button>
+        <button type="button" data-mobile-more-action="theme"><span id="iconMobileMoreTheme"></span><strong>外観</strong><small>ライト / ダーク</small></button>
       </div>
     </section>
   </div>
@@ -314,10 +314,10 @@
   <aside class="install-coach" id="installCoach" aria-live="polite" hidden>
     <div class="install-coach-icon">⌂</div>
     <div class="install-coach-copy">
-      <strong data-i18n="mobile_more_install">Add to Home Screen</strong>
-      <span data-i18n="mobile_more_install_desc">In iPhone Safari tap Share → “Add to Home Screen” to open full-screen like an app.</span>
+      <strong data-i18n="mobile_more_install">ホーム画面に追加</strong>
+      <span data-i18n="mobile_more_install_desc">iPhone の Safari で「共有」→「ホーム画面に追加」をタップすると、次からアプリのように全画面で開けます。</span>
     </div>
-    <button type="button" class="install-coach-close" id="installCoachClose" aria-label="Not now"></button>
+    <button type="button" class="install-coach-close" id="installCoachClose" aria-label="今はしない"></button>
   </aside>
 
   <script src="/static/core.js?v=1.155"></script>
