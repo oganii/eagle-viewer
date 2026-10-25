@@ -214,17 +214,44 @@ test('safeExternalUrl rejects executable and malformed source schemes', () => {
 });
 
 test('i18n: t and tFmt resolve translations and placeholders', () => {
-  core.setLang('zh'); // Node's platform navigator.language may default the module to en
-  assert.strictEqual(core.t('sidebar_all'), '全部');
+  core.setLang('ja');
+  assert.strictEqual(core.t('sidebar_all'), 'すべて');
   assert.strictEqual(core.t('no_such_key'), 'no_such_key'); // falls back to key
-  assert.strictEqual(core.tFmt('batch_selected', { n: 3 }), '已选 3 个');
+  assert.strictEqual(core.tFmt('batch_selected', { n: 3 }), '3 件選択中');
   core.setLang('en');
   assert.strictEqual(core.t('sidebar_all'), 'All Items');
   assert.strictEqual(core.tFmt('batch_selected', { n: 2 }), '2 selected');
-  core.setLang('fr'); // invalid -> zh
-  assert.strictEqual(core.getLang(), 'zh');
-  assert.strictEqual(core.t('sidebar_all'), '全部');
   core.setLang('zh');
+  assert.strictEqual(core.t('sidebar_all'), '全部');
+  assert.strictEqual(core.tFmt('batch_selected', { n: 3 }), '已选 3 个');
+  core.setLang('fr'); // invalid -> ja
+  assert.strictEqual(core.getLang(), 'ja');
+  assert.strictEqual(core.t('sidebar_all'), 'すべて');
+});
+
+test('i18n: language cycles ja -> en -> zh -> ja with matching date locale', () => {
+  core.setLang('ja');
+  assert.strictEqual(core.getDateLocale(), 'ja-JP');
+  assert.strictEqual(core.getNextLang(), 'en');
+  core.setLang(core.getNextLang());
+  assert.strictEqual(core.getLang(), 'en');
+  assert.strictEqual(core.getNextLang(), 'zh');
+  core.setLang(core.getNextLang());
+  assert.strictEqual(core.getLang(), 'zh');
+  assert.strictEqual(core.getDateLocale(), 'zh-CN');
+  assert.strictEqual(core.getNextLang(), 'ja');
+  core.setLang('ja');
+});
+
+test('i18n: every en key has a ja translation', () => {
+  const langs = ['ja', 'en', 'zh'];
+  for (const lang of langs) {
+    core.setLang(lang);
+    for (const key of ['sidebar_all', 'lang_name', 'lang_en', 'canvas_list']) {
+      assert.notStrictEqual(core.t(key), key, lang + ':' + key);
+    }
+  }
+  core.setLang('ja');
 });
 
 test('getRouteHistoryIdentity builds stable route identity', () => {

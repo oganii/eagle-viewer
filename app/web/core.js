@@ -503,7 +503,7 @@ function renderInspectorPreview(container, item, thumbUrl, fileUrl) {
 function formatDate(ts) {
   if (!ts) return '—';
   var d = new Date(ts);
-  return isNaN(d.getTime()) ? '—' : d.toLocaleString(getLang() === 'en' ? 'en' : 'zh-CN', { dateStyle: 'short', timeStyle: 'short' });
+  return isNaN(d.getTime()) ? '—' : d.toLocaleString(getDateLocale(), { dateStyle: 'short', timeStyle: 'short' });
 }
 
 function formatSize(bytes) {
@@ -515,9 +515,118 @@ function formatSize(bytes) {
 
 // ===== i18n =====
 var I18N_DATA = {
+  ja: {
+    lang_name: 'JA',
+    lang_en: 'English に切り替え',
+    // Sidebar
+    sidebar_browse: 'ブラウズ',
+    sidebar_all: 'すべて',
+    sidebar_recent: '最近追加',
+    sidebar_7d: '過去 7 日間',
+    sidebar_30d: '過去 30 日間',
+    sidebar_folders: 'フォルダ',
+    sidebar_tags: 'タグ',
+    // Search
+    search_placeholder: '名前・タグ・メモで検索…',
+    search_suggest: '検索候補',
+    tag_search_placeholder: 'タグを検索…',
+    // Sort & filter
+    sort_label: '並べ替え',
+    sort_mtime: '更新日時',
+    sort_btime: '作成日時',
+    sort_name: '名前',
+    sort_size: 'サイズ',
+    sort_ext: '形式',
+    sort_desc: '降順',
+    sort_asc: '昇順',
+    filter_label: '種類',
+    filter_all: 'すべて',
+    filter_image: '画像',
+    filter_video: '動画',
+    filter_document: 'ドキュメント',
+    filter_audio: '音声',
+    filter_other: 'その他',
+    // Batch bar
+    batch_selected: '{n} 件選択中',
+    batch_total: '合計 {s}',
+    batch_type_dist: '種類 -',
+    batch_current_view: '現在の表示',
+    batch_select_hint: '⌘/Ctrl+A すべて選択 · Shift 範囲選択 · Esc 解除',
+    batch_sel_all: 'すべて選択',
+    batch_invert: '選択を反転',
+    batch_clear: '解除',
+    batch_copy_links: 'リンクをコピー',
+    // View buttons
+    view_grid: 'グリッド表示',
+    view_list: 'リスト表示',
+    // Theme
+    theme_group_aria: 'テーマ',
+    theme_light: 'ライト',
+    theme_dark: 'ダーク',
+    // Chrome copy
+    appearance_title: '外観',
+    mobile_search_heading: 'Vault を検索',
+    // Remote status
+    remote_online: 'リモート Vault に接続中',
+    remote_readonly: 'Eagle Vault · 読み取り専用',
+    remote_retry: '再接続',
+    // PWA
+    pwa_new_version: '新しいバージョンの準備ができました',
+    pwa_new_desc: '更新はバックグラウンドでダウンロード済みです。再読み込みしても今の位置に戻ります。',
+    pwa_update_later: 'あとで',
+    pwa_update_now: '今すぐ更新',
+    // Update
+    update_available: 'アップデートがあります',
+    // Folders sidebar
+    folder_loading: '読み込み中…',
+    // Empty states
+    empty_sidebar: 'サイドバーからフォルダを選んでください',
+    // Inspector
+    inspector_prev: '前へ',
+    inspector_next: '次へ',
+    inspector_title: '詳細',
+    library_title: 'ライブラリ',
+    breadcrumb_location: '現在の場所',
+    breadcrumb_tag: 'タグ',
+    breadcrumb_search: '検索',
+    recent_days: '過去 {n} 日間',
+    folder_view: 'フォルダ',
+    tag_view: 'タグ',
+    recent_view: '最近の素材',
+    search_results: '検索結果',
+    loaded_count: '{loaded}/{total} 件読み込み済み',
+    item_count: '{n} 件',
+    folder_count: '{n} フォルダ',
+    no_items: '素材がありません',
+    filter_count: '{n} 件の絞り込み',
+    // Mobile tabbar & sheets (desktop responsive)
+    mobile_tab_library: 'ライブラリ',
+    mobile_tab_search: '検索',
+    mobile_tab_more: 'その他',
+    mobile_search_title: 'モバイル検索',
+    mobile_search_close: '検索を閉じる',
+    mobile_more_settings: 'リモート Vault の設定',
+    mobile_more_install: 'ホーム画面に追加',
+    mobile_more_install_desc: 'iPhone の Safari で「共有」→「ホーム画面に追加」をタップすると、次からアプリのように全画面で開けます。',
+    mobile_more_sub: 'ブラウズ・表示・外観',
+    mobile_more_checking: '接続を確認中…',
+    // Density
+    density_small: '小',
+    density_medium: '中',
+    density_large: '大',
+    // Sync status
+    sync_local: 'ローカル',
+    sync_synced: '同期済み',
+    sync_pending: '同期待ち',
+    sync_syncing: '同期中…',
+    sync_conflict: '統合中',
+    // Canvas
+    canvas_grid: 'グリッド表示',
+    canvas_list: 'リスト表示',
+  },
   zh: {
     lang_name: '中',
-    lang_en: 'English',
+    lang_en: '切换到日本語',
     // Sidebar
     sidebar_browse: '浏览',
     sidebar_all: '全部',
@@ -626,7 +735,7 @@ var I18N_DATA = {
   },
   en: {
     lang_name: 'EN',
-    lang_en: 'English',
+    lang_en: 'Switch to 中文',
     // Sidebar
     sidebar_browse: 'Browse',
     sidebar_all: 'All Items',
@@ -735,20 +844,30 @@ var I18N_DATA = {
   }
 };
 
-var _lang = 'en';
+var _lang = 'ja';
+var LANG_ORDER = ['ja', 'en', 'zh'];
+var HTML_LANG = { ja: 'ja', en: 'en', zh: 'zh-CN' };
+var DATE_LOCALE = { ja: 'ja-JP', en: 'en', zh: 'zh-CN' };
 
 function getLang() { return _lang; }
 
+function getNextLang() {
+  var i = LANG_ORDER.indexOf(_lang);
+  return LANG_ORDER[(i + 1) % LANG_ORDER.length];
+}
+
+function getDateLocale() { return DATE_LOCALE[_lang] || 'ja-JP'; }
+
 function setLang(lang) {
-  if (lang !== 'zh' && lang !== 'en') lang = 'zh';
+  if (LANG_ORDER.indexOf(lang) < 0) lang = 'ja';
   _lang = lang;
   try { localStorage.setItem('eagle-viewer-lang', lang); } catch (e) {}
-  document.documentElement.setAttribute('lang', lang === 'en' ? 'en' : 'zh-CN');
+  document.documentElement.setAttribute('lang', HTML_LANG[lang]);
 }
 
 function t(key) {
-  var map = I18N_DATA[_lang] || I18N_DATA.zh;
-  return map[key] || key;
+  var map = I18N_DATA[_lang] || I18N_DATA.ja;
+  return map[key] || I18N_DATA.ja[key] || I18N_DATA.en[key] || key;
 }
 
 function tFmt(key, params) {
@@ -762,14 +881,10 @@ function tFmt(key, params) {
 // Load saved language preference
 try {
   var savedLang = localStorage.getItem('eagle-viewer-lang');
-  if (savedLang === 'en' || savedLang === 'zh') setLang(savedLang);
+  if (LANG_ORDER.indexOf(savedLang) >= 0) setLang(savedLang);
 } catch (e) {}
-// Default to browser language preference
-if (false) {
-  _lang = 'en';
-  try { localStorage.setItem('eagle-viewer-lang', 'en'); } catch (e) {}
-  document.documentElement.setAttribute('lang', 'en');
-}
+// Reflect the active language even when nothing was saved (default: ja)
+document.documentElement.setAttribute('lang', HTML_LANG[_lang]);
 
 // Apply i18n to static DOM elements with data-i18n attributes
 function applyStaticI18n(root) {
@@ -803,7 +918,7 @@ function applyStaticI18n(root) {
   }
   // Update language button text
   var langBtn = document.getElementById('langBtn');
-  if (langBtn) langBtn.textContent = getLang() === 'zh' ? I18N_DATA.zh.lang_name : I18N_DATA.en.lang_name;
+  if (langBtn) langBtn.textContent = t('lang_name');
 }
 
 // Expose helpers for automated behavior tests (Node only; a no-op in the browser).
@@ -823,6 +938,8 @@ if (typeof module !== 'undefined' && module.exports) {
     escapeHtml: escapeHtml,
     safeExternalUrl: safeExternalUrl,
     getLang: getLang,
+    getNextLang: getNextLang,
+    getDateLocale: getDateLocale,
     setLang: setLang,
     t: t,
     tFmt: tFmt,

@@ -187,7 +187,7 @@ function bindEvents() {
   var langBtn = document.getElementById('langBtn');
   if (langBtn) {
     langBtn.onclick = function() {
-      var newLang = getLang() === 'zh' ? 'en' : 'zh';
+      var newLang = getNextLang();
       setLang(newLang);
       applyStaticI18n();
       if (EagleViewer.modules.render && EagleViewer.modules.render.updateMobileWorkbar) {

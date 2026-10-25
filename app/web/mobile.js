@@ -23,8 +23,30 @@
   const pvShare = document.getElementById('pvShare');
   const pvStage = document.getElementById('pvStage');
 
-  // ---------- 中英文 ----------
+  // ---------- 日英中 ----------
   const COPY = {
+    ja: {
+      library: 'ライブラリ', folders: 'フォルダ', search: '検索', status: '接続状態',
+      tabLibrary: 'ライブラリ', tabFolders: 'フォルダ', tabSearch: '検索',
+      close: '閉じる', share: '共有', back: '戻る', download: 'ダウンロード', showOriginal: '元画像を表示', loadingOriginal: '元画像を読み込み中…', saveAlbum: '写真に保存',
+      loadFailed: '読み込みに失敗しました：{error}', connectedChanged: '接続中 · リモートに変更あり',
+      connected: '接続中', disconnected: '未接続', statusUnknown: '接続状態不明', vault: 'Eagle Vault',
+      items: '素材', foldersLabel: 'フォルダ', tags: 'タグ',
+      searchPlaceholder: '名前・タグ・メモで検索…', recent: '最近追加',
+      locked: 'このフォルダは Eagle でロックされているため、リモートでは表示できません。',
+      subfolders: 'サブフォルダ', noFolders: 'フォルダがありません',
+      searchStart: 'キーワードを入力して検索', searchFailed: '検索に失敗しました：{error}',
+      popularTags: 'よく使うタグ',
+      results: '{count} 件 · {seconds} 秒', indexedAt: 'インデックス作成',
+      remoteChangedTitle: 'リモートの変更を検出しました',
+      remoteChangedBody: '前回のインデックス作成後に Vault が変更されています。再読み込みして同期してください。',
+      reload: 'インデックスを再読み込み', loading: '読み込み中…', reloadFailed: '再読み込みに失敗しました',
+      downloaded: '「ファイル」にダウンロードしました。写真アプリでも開けます。', saveFailed: '保存できませんでした', unsupportedPreview: 'この形式はここではプレビューできません。ダウンロードして開いてください。', videoUnavailable: 'この動画はこの端末では再生できません。ダウンロードして見てください。',
+      thumbnailCache: 'サムネイルのキャッシュ', thumbnailCacheClear: 'サムネイルのキャッシュを削除', thumbnailCacheCleared: 'サムネイルのキャッシュを削除しました',
+      previous: '前へ', next: '次へ',
+      copied: 'リンクをコピーしました', shareUnavailable: '共有は使えません', language: 'English',
+      lightTheme: 'ライトテーマにする', darkTheme: 'ダークテーマにする'
+    },
     zh: {
       library: '资源库', folders: '目录', search: '搜索', status: '连接状态',
       tabLibrary: '资料库', tabFolders: '文件夹', tabSearch: '搜索',
@@ -44,7 +66,7 @@
       downloaded: '已下载到「文件」，可在相册中查看', saveFailed: '保存失败', unsupportedPreview: '此格式不支持在线预览，请下载后打开', videoUnavailable: '当前视频无法在此设备上播放，请下载查看',
       thumbnailCache: '缩略图缓存', thumbnailCacheClear: '清理缩略图缓存', thumbnailCacheCleared: '缩略图缓存已清理',
       previous: '上一个', next: '下一个',
-      copied: '链接已复制', shareUnavailable: '分享不可用', language: 'English',
+      copied: '链接已复制', shareUnavailable: '分享不可用', language: '日本語',
       lightTheme: '切换到浅色', darkTheme: '切换到深色'
     },
     en: {
@@ -71,21 +93,24 @@
       lightTheme: 'Use light theme', darkTheme: 'Use dark theme'
     }
   };
-  let lang = 'en';
+  const LANG_ORDER = ['ja', 'en', 'zh'];
+  const HTML_LANG = { ja: 'ja', en: 'en', zh: 'zh-CN' };
+  const DATE_LOCALE = { ja: 'ja-JP', en: 'en-US', zh: 'zh-CN' };
+  let lang = 'ja';
   let searchAbortController = null;
   try {
     const saved = localStorage.getItem('eagle-viewer-lang');
-    lang = saved === 'en' || saved === 'zh' ? saved : 'en';
+    lang = LANG_ORDER.indexOf(saved) >= 0 ? saved : 'ja';
   } catch (e) {}
 
   function tr(key, values) {
-    let text = (COPY[lang] && COPY[lang][key]) || COPY.zh[key] || key;
+    let text = (COPY[lang] && COPY[lang][key]) || COPY.ja[key] || COPY.en[key] || key;
     Object.keys(values || {}).forEach(k => { text = text.replace('{' + k + '}', values[k]); });
     return text;
   }
 
   function applyLanguage() {
-    document.documentElement.lang = lang === 'en' ? 'en' : 'zh-CN';
+    document.documentElement.lang = HTML_LANG[lang] || 'ja';
     document.getElementById('tabLibrary').textContent = tr('tabLibrary');
     document.getElementById('tabFolders').textContent = tr('tabFolders');
     document.getElementById('tabSearch').textContent = tr('tabSearch');
@@ -427,7 +452,7 @@
     const brand = topbar.querySelector('#mobileBrandBtn');
     if (brand) brand.onclick = goStatus;
     topbar.querySelector('#langBtn').onclick = () => {
-      lang = lang === 'zh' ? 'en' : 'zh';
+      lang = LANG_ORDER[(LANG_ORDER.indexOf(lang) + 1) % LANG_ORDER.length];
       try { localStorage.setItem('eagle-viewer-lang', lang); } catch (e) {}
       applyLanguage();
       if (S.view === 'folders') renderFolders();
@@ -730,7 +755,7 @@
     if (token !== S.viewGeneration || S.view !== 'status') return;
     S.status = st;
     view.scrollTop = 0;
-    const fmtTime = ms => ms ? new Date(ms).toLocaleString(lang === 'en' ? 'en-US' : 'zh-CN', { hour12: false }) : '—';
+    const fmtTime = ms => ms ? new Date(ms).toLocaleString(DATE_LOCALE[lang] || 'ja-JP', { hour12: false }) : '—';
     const stats = st.stats || {};
     viewBody.innerHTML =
       '<div class="lt">' + esc(tr('status')) + '</div>' +
