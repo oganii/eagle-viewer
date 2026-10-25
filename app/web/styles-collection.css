@@ -71,7 +71,7 @@
       box-shadow:0 0 0 2px var(--accent-text),0 16px 38px rgba(0,0,0,.30);
     }
 .card.selected::after {
-      content:'已选';
+      content:'選択中';
       position:absolute;
       top:10px;
       right:10px;
@@ -90,6 +90,8 @@
       pointer-events:none;
       backdrop-filter:blur(12px);
     }
+html:lang(en) .card.selected::after { content:'Selected'; }
+html:lang(zh) .card.selected::after { content:'已选'; }
 .card.selected .card-thumb {
       background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 16%,transparent),color-mix(in srgb,var(--accent) 4%,var(--bg3)));
     }

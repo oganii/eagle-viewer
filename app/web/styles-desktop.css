@@ -333,7 +333,9 @@
     .search-box:focus-within{border-color:#3a3a3c;box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 8%,transparent),inset 0 1px 2px rgba(0,0,0,.34);}
     .search-box input::placeholder{font-size:0;}
     .search-box input::placeholder{color:transparent;}
-    .search-box::after{content:"搜索";position:absolute;pointer-events:none;color:#8e8e93;font-size:11px;margin-left:23px;}
+    .search-box::after{content:"検索";position:absolute;pointer-events:none;color:#8e8e93;font-size:11px;margin-left:23px;}
+    html:lang(en) .search-box::after{content:"Search";}
+    html:lang(zh) .search-box::after{content:"搜索";}
     .search-box:focus-within::after,.search-box:has(input:not(:placeholder-shown))::after{display:none;}
     .tb-btn{position:relative;color:#8e8e93;}
     .tb-btn svg{stroke-width:1.9;}
