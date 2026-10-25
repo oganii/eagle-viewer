@@ -13,9 +13,12 @@ class FolderNode:
     children: list["FolderNode"] = field(default_factory=list)
 
 
-@dataclass
+@dataclass(slots=True)
 class ItemInfo:
-    """Single asset item (from each .info/metadata.json)."""
+    """Single asset item (from each .info/metadata.json).
+
+    slots=True keeps the per-item footprint small for libraries with 100k+ items.
+    """
     id: str
     name: str
     ext: str
@@ -30,6 +33,7 @@ class ItemInfo:
     bpm: float = 0
     btime: int = 0   # creation time (timestamp ms)
     mtime: int = 0   # modification time (timestamp ms)
+    star: int = 0    # Eagle rating 1..5, 0 = unrated
     # Paths (resolved by parser)
     main_file_path: str = ""   # absolute path to the main media file
     thumbnail_path: str = ""  # optional thumbnail for list view

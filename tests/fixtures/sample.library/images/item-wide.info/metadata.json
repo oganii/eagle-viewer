@@ -2,6 +2,7 @@
   "id": "item-wide",
   "name": "Wide dashboard capture",
   "ext": "png",
+  "star": 1,
   "folders": [
     "root"
   ],

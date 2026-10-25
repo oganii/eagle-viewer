@@ -2,6 +2,7 @@
   "id": "item-jpg",
   "name": "Photo sample jpg",
   "ext": "jpg",
+  "star": 3,
   "folders": [
     "boards"
   ],

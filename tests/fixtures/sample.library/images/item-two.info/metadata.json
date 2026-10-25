@@ -2,6 +2,7 @@
   "id": "item-two",
   "name": "Beta duplicate",
   "ext": "png",
+  "star": 3,
   "folders": ["screens"],
   "width": 1600,
   "height": 900,

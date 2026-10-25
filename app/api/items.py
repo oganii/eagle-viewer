@@ -3,12 +3,13 @@ import mimetypes
 from pathlib import Path
 from urllib.parse import quote
 
-from fastapi import APIRouter, Body, HTTPException, Request
+from fastapi import APIRouter, Body, Depends, HTTPException, Request
 from fastapi.responses import FileResponse, Response, StreamingResponse
 
-from app.vault import get_item, item_to_dict
+from app.api.deps import select_library
+from app.vault import RatingWriteError, get_item, item_to_dict, set_item_star
 
-router = APIRouter(prefix="/api", tags=["items"])
+router = APIRouter(prefix="/api", tags=["items"], dependencies=[Depends(select_library)])
 
 # 1x1 transparent PNG (avoid 404 when item has no thumbnail file)
 _PLACEHOLDER_PNG_B64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
@@ -83,6 +84,19 @@ def api_item_detail(item_id: str):
     item = get_item(item_id)
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
+    return item_to_dict(item)
+
+
+@router.put("/items/{item_id}/star")
+def api_item_set_star(item_id: str, star: int = Body(..., embed=True)):
+    """Set the Eagle rating (0 = unrated) by rewriting the item's metadata.json.
+
+    Only libraries listed in EAGLE_VAULT_EDITABLE accept this; others answer 403.
+    """
+    try:
+        item = set_item_star(item_id, star)
+    except RatingWriteError as exc:
+        raise HTTPException(status_code=exc.status, detail=exc.message) from None
     return item_to_dict(item)
 
 

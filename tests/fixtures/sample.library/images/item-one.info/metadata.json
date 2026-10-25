@@ -2,6 +2,7 @@
   "id": "item-one",
   "name": "Alpha landscape",
   "ext": "png",
+  "star": 5,
   "folders": ["root"],
   "width": 1600,
   "height": 900,

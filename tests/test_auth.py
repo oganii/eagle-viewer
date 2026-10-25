@@ -51,6 +51,9 @@ def test_api_info_declares_native_capabilities(monkeypatch):
         "download",
         "bearerAuth",
         "protectedFolders",
+        "libraries",
+        "rating",
+        "ratingEdit",
     }
     assert "sharedState" not in info["features"]
 

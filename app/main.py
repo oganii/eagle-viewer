@@ -3,7 +3,7 @@ import hmac
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, Request, Form
+from fastapi import Depends, FastAPI, Form, HTTPException, Request
 from fastapi.responses import FileResponse, Response, RedirectResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
@@ -12,7 +12,9 @@ from starlette.types import ASGIApp
 from app.config import VIEWER_API_TOKEN, VIEWER_PASSWORD, VIEWER_SECRET_KEY
 from app.api.folders import router as folders_router
 from app.api.items import router as items_router
+from app.api.deps import select_library
 from app.vault import APP_VERSION, load_vault, get_cache_stats, get_library_status
+from app.vault.libraries import get_manager
 
 if VIEWER_PASSWORD and not VIEWER_SECRET_KEY:
     raise RuntimeError("VIEWER_SECRET_KEY must be set when VIEWER_PASSWORD is enabled")
@@ -110,10 +112,13 @@ class SecurityHeadersMiddleware:
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    # Index only the default library, in the background: a cached index is served within
+    # seconds, a cold one can take minutes on a slow disk. Other libraries load on first use.
     try:
-        load_vault()
+        manager = get_manager()
+        manager.request_load(manager.default_index())
     except Exception:
-        logger.exception("Failed to preload Eagle vault on startup")
+        logger.exception("Failed to start indexing the default Eagle library")
     yield
 
 
@@ -141,17 +146,37 @@ def api_info():
         "name": "Eagle Vault Viewer",
         "version": APP_VERSION,
         "apiVersion": 1,
-        "features": ["browse", "search", "preview", "download", "bearerAuth", "protectedFolders"],
+        "features": [
+            "browse", "search", "preview", "download", "bearerAuth", "protectedFolders",
+            "libraries", "rating", "ratingEdit",
+        ],
         "auth": {"session": bool(VIEWER_PASSWORD), "bearer": bool(VIEWER_API_TOKEN)},
     }
 
-@app.post("/api/library/reload")
+@app.get("/api/libraries")
+def list_libraries():
+    """Configured libraries with their index state (unloaded / loading / ready / error)."""
+    return get_manager().list()
+
+
+@app.post("/api/libraries/{lib_id}/load")
+def load_library(lib_id: str):
+    """Start indexing a library in the background (no-op when it is ready or loading)."""
+    manager = get_manager()
+    index = manager.resolve(lib_id)
+    if index is None:
+        raise HTTPException(status_code=404, detail="ライブラリが見つかりません")
+    manager.request_load(index)
+    return manager.describe(index)
+
+
+@app.post("/api/library/reload", dependencies=[Depends(select_library)])
 def reload_library():
     load_vault()
     return {"ok": True, "stats": get_cache_stats(), "status": get_library_status(deep=False)}
 
 
-@app.get("/api/library/status")
+@app.get("/api/library/status", dependencies=[Depends(select_library)])
 def library_status(deep: bool = False):
     return get_library_status(deep=deep)
 
