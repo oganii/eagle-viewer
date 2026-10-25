@@ -28,7 +28,7 @@
     ja: {
       library: 'ライブラリ', folders: 'フォルダ', search: '検索', status: '接続状態',
       tabLibrary: 'ライブラリ', tabFolders: 'フォルダ', tabSearch: '検索',
-      close: '閉じる', share: '共有', back: '戻る', download: 'ダウンロード', showOriginal: '元画像を表示', loadingOriginal: '元画像を読み込み中…', saveAlbum: '写真に保存',
+      close: '閉じる', share: '共有', back: '戻る', download: 'ダウンロード', showOriginal: '元画像を表示', loadingOriginal: '元画像を読み込み中…', originalShown: '元画像を表示中', saveAlbum: '写真に保存',
       loadFailed: '読み込みに失敗しました：{error}', connectedChanged: '接続中 · リモートに変更あり',
       connected: '接続中', disconnected: '未接続', statusUnknown: '接続状態不明', vault: 'Eagle Vault',
       items: '素材', foldersLabel: 'フォルダ', tags: 'タグ',
@@ -50,7 +50,7 @@
     zh: {
       library: '资源库', folders: '目录', search: '搜索', status: '连接状态',
       tabLibrary: '资料库', tabFolders: '文件夹', tabSearch: '搜索',
-      close: '关闭', share: '分享', back: '返回', download: '下载', showOriginal: '显示原图', loadingOriginal: '原图加载中…', saveAlbum: '保存相册',
+      close: '关闭', share: '分享', back: '返回', download: '下载', showOriginal: '显示原图', loadingOriginal: '原图加载中…', originalShown: '已显示原图', saveAlbum: '保存相册',
       loadFailed: '加载失败：{error}', connectedChanged: '已连接 · 远程有变更',
       connected: '已连接', disconnected: '未连接', statusUnknown: '连接状态未知', vault: 'Eagle 资源库',
       items: '素材', foldersLabel: '文件夹', tags: '标签',
@@ -85,7 +85,7 @@
       remoteChangedTitle: 'Remote changes detected',
       remoteChangedBody: 'The Vault changed after the last index. Reload to sync it.',
       reload: 'Reload index', loading: 'Loading…', reloadFailed: 'Reload failed',
-      downloaded: 'Downloaded to Files. You can open it in Photos.', showOriginal: 'View original', loadingOriginal: 'Loading original…', unsupportedPreview: 'This format cannot be previewed here. Download it to open.', videoUnavailable: 'This video cannot play on this device. Download it to view.',
+      downloaded: 'Downloaded to Files. You can open it in Photos.', showOriginal: 'View original', loadingOriginal: 'Loading original…', originalShown: 'Showing original', unsupportedPreview: 'This format cannot be previewed here. Download it to open.', videoUnavailable: 'This video cannot play on this device. Download it to view.',
       thumbnailCache: 'Thumbnail cache', thumbnailCacheClear: 'Clear thumbnail cache', thumbnailCacheCleared: 'Thumbnail cache cleared',
       previous: 'Previous', next: 'Next',
       saveFailed: 'Could not save', copied: 'Link copied',
@@ -800,7 +800,7 @@
   }
 
   // ---------- プレビューのオーバーレイ + ジェスチャー ----------
-  const g = { mode: null, pointers: new Map(), startX: 0, startY: 0, dx: 0, dy: 0, moved: false, t0: 0, lastTap: 0, scale: 1, baseScale: 1, pinchStart: 0 };
+  const g = { mode: null, pointers: new Map(), startX: 0, startY: 0, dx: 0, dy: 0, moved: false, t0: 0, lastTap: 0, scale: 1, baseScale: 1, pinchStart: 0, tx: 0, ty: 0, baseTx: 0, baseTy: 0 };
 
   function openPreview(index) {
     S.preview.list = S.currentGallery;
@@ -829,7 +829,7 @@
     pvImg.style.display = '';
     pvImg.style.transform = '';
     overlay.style.background = '#000';
-    g.scale = 1;
+    g.scale = 1; g.tx = 0; g.ty = 0;
   }
   function closePreview() {
     if (!S.preview.open) return;
@@ -840,7 +840,7 @@
     const list = S.preview.list, i = S.preview.index, it = list[i];
     if (!it) return;
     const token = ++S.preview.token;
-    g.scale = 1;
+    g.scale = 1; g.tx = 0; g.ty = 0;
     pvIndex.textContent = (i + 1) + ' / ' + list.length;
     const ext = normExt(it.ext);
     const mediaUrl = '/api/items/' + it.id + '/file';
@@ -883,7 +883,7 @@
       pvStage.appendChild(frame);
     }
     pvImg.style.transition = '';
-    pvImg.style.transform = g.scale > 1 ? 'scale(' + g.scale + ')' : '';
+    applyTransform();
     pvName.textContent = it.name || '';
     const dims = (it.width && it.height) ? it.width + '×' + it.height + ' · ' : '';
     const sz = fmtSize(it.size);
@@ -929,12 +929,17 @@
         original.onerror = reject;
         original.src = originalUrl;
       });
-      if (S.preview.open && token === S.preview.token && S.preview.list[S.preview.index] === it) pvImg.src = originalUrl;
+      if (!(S.preview.open && token === S.preview.token && S.preview.list[S.preview.index] === it)) return;
+      pvImg.src = originalUrl;
+      // 見た目が変わらないこともあるので、表示中であることをボタンで示す（次の項目で元に戻る）
+      document.getElementById('pvOriginalLabel').textContent = tr('originalShown');
+      toast(tr('originalShown'));
     } catch (e) {
       toast(tr('unsupportedPreview'));
-    } finally {
-      pvOriginal.disabled = false;
-      document.getElementById('pvOriginalLabel').textContent = tr('showOriginal');
+      if (token === S.preview.token) {
+        pvOriginal.disabled = false;
+        document.getElementById('pvOriginalLabel').textContent = tr('showOriginal');
+      }
     }
   }
   function normExt(ext) { return (ext || '').toLowerCase().replace(/^\./, ''); }
@@ -970,7 +975,18 @@
     // プレビュー中は背景をすっきり保つ：隣の項目のはみ出したサムネイルを外し、他の結果が透けて見づらくならないようにする。
     pvStage.querySelectorAll('.pv-peek').forEach(p => p.remove());
   }
-  function applyTransform() { pvImg.style.transform = g.scale > 1 ? 'scale(' + g.scale + ')' : ''; }
+  // 拡大中は、はみ出した分だけ上下左右にずらせる
+  function clampPan() {
+    const maxX = Math.max(0, (pvImg.offsetWidth * g.scale - pvStage.clientWidth) / 2);
+    const maxY = Math.max(0, (pvImg.offsetHeight * g.scale - pvStage.clientHeight) / 2);
+    g.tx = clamp(g.tx, -maxX, maxX);
+    g.ty = clamp(g.ty, -maxY, maxY);
+  }
+  function applyTransform() {
+    if (g.scale <= 1) { g.tx = 0; g.ty = 0; pvImg.style.transform = ''; return; }
+    clampPan();
+    pvImg.style.transform = 'translate(' + g.tx + 'px, ' + g.ty + 'px) scale(' + g.scale + ')';
+  }
   function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
   function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
 
@@ -983,6 +999,7 @@
       g.pinchStart = dist(p[0], p[1]); g.baseScale = g.scale; g.mode = 'pinch';
     } else if (g.pointers.size === 1) {
       g.mode = null; g.startX = e.clientX; g.startY = e.clientY; g.dx = 0; g.dy = 0; g.moved = false; g.t0 = Date.now();
+      g.baseTx = g.tx; g.baseTy = g.ty;
     }
   });
   pvStage.addEventListener('pointermove', e => {
@@ -998,6 +1015,13 @@
     const dx = e.clientX - g.startX, dy = e.clientY - g.startY;
     g.dx = dx; g.dy = dy;
     if (Math.abs(dx) > 6 || Math.abs(dy) > 6) g.moved = true;
+    if (!g.mode && g.scale > 1 && g.moved) g.mode = 'pan';
+    if (g.mode === 'pan') {
+      pvImg.style.transition = 'none';
+      g.tx = g.baseTx + dx; g.ty = g.baseTy + dy;
+      applyTransform();
+      return;
+    }
     if (!g.mode) {
       if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 10) g.mode = 'dismiss';
       else if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10) g.mode = 'switch';
@@ -1016,12 +1040,13 @@
     if (!g.pointers.has(e.pointerId)) return;
     g.pointers.delete(e.pointerId);
     if (g.mode === 'pinch') {
-      if (g.pointers.size === 1) { const p = [...g.pointers.values()][0]; g.startX = p.x; g.startY = p.y; g.mode = g.scale > 1 ? null : 'switch'; }
+      if (g.pointers.size === 1) { const p = [...g.pointers.values()][0]; g.startX = p.x; g.startY = p.y; g.baseTx = g.tx; g.baseTy = g.ty; g.mode = g.scale > 1 ? 'pan' : 'switch'; }
       else if (g.pointers.size === 0) g.mode = null;
       return;
     }
     pvImg.style.transition = '';
     const elapsed = Date.now() - g.t0;
+    if (g.mode === 'pan') { g.mode = null; return; }
     if (g.mode === 'dismiss') {
       if (Math.abs(g.dy) > window.innerHeight * 0.25 || (Math.abs(g.dy) > 60 && elapsed < 250)) closePreview();
       else { pvImg.style.transform = ''; overlay.style.background = '#000'; }
