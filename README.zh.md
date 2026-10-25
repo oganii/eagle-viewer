@@ -137,6 +137,11 @@ make test     # 仅运行 pytest
 | 环境变量 | 说明 | 默认值 |
 |----------|------|--------|
 | `EAGLE_VAULT_ROOT` | Eagle 库目录路径（容器内需挂载） | `/vault` |
+| `EAGLE_VAULT_LIBRARIES` | 可切换的多个库路径（换行或 `:` 分隔，支持 `*` 通配）；`EAGLE_VAULT_ROOT` 为默认库 | _(空 = 单库)_ |
+| `EAGLE_VAULT_DEFAULT` | 默认库（id、名称或路径） | _(空)_ |
+| `EAGLE_VAULT_MAX_LOADED` | 同时保留在内存中的库数量（含默认库，LRU 淘汰） | `2` |
+| `EAGLE_INDEX_CACHE_DIR` | 每个库的索引缓存目录；`off` 关闭 | `VIEWER_STATE_PATH` 同级的 `index-cache` |
+| `EAGLE_VAULT_EDITABLE` | 允许修改星级评分的库（会改写 `metadata.json` 的 `star`） | _(空 = 只读)_ |
 | `VIEWER_PASSWORD` | 访问密码——设置后需要登录才能查看 | _(空)_ |
 | `VIEWER_SECRET_KEY` | Session 签名密钥——设置 `VIEWER_PASSWORD` 时必须提供，并用 `openssl rand -hex 32` 生成 | _(空；设置密码时必填)_ |
 | `VIEWER_API_TOKEN` | API 客户端的 Bearer Token——设置后 API 调用需此 Token 或网页会话 | _(空)_ |

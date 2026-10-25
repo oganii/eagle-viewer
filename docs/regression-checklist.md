@@ -90,6 +90,13 @@
 - Switching between background and foreground does not break preview, Inspector, or multi-select state.
 - After a static asset version upgrade, the browser does not serve stale UI for an extended period.
 
+## Libraries & Ratings
+
+- [ ] With `EAGLE_VAULT_LIBRARIES` set, the library selector (desktop sidebar, mobile home / folder root) lists every library; the choice survives a reload.
+- [ ] Switching to an unindexed library shows the loading state with progress, then its items; the previous library's thumbnails never appear.
+- [ ] Rating filter (すべて / ★1 以上 … ★5 / 未評価) and the 評価 sort work on desktop and in mobile folder lists and search.
+- [ ] Stars appear on cards (when rated), in the inspector and in the mobile preview; on editable libraries clicking a star saves it, clicking the current value clears it, and a failure rolls back with a toast; read-only libraries show no clickable stars.
+
 ## Minimum Pass Criteria
 
 - No white screen, no main-path console errors.

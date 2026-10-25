@@ -68,7 +68,7 @@ Vault is always mounted **read-only**. It never modifies files inside the librar
 
 ## Product Boundaries
 
-The web viewer focuses on **remote read-only browsing**, **not** replicating Eagle's full workstation in the browser. It surfaces library, folders, tags, search, preview, asset links, downloads, and basic multi-select. It does **not** provide organization queues, ratings, favorites, workspaces, Viewer notes, review markers, smart views, Eagle smart folders, duplicate analysis, color spectrum, random walk, command palette, advanced reference export, or offline data management.
+The web viewer focuses on **remote read-only browsing**, **not** replicating Eagle's full workstation in the browser. It surfaces library, folders, tags, search, preview, asset links, downloads, and basic multi-select. It shows Eagle star ratings (filter, sort, and — only for libraries listed in `EAGLE_VAULT_EDITABLE` — editing). It does **not** provide organization queues, favorites, workspaces, Viewer notes, review markers, smart views, Eagle smart folders, duplicate analysis, color spectrum, random walk, command palette, advanced reference export, or offline data management.
 
 iPhone / iPad use the same web app. Open the remote URL in Safari, then tap **Share → Add to Home Screen** for a standalone window. The three bottom tabs are Library, Folders, and Search.
 
@@ -149,7 +149,12 @@ The frontend uses vanilla HTML/CSS/JS — no framework. The backend is FastAPI. 
 
 | Env variable | Description | Default |
 |--------------|-------------|---------|
-| `EAGLE_VAULT_ROOT` | Path to the Eagle library inside the container (must be mounted) | `/vault` |
+| `EAGLE_VAULT_ROOT` | Path to the Eagle library inside the container (must be mounted). With several libraries this is the default one | `/vault` |
+| `EAGLE_VAULT_LIBRARIES` | Extra libraries to switch between: paths separated by newlines or `:`; entries with `*` are expanded as globs (e.g. `/mnt/Eagle/*.library`). Display name = folder name without `.library`; id = lowercase slug of it (`Doujin_CGs_Manga` → `doujin-cgs-manga`). `EAGLE_VAULT_ROOT` is added in front when missing | _(empty = single library)_ |
+| `EAGLE_VAULT_DEFAULT` | Default library by id, name or path (overrides `EAGLE_VAULT_ROOT` as default) | _(empty)_ |
+| `EAGLE_VAULT_MAX_LOADED` | Libraries kept in memory at once, including the default one; the least recently used other library is evicted | `2` |
+| `EAGLE_INDEX_CACHE_DIR` | Where parsed indexes are cached per library (`<id>.index.jsonl.gz`); `off` disables | `<dir of VIEWER_STATE_PATH>/index-cache`, else `~/.cache/eagle-viewer/index-cache` |
+| `EAGLE_VAULT_EDITABLE` | Libraries (id, name or path; `,` / `:` / newline separated) whose star ratings may be changed. The viewer then rewrites `images/<id>.info/metadata.json` (only the `star` key). Leave libraries synced receive-only out | _(empty = read-only)_ |
 | `VIEWER_PASSWORD` | Access password — set to require login; leave empty for no auth | _(empty)_ |
 | `VIEWER_SECRET_KEY` | Required session signing key — use a random string (e.g. `openssl rand -hex 32`) when `VIEWER_PASSWORD` is set | _(empty; required with password)_ |
 | `VIEWER_API_TOKEN` | Bearer token for API clients — when set, API calls need this token or a web session | _(empty)_ |
@@ -163,7 +168,9 @@ The frontend uses vanilla HTML/CSS/JS — no framework. The backend is FastAPI. 
 | GET | `/health` | Unauthenticated container health check |
 | GET | `/api/info` | API metadata: version, capabilities, available auth methods |
 | GET | `/api/tree` | Folder tree (each node includes `count`: total items in folder + descendants) |
-| GET | `/api/items` | All items (supports `sort`, `dir`, `type`, `offset`, `limit`) |
+| GET | `/api/libraries` | Configured libraries: `id`, `name`, `default`, `state` (`unloaded`/`loading`/`ready`/`error`), `items`, `progress`, `editable` |
+| POST | `/api/libraries/{id}/load` | Start indexing a library in the background |
+| GET | `/api/items` | All items (supports `sort`, `dir`, `type`, `rating`, `offset`, `limit`) |
 | GET | `/api/recent?days=7\|30` | Recent N-day assets (supports `sort`, `dir`, `type`, `offset`, `limit`) |
 | GET | `/api/folders/{folder_id}/items` | Items in a specific folder (supports `sort`, `dir`, `type`, `offset`, `limit`) |
 | GET | `/api/tags` | Tags and their counts |
@@ -175,7 +182,12 @@ The frontend uses vanilla HTML/CSS/JS — no framework. The backend is FastAPI. 
 | GET | `/api/items/{item_id}/thumbnail` | Thumbnail image (returns placeholder on miss) |
 | GET | `/api/items/{item_id}/file` | Original file (preview) |
 | GET | `/api/items/{item_id}/file?download=true` | Original file (download) |
-| POST | `/api/library/reload` | Trigger a full re-scan of the library |
+| PUT | `/api/items/{item_id}/star` | Set the rating (`{"star": 0-5}`, 0 = unrated); only for `EAGLE_VAULT_EDITABLE` libraries, else `403` |
+| POST | `/api/library/reload` | Re-scan the library (re-reads only changed `.info` dirs) |
+
+Every endpoint except `/api/libraries*` takes `?lib=<id>` (default library when omitted). While that library is still being indexed the API answers `503` with `{"detail": {"code": "library-loading", "library": {...}}}` and `Retry-After`. Only the default library is indexed at startup; the others are indexed in the background on first use. A restart serves the cached index immediately and then re-reads only `.info` dirs whose stats changed.
+
+List endpoints accept `sort=star` (rating high → low; unrated always last; ties by modified time) and `rating=all|unrated|1..5` (`N` = at least N stars). Items carry `star` (0 = unrated).
 
 List endpoints return: `items`, `total`, `offset`, `limit`, `nextOffset`, `hasMore`, plus endpoint-specific fields (`subfolders`, `tag`, `query`, `days`).
 
