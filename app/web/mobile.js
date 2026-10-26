@@ -718,7 +718,7 @@
     try {
       if (atRoot) {
         const tree = await API.tree();
-        subfolders = (tree.folders || []).map(f => ({ id: f.id, name: f.name, count: f.count, locked: f.locked }));
+        subfolders = (tree.folders || []).map(f => ({ id: f.id, name: f.name, count: f.count, locked: f.locked, coverId: f.coverId }));
       } else {
         const data = await API.folderItems(S.folderStack[S.folderStack.length - 1].id, 0);
         subfolders = data.subfolders || [];
@@ -746,7 +746,9 @@
     if (subfolders.length) {
       const rows = subfolders.map(f =>
         '<button class="fr' + (f.locked ? ' locked' : '') + '" data-fid="' + esc(f.id) + '" data-fname="' + esc(f.name) + '"' + (f.locked ? ' data-locked="1"' : '') + '>' +
-          '<span class="fico">' + folderSVG + '</span>' +
+          (f.coverId
+            ? '<img class="fcover" src="' + esc(itemUrl(f.coverId, 'thumbnail')) + '" alt="" loading="lazy" decoding="async">'
+            : '<span class="fico">' + folderSVG + '</span>') +
           '<span class="fn">' + esc(f.name) + '</span>' +
           '<span class="ct">' + (f.locked ? lockSVG : (f.count != null ? f.count : '')) + '</span>' + chevSVG +
         '</button>').join('');

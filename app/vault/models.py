@@ -10,6 +10,7 @@ class FolderNode:
     description: str = ""
     parent: Optional[str] = None
     locked: bool = False
+    cover_id: str = ""  # Eagle folder cover (coverId), item id
     children: list["FolderNode"] = field(default_factory=list)
 
 

@@ -1202,6 +1202,35 @@ html[data-theme] .content-crumb[aria-current="page"] {
 }
 .folder-rail + .masonry { margin-top:0; }
 
+/* Folder cards with an Eagle folder cover: the cover fills the card, the name sits on a scrim */
+.folder-card.has-cover {
+  position:relative;
+  overflow:hidden;
+  align-items:flex-end;
+  justify-content:flex-start;
+  padding:10px 12px;
+  color:#fff;
+}
+.folder-rail .folder-card.has-cover { min-height:150px; padding:10px 12px; }
+.folder-card.has-cover .folder-card-cover {
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  object-fit:cover;
+  transition:transform .2s ease;
+}
+.folder-card.has-cover:hover .folder-card-cover { transform:scale(1.03); }
+.folder-card.has-cover::after {
+  content:""; position:absolute; inset:auto 0 0 0; height:60%;
+  background:linear-gradient(to top, rgba(0,0,0,.72), transparent);
+  pointer-events:none;
+}
+.folder-card.has-cover .folder-card-icon { display:none; }
+.folder-card.has-cover .folder-card-copy { position:relative; z-index:1; }
+.folder-card.has-cover .folder-card-name {
+  color:#fff; font-weight:600; text-shadow:0 1px 3px rgba(0,0,0,.5);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+
 /* ===== Library switcher ===== */
 .library-switcher { display:flex; flex-direction:column; gap:6px; }
 .library-switcher[hidden] { display:none; }

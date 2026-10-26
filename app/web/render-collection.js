@@ -136,9 +136,11 @@ function renderItemCard(item, container) {
 
 function renderFolderCard(sub, container) {
   var card = document.createElement('div');
-  card.className = 'folder-card' + (sub.locked ? ' locked' : '');
+  card.className = 'folder-card' + (sub.locked ? ' locked' : '') + (sub.coverId ? ' has-cover' : '');
   card.dataset.aspectRatio = '1.4';
-  card.innerHTML = '<span class="folder-card-icon">' + (sub.locked ? iconLock() : iconFolderLarge()) + '</span><span class="folder-card-copy"><span class="folder-card-name">' + escapeHtml(sub.name) + '</span>' + (sub.locked ? '<small>Eagle でパスワード保護</small>' : '') + '</span>';
+  // Eagle のフォルダのカバー（coverId）があれば、アイコンの代わりにその画像を敷く
+  var cover = sub.coverId ? '<img class="folder-card-cover" src="' + escapeHtml(itemThumbUrl(sub.coverId)) + '" alt="" loading="lazy" decoding="async" onerror="this.closest(\'.folder-card\').classList.remove(\'has-cover\');this.remove()">' : '';
+  card.innerHTML = cover + '<span class="folder-card-icon">' + (sub.locked ? iconLock() : iconFolderLarge()) + '</span><span class="folder-card-copy"><span class="folder-card-name">' + escapeHtml(sub.name) + '</span>' + (sub.locked ? '<small>Eagle でパスワード保護</small>' : '') + '</span>';
   card.onclick = function() {
     if (sub.locked) {
       showLockedFolderNotice(sub);
@@ -301,7 +303,9 @@ function renderFolderListRow(sub, tbody) {
   tr.appendChild(document.createElement('td')).className = 'col-check';
   var thumbTd = document.createElement('td');
   thumbTd.className = 'col-thumb';
-  thumbTd.innerHTML = '<span class="placeholder">' + (sub.locked ? iconLock() : iconFolder()) + '</span>';
+  thumbTd.innerHTML = sub.coverId
+    ? '<img src="' + escapeHtml(itemThumbUrl(sub.coverId)) + '" alt="" loading="lazy" decoding="async">'
+    : '<span class="placeholder">' + (sub.locked ? iconLock() : iconFolder()) + '</span>';
   tr.appendChild(thumbTd);
 
   var nameTd = document.createElement('td');

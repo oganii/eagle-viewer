@@ -9,6 +9,7 @@
           "id": "screens",
           "name": "Screens",
           "description": "",
+          "coverId": "item-two",
           "children": [
             {
               "id": "mobile",
@@ -22,6 +23,7 @@
           "id": "projects",
           "name": "Projects",
           "description": "Parent folder without direct items",
+          "coverId": "item-missing",
           "children": [
             {
               "id": "boards",
@@ -36,6 +38,7 @@
           "name": "Protected",
           "description": "Eagle password folder",
           "password": "fixture-lock",
+          "coverId": "item-locked",
           "children": [
             {
               "id": "protected-child",

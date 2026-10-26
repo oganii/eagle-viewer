@@ -93,3 +93,16 @@ def test_media_file_supports_mobile_ranges_and_pdf_embedding(sample_library):
     pdf = items_api.api_item_file("item-pdf")
     assert pdf.headers["x-frame-options"] == "SAMEORIGIN"
     assert pdf.headers["content-security-policy"] == "frame-ancestors 'self'"
+
+
+def test_folder_cover_is_exposed_only_for_servable_items(sample_library):
+    tree = folders_api.api_tree()["folders"]
+    children = {node["id"]: node for node in tree[0]["children"]}
+    assert children["screens"]["coverId"] == "item-two"
+    assert "coverId" not in children["projects"]   # cover item does not exist
+    assert "coverId" not in children["protected"]  # Eagle password folder
+
+    subfolders = {sub["id"]: sub for sub in folders_api.api_folder_items("root")["subfolders"]}
+    assert subfolders["screens"]["coverId"] == "item-two"
+    assert "coverId" not in subfolders["projects"]
+    assert "coverId" not in subfolders["protected"]

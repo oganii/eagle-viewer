@@ -201,6 +201,7 @@ def _build_folder_node(data: dict[str, Any], locked_folder_ids: set[str], parent
         description=data.get("description", ""),
         parent=str(data["parent"]) if data.get("parent") is not None else (str(parent_id) if parent_id else None),
         locked=node_id in locked_folder_ids,
+        cover_id=str(data.get("coverId") or ""),
         children=[],
     )
     if node.locked:
@@ -225,6 +226,7 @@ def _build_folder_tree_from_flat(folders_data: list[dict], locked_folder_ids: se
             description=f.get("description", ""),
             parent=str(pid) if pid is not None else None,
             locked=nid in locked_folder_ids,
+            cover_id=str(f.get("coverId") or ""),
             children=[],
         )
         nodes[n.id] = n
@@ -1060,7 +1062,14 @@ def get_subfolders(folder_id: str) -> list[dict]:
     node = data.folder_by_id.get(fid)
     if not node or node.locked:
         return []
-    return [{"id": c.id, "name": c.name or "(名称未設定)", "locked": c.locked} for c in node.children]
+    return [_with_cover({"id": c.id, "name": c.name or "(名称未設定)", "locked": c.locked}, c, data) for c in node.children]
+
+
+def _with_cover(d: dict, node: FolderNode, data: "IndexData") -> dict:
+    """Add the Eagle folder cover when it points at an item the Viewer can serve."""
+    if not node.locked and node.cover_id and node.cover_id in data.items_by_id:
+        d["coverId"] = node.cover_id
+    return d
 
 
 def get_folder_tree() -> list[FolderNode]:
@@ -1221,20 +1230,19 @@ def set_item_star(item_id: str, star: int) -> ItemInfo:
 
 
 def folder_tree_to_dict(nodes: list[FolderNode]) -> list[dict]:
-    counts = _data().folder_counts
-    return _folder_tree_to_dict(nodes, counts)
+    return _folder_tree_to_dict(nodes, _data())
 
 
-def _folder_tree_to_dict(nodes: list[FolderNode], counts: dict[str, int]) -> list[dict]:
+def _folder_tree_to_dict(nodes: list[FolderNode], data: "IndexData") -> list[dict]:
     return [
-        {
+        _with_cover({
             "id": n.id,
             "name": n.name,
             "description": n.description or "",
-            "children": [] if n.locked else _folder_tree_to_dict(n.children, counts),
-            "count": 0 if n.locked else counts.get(n.id, 0),
+            "children": [] if n.locked else _folder_tree_to_dict(n.children, data),
+            "count": 0 if n.locked else data.folder_counts.get(n.id, 0),
             "locked": n.locked,
-        }
+        }, n, data)
         for n in nodes
     ]
 
