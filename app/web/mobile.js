@@ -234,6 +234,16 @@
         evictTimer = setTimeout(() => { evictTimer = null; evict(); }, 750);
       });
     }
+    function del(id) {
+      return open().then((db) => {
+        if (!db) return;
+        return new Promise((resolve) => {
+          const tx = db.transaction(STORE, 'readwrite');
+          tx.objectStore(STORE).delete(id);
+          tx.oncomplete = resolve; tx.onerror = resolve;
+        });
+      });
+    }
     function clear() {
       cacheGeneration += 1;
       if (evictTimer) { clearTimeout(evictTimer); evictTimer = null; }
@@ -317,7 +327,7 @@
         cur.onerror = () => resolve(out);
       }));
     }
-    return { ok: ok, get: get, put: put, clear: clear, clearPrefix: clearPrefix, stats: stats };
+    return { ok: ok, get: get, put: put, del: del, clear: clear, clearPrefix: clearPrefix, stats: stats };
   })();
 
   // Thumbnails of different libraries never share a cache entry, even with equal item ids.
@@ -328,6 +338,8 @@
     const url = img.dataset.thumb;
     const apply = (blob) => {
       if (img.src && img.src.indexOf('blob:') === 0) URL.revokeObjectURL(img.src);
+      // iOS Safari では、IndexedDB から読んだ Blob が読めなくなることがある（WebKitBlobResource error）。そのときは取り直す
+      img.onerror = () => { img.onerror = null; Thumbs.del(id); img.src = url; };
       img.src = URL.createObjectURL(blob);
     };
     Thumbs.get(id).then((hit) => {
@@ -1020,7 +1032,7 @@
     document.body.style.overflow = '';
     clearPreviewMedia();
     pvImg.onerror = null;
-    pvImg.src = '';
+    pvImg.removeAttribute('src');
     if (S.preview.thumbObjectUrl) URL.revokeObjectURL(S.preview.thumbObjectUrl);
     S.preview.thumbObjectUrl = '';
     pvImg.style.display = '';
@@ -1050,7 +1062,19 @@
       showPreviewUnavailable(tr('unsupportedPreview'));
     } else if (image) {
       const thumbUrl = itemUrl(it.id, 'thumbnail');
-      pvImg.onerror = () => showPreviewUnavailable(tr('unsupportedPreview'));
+      // 読めなかったときは、すぐにあきらめず1回だけ取り直す。キャッシュの Blob が壊れている（iOS Safari で起きる）
+      // か、回線が一時的に切れたときに「プレビューできません」と出ていた。前の項目の遅れたエラーは無視する
+      let retried = false;
+      pvImg.onerror = () => {
+        if (!S.preview.open || token !== S.preview.token) return;
+        if (!retried) {
+          retried = true;
+          if (pvImg.src.indexOf('blob:') === 0) Thumbs.del(thumbKey(it.id));
+          pvImg.src = thumbUrl + (thumbUrl.indexOf('?') >= 0 ? '&' : '?') + 'retry=' + Date.now();
+          return;
+        }
+        showPreviewUnavailable(tr('unsupportedPreview'));
+      };
       Thumbs.get(thumbKey(it.id)).then((blob) => {
         if (blob && S.preview.open && token === S.preview.token && S.preview.list[S.preview.index] === it) {
           if (S.preview.thumbObjectUrl) URL.revokeObjectURL(S.preview.thumbObjectUrl);
