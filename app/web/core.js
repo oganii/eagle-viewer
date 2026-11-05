@@ -324,10 +324,13 @@ function normalizeStar(value) {
   return n >= 1 && n <= 5 ? n : 0;
 }
 
-function renderStarBadge(star) {
+// showEmpty: also mark unrated items (dim ☆☆☆☆☆), used where the library is editable.
+function renderStarBadge(star, showEmpty) {
   var n = normalizeStar(star);
-  if (!n) return '';
-  return '<span class="star-badge" title="' + escapeHtml(tFmt('rating_stars', { n: n })) + '" aria-label="' + escapeHtml(tFmt('rating_stars', { n: n })) + '">\u2605' + n + '</span>';
+  if (!n && !showEmpty) return '';
+  var label = n ? tFmt('rating_stars', { n: n }) : t('rating_none');
+  return '<span class="star-badge' + (n ? '' : ' is-empty') + '" data-star="' + n + '" title="' + escapeHtml(label) + '" aria-label="' + escapeHtml(label) + '">' +
+    '<span class="on">' + '\u2605'.repeat(n) + '</span><span class="off">' + '\u2606'.repeat(5 - n) + '</span></span>';
 }
 
 function renderStarRow(star, editable) {
@@ -665,6 +668,8 @@ var I18N_DATA = {
     rating_saved: '評価を保存しました',
     rating_failed: '評価を保存できませんでした',
     rating_readonly: 'このライブラリは読み取り専用です',
+    rating_saved_n: '{n} 件の評価を保存しました',
+    rating_key_hint: '0〜5 キーでも評価できます（0 で外す）',
     library_label: 'ライブラリ',
     library_loading: '「{name}」を読み込み中…',
     library_loading_progress: '「{name}」を読み込み中… {done} / {total}',
@@ -793,6 +798,8 @@ var I18N_DATA = {
     rating_saved: '评分已保存',
     rating_failed: '无法保存评分',
     rating_readonly: '此资源库为只读',
+    rating_saved_n: '已保存 {n} 项评分',
+    rating_key_hint: '也可按 0–5 键评分（0 清除）',
     library_label: '资源库',
     library_loading: '正在加载「{name}」…',
     library_loading_progress: '正在加载「{name}」… {done} / {total}',
@@ -921,6 +928,8 @@ var I18N_DATA = {
     rating_saved: 'Rating saved',
     rating_failed: 'Could not save the rating',
     rating_readonly: 'This library is read-only',
+    rating_saved_n: 'Saved ratings for {n} items',
+    rating_key_hint: 'Keys 0–5 also set the rating (0 clears)',
     library_label: 'Library',
     library_loading: 'Loading "{name}"…',
     library_loading_progress: 'Loading "{name}"… {done} / {total}',

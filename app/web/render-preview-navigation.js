@@ -188,8 +188,17 @@ function addPreviewInfoHud(overlay, item) {
 
   var hud = document.createElement('div');
   hud.className = 'preview-info-hud';
+  var editable = isCurrentLibraryEditable();
   hud.innerHTML = '<strong title="' + escapeHtml(item.name || '名称未設定の素材') + '">' + escapeHtml(item.name || '名称未設定の素材') + '</strong>' +
+    '<div class="preview-rating"' + (editable ? ' title="' + escapeHtml(t('rating_key_hint')) + '"' : '') + '>' + renderStarRow(item.star, editable) + '</div>' +
     '<div class="preview-info-meta">' + meta.join('') + '</div>';
+  var rating = hud.querySelector('.preview-rating');
+  rating.onclick = function(event) {
+    var button = event.target.closest('[data-star-value]');
+    if (!button || !isCurrentLibraryEditable()) return;
+    event.stopPropagation();
+    changeItemStar(item.id, Number(button.dataset.starValue));
+  };
   overlay.appendChild(hud);
 }
 

@@ -1254,6 +1254,17 @@ html[data-theme] .content-crumb[aria-current="page"] {
   color:#ffd257; background:rgba(0,0,0,.55);
 }
 .list-name-wrap .star-badge { margin-left:6px; flex:none; }
+.star-badge .on { color:#ffd257; }
+.star-badge .off { color:rgba(255,255,255,.45); }
+.star-badge.is-empty { background:rgba(0,0,0,.35); }
+.star-badge.is-empty .off { color:rgba(255,255,255,.6); }
+.list-name-wrap .star-badge { background:transparent; padding:0; }
+.list-name-wrap .star-badge .on { color:#f5b301; }
+.list-name-wrap .star-badge .off { color:var(--text-muted); opacity:.6; }
+.preview-rating .star-rating { font-size:17px; }
+.preview-rating .star-rating .star { color:rgba(255,255,255,.55); }
+.preview-rating .star-rating .star.on { color:#ffd257; }
+.preview-rating .star-rating .star-none { color:rgba(255,255,255,.6); }
 .inspector-rating { margin-top:6px; }
 .star-rating { display:inline-flex; align-items:center; gap:2px; color:var(--text-muted); font-size:18px; line-height:1; }
 .star-rating .star { color:var(--text-muted); opacity:.55; }

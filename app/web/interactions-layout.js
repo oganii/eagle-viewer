@@ -16,7 +16,33 @@ function setViewMode(mode, skipPersist) {
 }
 
 // ===== Keyboard shortcuts =====
+// The digit a rating key stands for, or -1. Uses e.code too: with the Japanese IME on, e.key is
+// 'Process' or a full-width digit.
+function ratingKeyValue(e) {
+  if (e.ctrlKey || e.metaKey || e.altKey) return -1;
+  var key = String(e.key || '').replace(/[０-５]/, function(c) { return String.fromCharCode(c.charCodeAt(0) - 0xFEE0); });
+  if (/^[0-5]$/.test(key)) return Number(key);
+  var m = /^(?:Digit|Numpad)([0-5])$/.exec(e.code || '');
+  return m ? Number(m[1]) : -1;
+}
+
 function setupKeyboard() {
+  // Rating keys run in the capture phase, before the preview's own handlers, and also while a
+  // dropdown (sort, rating filter, library) still has focus after being used.
+  document.addEventListener('keydown', function(e) {
+    var tag = e.target && e.target.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target && e.target.isContentEditable)) return;
+    if (document.querySelector('.compare-overlay')) return;
+    var star = ratingKeyValue(e);
+    if (star < 0) return;
+    var ids = ratingTargetIds(document.querySelector('.preview-overlay'));
+    if (!ids.length) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (tag === 'SELECT') e.target.blur();
+    rateItemsByKey(ids, star);
+  }, true);
+
   document.addEventListener('keydown', function(e) {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
     var overlay = document.querySelector('.preview-overlay');
@@ -51,6 +77,32 @@ function setupKeyboard() {
       }
     }
   });
+}
+
+// Which items a number key rates: the open preview; else the selection; else the inspector item;
+// else the card or row under the mouse; else the keyboard-focused one.
+function ratingTargetIds(overlay) {
+  if (overlay) return overlay.dataset.previewItemId ? [overlay.dataset.previewItemId] : [];
+  if (state.selectedIds.size) return Array.from(state.selectedIds);
+  if (state.inspectorItem) return [state.inspectorItem.id];
+  var el = document.querySelector('.card[data-item-id]:hover, tr.item-row[data-item-id]:hover') ||
+    document.querySelector('.card.keyboard-focus[data-item-id], tr.item-row.keyboard-focus[data-item-id]') ||
+    (document.activeElement && document.activeElement.closest && document.activeElement.closest('.card[data-item-id], tr.item-row[data-item-id]'));
+  return el ? [el.dataset.itemId] : [];
+}
+
+async function rateItemsByKey(ids, star) {
+  if (!isCurrentLibraryEditable()) {
+    showToast(t('rating_readonly'), 'error');
+    return;
+  }
+  if (ids.length === 1) {
+    render.changeItemStar(ids[0], star, { exact: true });
+    return;
+  }
+  var results = await Promise.all(ids.map(function(id) { return render.changeItemStar(id, star, { exact: true, quiet: true }); }));
+  var saved = results.filter(Boolean).length;
+  if (saved) showToast(tFmt('rating_saved_n', { n: saved }), 'success');
 }
 
 function navigateItems(direction) {

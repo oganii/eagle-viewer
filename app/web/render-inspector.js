@@ -125,7 +125,7 @@ function updateItemStarEverywhere(itemId, star) {
   document.querySelectorAll('.card[data-item-id], tr.item-row[data-item-id]').forEach(function(el) {
     if (el.dataset.itemId !== itemId) return;
     var old = el.querySelector('.star-badge');
-    var html = renderStarBadge(star);
+    var html = renderStarBadge(star, isCurrentLibraryEditable());
     if (el.tagName === 'TR') {
       var wrap = el.querySelector('.list-name-wrap');
       if (old) old.remove();
@@ -142,27 +142,37 @@ function updateItemStarEverywhere(itemId, star) {
     }
     holderEl.innerHTML = html;
   });
+  document.querySelectorAll('.preview-overlay').forEach(function(overlay) {
+    if (overlay.dataset.previewItemId !== itemId) return;
+    var rating = overlay.querySelector('.preview-rating');
+    if (rating) rating.innerHTML = renderStarRow(star, isCurrentLibraryEditable());
+  });
 }
 
 var starWriteGeneration = {};
 
 // Optimistic update; rolls back and shows the server's (Japanese) message on failure.
-async function changeItemStar(itemId, clickedValue) {
+// options.exact: set clickedValue as is (number keys) instead of toggling; options.quiet: no success toast.
+// Resolves to true when saved.
+async function changeItemStar(itemId, clickedValue, options) {
+  options = options || {};
   var current = state.inspectorItem && state.inspectorItem.id === itemId ? state.inspectorItem : (state.currentItems || []).find(function(c) { return c.id === itemId; });
   var previous = normalizeStar(current && current.star);
-  var next = nextStarValue(previous, clickedValue);
+  var next = options.exact ? normalizeStar(clickedValue) : nextStarValue(previous, clickedValue);
   var generation = (starWriteGeneration[itemId] || 0) + 1;
   starWriteGeneration[itemId] = generation;
   updateItemStarEverywhere(itemId, next);
   try {
     var updated = await apiModule.setItemStar(itemId, next);
-    if (starWriteGeneration[itemId] !== generation) return;
+    if (starWriteGeneration[itemId] !== generation) return true;
     if (updated) updateItemStarEverywhere(itemId, normalizeStar(updated.star));
-    if (window.showToast) window.showToast(t('rating_saved'), 'success');
+    if (!options.quiet && window.showToast) window.showToast(t('rating_saved'), 'success');
+    return true;
   } catch (error) {
-    if (starWriteGeneration[itemId] !== generation) return;
+    if (starWriteGeneration[itemId] !== generation) return false;
     updateItemStarEverywhere(itemId, previous);
     if (window.showToast) window.showToast((error && error.detail) || t('rating_failed'), 'error');
+    return false;
   }
 }
 

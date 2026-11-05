@@ -55,7 +55,7 @@ function renderItemCard(item, container) {
     loadTextSnippet(item, thumb);
   }
 
-  var starHtml = renderStarBadge(item.star);
+  var starHtml = renderStarBadge(item.star, isCurrentLibraryEditable());
   if (starHtml) {
     var starWrap = document.createElement('div');
     starWrap.className = 'card-star';
@@ -203,7 +203,7 @@ function renderListRow(item, tbody) {
   if (sourceDomain) mobileMeta.push(sourceDomain);
   nameCell.innerHTML = '<div class="list-name-wrap">' +
     '<span class="list-name-text" title="' + escapeHtml(item.name) + '">' + escapeHtml(item.name) + '</span>' +
-    renderStarBadge(item.star) +
+    renderStarBadge(item.star, isCurrentLibraryEditable()) +
     '</div>' +
     (mobileMeta.length ? '<div class="list-mobile-meta">' + mobileMeta.map(function(part) { return '<span>' + escapeHtml(part) + '</span>'; }).join('') + '</div>' : '') +
     '<div class="list-mobile-actions">' +
