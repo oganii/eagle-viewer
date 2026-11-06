@@ -48,6 +48,7 @@ function setupKeyboard() {
     var overlay = document.querySelector('.preview-overlay');
     if (overlay) {
       if (e.key === 'Escape') render.closePreviewOverlay(overlay);
+      else if ((e.key === 'i' || e.key === 'I') && !e.metaKey && !e.ctrlKey && !e.altKey) togglePreviewInfoHud(overlay);
       return;
     }
     if (e.key === 'Escape') {

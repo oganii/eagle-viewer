@@ -189,9 +189,15 @@ function addPreviewInfoHud(overlay, item) {
   var hud = document.createElement('div');
   hud.className = 'preview-info-hud';
   var editable = isCurrentLibraryEditable();
-  hud.innerHTML = '<strong title="' + escapeHtml(item.name || '名称未設定の素材') + '">' + escapeHtml(item.name || '名称未設定の素材') + '</strong>' +
+  hud.innerHTML = '<div class="preview-info-head"><button type="button" class="preview-info-toggle"></button>' +
+    '<strong title="' + escapeHtml(item.name || '名称未設定の素材') + '">' + escapeHtml(item.name || '名称未設定の素材') + '</strong></div>' +
     '<div class="preview-rating"' + (editable ? ' title="' + escapeHtml(t('rating_key_hint')) + '"' : '') + '>' + renderStarRow(item.star, editable) + '</div>' +
     '<div class="preview-info-meta">' + meta.join('') + '</div>';
+  setPreviewInfoCollapsed(hud, isPreviewInfoCollapsed());
+  hud.querySelector('.preview-info-toggle').onclick = function(event) {
+    event.stopPropagation();
+    togglePreviewInfoHud(overlay);
+  };
   var rating = hud.querySelector('.preview-rating');
   rating.onclick = function(event) {
     var button = event.target.closest('[data-star-value]');
@@ -200,6 +206,31 @@ function addPreviewInfoHud(overlay, item) {
     changeItemStar(item.id, Number(button.dataset.starValue));
   };
   overlay.appendChild(hud);
+}
+
+// The info box can be folded down to a small button (remembered per browser) when it covers the image.
+var PREVIEW_INFO_COLLAPSED_KEY = 'eagle-viewer-preview-info-collapsed';
+
+function isPreviewInfoCollapsed() {
+  try { return localStorage.getItem(PREVIEW_INFO_COLLAPSED_KEY) === '1'; } catch (e) { return false; }
+}
+
+function setPreviewInfoCollapsed(hud, collapsed) {
+  hud.classList.toggle('is-collapsed', collapsed);
+  var toggle = hud.querySelector('.preview-info-toggle');
+  var label = t(collapsed ? 'preview_info_show' : 'preview_info_hide');
+  toggle.innerHTML = collapsed ? '<span aria-hidden="true">i</span>' : '<span aria-hidden="true">−</span>';
+  toggle.title = label;
+  toggle.setAttribute('aria-label', label);
+  toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+}
+
+function togglePreviewInfoHud(overlay) {
+  var hud = overlay && overlay.querySelector('.preview-info-hud');
+  if (!hud) return;
+  var collapsed = !hud.classList.contains('is-collapsed');
+  try { localStorage.setItem(PREVIEW_INFO_COLLAPSED_KEY, collapsed ? '1' : '0'); } catch (e) {}
+  setPreviewInfoCollapsed(hud, collapsed);
 }
 
 function refreshPreviewInfoHud(overlay, item) {

@@ -1274,3 +1274,21 @@ html[data-theme] .content-crumb[aria-current="page"] {
 }
 .star-rating button.star:hover, .star-rating button.star:focus-visible { background:var(--hover); opacity:1; }
 .star-rating .star-none { margin-left:6px; font-size:12px; }
+
+/* Preview info box: fold to a small button */
+.preview-info-head { display:flex; align-items:center; gap:8px; min-width:0; }
+.preview-info-head strong { flex:1 1 auto; min-width:0; }
+.preview-info-toggle {
+  flex:0 0 auto; width:22px; height:22px; padding:0; border:0; border-radius:50%;
+  display:inline-flex; align-items:center; justify-content:center;
+  background:rgba(255,255,255,.12); color:rgba(255,255,255,.85);
+  font:inherit; font-size:13px; font-weight:700; line-height:1; cursor:pointer;
+}
+.preview-info-toggle:hover, .preview-info-toggle:focus-visible { background:rgba(255,255,255,.24); color:#fff; outline:none; }
+/* Keep the box (and its toggle) clear of the centered counter bar on narrow desktop windows */
+@media (min-width:769px) { .preview-info-hud { max-width:min(420px,calc(50vw - 76px)); } }
+.preview-info-hud.is-collapsed { right:auto; max-width:none; padding:5px; border-radius:999px; gap:0; }
+.preview-info-hud.is-collapsed strong,
+.preview-info-hud.is-collapsed .preview-rating,
+.preview-info-hud.is-collapsed .preview-info-meta { display:none; }
+.preview-info-hud.is-collapsed .preview-info-toggle { width:26px; height:26px; font-family:Georgia,serif; font-style:italic; }
