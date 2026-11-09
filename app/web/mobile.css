@@ -1078,3 +1078,47 @@ button, a {
   object-fit:cover;
   background:var(--bg3);
 }
+
+/* ===== プレビューの下のボタン: アイコンだけで1行に収める（iPhone SE の幅でも文字が2行にならない）===== */
+.pv-actions { gap:10px; }
+.pv-actions a, .pv-actions button { position:relative; min-width:0; padding:0; }
+.pv-actions a > span, .pv-actions button > span {
+  position:absolute; width:1px; height:1px; overflow:hidden;
+  clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap;
+}
+.pv-actions a, .pv-actions button { min-height:40px; height:40px; border-radius:11px; }
+.pv-actions { margin-top:12px; }
+.pv-actions svg { width:20px !important; height:20px !important; flex:none; }
+.pv-actions button.shown { box-shadow:inset 0 0 0 2px rgba(255,255,255,.85); }
+.pv-actions button:disabled { opacity:.55; }
+#pvInfo[aria-pressed="true"] { background:#fff; color:#111; }
+
+/* ===== プレビューの情報（ファイル名・寸法とサイズ・タグ・フォルダ・メモ・出典）=====
+   ⓘ で開いたときだけ、下のバーの上に重ねて出す。絵の領域は小さくならない */
+.pv-bottom { position:relative; }
+.pv-sheet {
+  position:absolute; left:12px; right:12px; bottom:calc(100% + 8px); z-index:6;
+  max-height:min(52vh, 420px); overflow-y:auto; overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  padding:12px 14px; border-radius:14px;
+  background:rgba(20,20,20,.86);
+  backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  box-shadow:0 6px 24px rgba(0,0,0,.4), inset 0 0 0 1px rgba(255,255,255,.08);
+}
+.overlay:not(.info-open) .pv-sheet { display:none; }
+.pv-sheet .nm { font-size:15px; font-weight:600; white-space:normal; word-break:break-word; }
+.pv-sheet .meta { font-family:var(--font-ui); font-size:12px; color:rgba(255,255,255,.6); margin-top:2px; }
+.pv-stars { margin-top:0; }
+.pv-info {
+  margin-top:10px;
+  display:flex; flex-direction:column; gap:10px;
+  font-family:var(--font-ui); font-size:13px; line-height:1.45; color:rgba(255,255,255,.88);
+}
+.pv-info[hidden] { display:none; }
+.pv-info .k { font-size:11px; font-weight:600; color:rgba(255,255,255,.55); margin-bottom:3px; }
+.pv-info .chips { display:flex; flex-wrap:wrap; gap:5px; }
+.pv-info .chip { padding:2px 9px; border-radius:999px; background:rgba(255,255,255,.14); font-size:12px; }
+.pv-info .path { word-break:break-word; }
+.pv-info .note { white-space:pre-wrap; word-break:break-word; }
+.pv-info .none { color:rgba(255,255,255,.45); }
+.pv-info a { color:#9cc7ff; word-break:break-all; }

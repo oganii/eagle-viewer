@@ -23,6 +23,8 @@
   const pvShare = document.getElementById('pvShare');
   const pvStage = document.getElementById('pvStage');
   const pvStars = document.getElementById('pvStars');
+  const pvInfo = document.getElementById('pvInfo');
+  const pvInfoPanel = document.getElementById('pvInfoPanel');
 
   // ---------- 日英中 ----------
   const COPY = {
@@ -30,6 +32,7 @@
       library: 'ライブラリ', folders: 'フォルダ', search: '検索', status: '接続状態',
       tabLibrary: 'ライブラリ', tabFolders: 'フォルダ', tabSearch: '検索',
       close: '閉じる', share: '共有', back: '戻る', download: 'ダウンロード', showOriginal: 'オリジナルを表示', loadingOriginal: 'オリジナルを読み込み中…', originalShown: 'オリジナルを表示中', saveAlbum: '写真に保存',
+      info: '情報', infoNote: 'メモ', infoSource: '出典', infoNone: 'なし', infoLoading: '読み込み中…',
       loadFailed: '読み込みに失敗しました：{error}', connectedChanged: '接続中 · リモートに変更あり',
       connected: '接続中', disconnected: '未接続', statusUnknown: '接続状態不明', vault: 'Eagle Vault',
       items: '素材', foldersLabel: 'フォルダ', tags: 'タグ',
@@ -57,6 +60,7 @@
       library: '资源库', folders: '目录', search: '搜索', status: '连接状态',
       tabLibrary: '资料库', tabFolders: '文件夹', tabSearch: '搜索',
       close: '关闭', share: '分享', back: '返回', download: '下载', showOriginal: '显示原图', loadingOriginal: '原图加载中…', originalShown: '已显示原图', saveAlbum: '保存相册',
+      info: '信息', infoNote: '注释', infoSource: '来源', infoNone: '无', infoLoading: '加载中…',
       loadFailed: '加载失败：{error}', connectedChanged: '已连接 · 远程有变更',
       connected: '已连接', disconnected: '未连接', statusUnknown: '连接状态未知', vault: 'Eagle 资源库',
       items: '素材', foldersLabel: '文件夹', tags: '标签',
@@ -84,6 +88,7 @@
       library: 'Library', folders: 'Folders', search: 'Search', status: 'Connection',
       tabLibrary: 'Library', tabFolders: 'Folders', tabSearch: 'Search',
       close: 'Close', share: 'Share', back: 'Back', download: 'Download', saveAlbum: 'Save to Photos',
+      info: 'Info', infoNote: 'Notes', infoSource: 'Source', infoNone: 'None', infoLoading: 'Loading…',
       loadFailed: 'Could not load: {error}', connectedChanged: 'Connected · Remote changes',
       connected: 'Connected', disconnected: 'Disconnected', statusUnknown: 'Connection unknown', vault: 'Eagle Vault',
       items: 'Items', foldersLabel: 'Folders', tags: 'Tags',
@@ -133,6 +138,11 @@
     document.getElementById('pvDownloadLabel').textContent = tr('download');
     document.getElementById('pvOriginalLabel').textContent = tr('showOriginal');
     document.getElementById('pvSaveLabel').textContent = tr('saveAlbum');
+    // ボタンはアイコンだけなので、読み上げ用の名前は aria-label に入れる
+    pvDownload.setAttribute('aria-label', tr('download'));
+    pvOriginal.setAttribute('aria-label', document.getElementById('pvOriginalLabel').textContent);
+    pvSave.setAttribute('aria-label', tr('saveAlbum'));
+    pvInfo.setAttribute('aria-label', tr('info'));
     pvClose.setAttribute('aria-label', tr('close'));
     pvShare.setAttribute('aria-label', tr('share'));
     document.getElementById('pvPrev').setAttribute('aria-label', tr('previous'));
@@ -389,7 +399,7 @@
     viewGeneration: 0, folderRequest: 0, searchRequest: 0,
     status: null,
     currentGallery: [],
-    preview: { list: [], index: 0, open: false, pushed: false, token: 0, thumbObjectUrl: '' },
+    preview: { list: [], index: 0, open: false, pushed: false, token: 0, thumbObjectUrl: '', info: false },
     lib: '', libraries: [], defaultLib: '', libPoll: 0,
     listSort: readPref('ev:listSort', ['mtime', 'name', 'size', 'star'], 'mtime'),
     listRating: readPref('ev:listRating', ['all', 'unrated', '1', '2', '3', '4', '5'], 'all'),
@@ -1113,7 +1123,8 @@
     renderPreviewStars(it);
     pvOriginal.style.display = image ? '' : 'none';
     pvOriginal.disabled = false;
-    document.getElementById('pvOriginalLabel').textContent = tr('showOriginal');
+    setOriginalLabel(tr('showOriginal'), false);
+    renderPreviewInfo(it, token);
     // 「アルバムに保存」は画像/動画のときだけ出す（iOS では共有シートの「写真に保存」からしかアルバムに書き込めない）。
     pvSave.style.display = (image || video) ? '' : 'none';
     pvPrev.disabled = i <= 0;
@@ -1143,7 +1154,7 @@
     const token = S.preview.token;
     const originalUrl = itemUrl(it.id, 'file');
     pvOriginal.disabled = true;
-    document.getElementById('pvOriginalLabel').textContent = tr('loadingOriginal');
+    setOriginalLabel(tr('loadingOriginal'), false);
     try {
       const original = new Image();
       await new Promise((resolve, reject) => {
@@ -1154,16 +1165,71 @@
       if (!(S.preview.open && token === S.preview.token && S.preview.list[S.preview.index] === it)) return;
       pvImg.src = originalUrl;
       // 見た目が変わらないこともあるので、表示中であることをボタンで示す（次の項目で元に戻る）
-      document.getElementById('pvOriginalLabel').textContent = tr('originalShown');
+      setOriginalLabel(tr('originalShown'), true);
       toast(tr('originalShown'));
     } catch (e) {
       toast(tr('unsupportedPreview'));
       if (token === S.preview.token) {
         pvOriginal.disabled = false;
-        document.getElementById('pvOriginalLabel').textContent = tr('showOriginal');
+        setOriginalLabel(tr('showOriginal'), false);
       }
     }
   }
+  // ボタンはアイコンだけ。文字は読み上げ用に残し、オリジナルを表示中かどうかは枠の色で示す
+  function setOriginalLabel(text, shown) {
+    document.getElementById('pvOriginalLabel').textContent = text;
+    pvOriginal.setAttribute('aria-label', text);
+    pvOriginal.classList.toggle('shown', shown);
+  }
+  // ---------- プレビューの情報（ⓘ のボタンで開け閉めする。ファイル名・寸法とサイズ・タグ・フォルダ・メモ・出典）----------
+  // 一覧の項目にはメモとフォルダの名前がないので、開いたときに /api/items/resolve で取る（ライブラリ・項目ごとに覚えておく）
+  const infoCache = new Map();
+  try { S.preview.info = localStorage.getItem('eagle-viewer-pv-info') === '1'; } catch (e) {}
+  function infoRow(label, html) {
+    return '<div class="row"><div class="k">' + esc(label) + '</div><div class="v">' + html + '</div></div>';
+  }
+  function infoHtml(it, detail) {
+    const none = '<span class="none">' + esc(tr('infoNone')) + '</span>';
+    const loading = '<span class="none">' + esc(tr('infoLoading')) + '</span>';
+    const tags = (it.tags || []).length ? '<div class="chips">' + it.tags.map(t => '<span class="chip">' + esc(t) + '</span>').join('') + '</div>' : none;
+    let folders = loading, note = loading;
+    if (detail) {
+      const paths = detail.folderPaths || [];
+      folders = paths.length ? paths.map(p => '<div class="path">' + esc(p) + '</div>').join('') : none;
+      note = detail.annotation ? '<div class="note">' + esc(detail.annotation) + '</div>' : none;
+    }
+    let html = infoRow(tr('tags'), tags) + infoRow(tr('foldersLabel'), folders) + infoRow(tr('infoNote'), note);
+    if (it.url) {
+      const safe = /^https?:\/\//i.test(it.url);
+      html += infoRow(tr('infoSource'), safe ? '<a href="' + esc(it.url) + '" target="_blank" rel="noopener">' + esc(it.url) + '</a>' : esc(it.url));
+    }
+    return html;
+  }
+  function renderPreviewInfo(it, token) {
+    pvInfo.setAttribute('aria-pressed', S.preview.info ? 'true' : 'false');
+    pvInfoPanel.hidden = !S.preview.info;
+    overlay.classList.toggle('info-open', S.preview.info);
+    if (!S.preview.info || !it) return;
+    const key = (S.lib || '') + '/' + it.id;
+    const cached = infoCache.get(key);
+    pvInfoPanel.innerHTML = infoHtml(it, cached);
+    document.getElementById('pvSheet').scrollTop = 0;
+    if (cached) return;
+    API.json('/api/items/resolve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify([it.id]) })
+      .then(data => {
+        const detail = (data.items || [])[0] || { folderPaths: [], annotation: '' };
+        infoCache.set(key, detail);
+        if (S.preview.open && S.preview.info && token === S.preview.token) pvInfoPanel.innerHTML = infoHtml(it, detail);
+      })
+      .catch(() => {
+        if (S.preview.open && S.preview.info && token === S.preview.token) pvInfoPanel.innerHTML = infoHtml(it, { folderPaths: [], annotation: '' });
+      });
+  }
+  pvInfo.onclick = () => {
+    S.preview.info = !S.preview.info;
+    try { localStorage.setItem('eagle-viewer-pv-info', S.preview.info ? '1' : '0'); } catch (e) {}
+    renderPreviewInfo(S.preview.list[S.preview.index], S.preview.token);
+  };
   // ---------- プレビューの評価（★）----------
   function renderPreviewStars(it) {
     const n = normStar(it.star);
