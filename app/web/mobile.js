@@ -32,7 +32,7 @@
       library: 'ライブラリ', folders: 'フォルダ', search: '検索', status: '接続状態',
       tabLibrary: 'ライブラリ', tabFolders: 'フォルダ', tabSearch: '検索',
       close: '閉じる', share: '共有', back: '戻る', download: 'ダウンロード', showOriginal: 'オリジナルを表示', loadingOriginal: 'オリジナルを読み込み中…', originalShown: 'オリジナルを表示中', saveAlbum: '写真に保存',
-      info: '情報', infoNote: 'メモ', infoSource: '出典', infoNone: 'なし', infoLoading: '読み込み中…',
+      info: '情報', infoNote: 'メモ', infoSource: '出典', infoCreated: '作成日時', infoNone: 'なし', infoLoading: '読み込み中…',
       loadFailed: '読み込みに失敗しました：{error}', connectedChanged: '接続中 · リモートに変更あり',
       connected: '接続中', disconnected: '未接続', statusUnknown: '接続状態不明', vault: 'Eagle Vault',
       items: '素材', foldersLabel: 'フォルダ', tags: 'タグ',
@@ -60,7 +60,7 @@
       library: '资源库', folders: '目录', search: '搜索', status: '连接状态',
       tabLibrary: '资料库', tabFolders: '文件夹', tabSearch: '搜索',
       close: '关闭', share: '分享', back: '返回', download: '下载', showOriginal: '显示原图', loadingOriginal: '原图加载中…', originalShown: '已显示原图', saveAlbum: '保存相册',
-      info: '信息', infoNote: '注释', infoSource: '来源', infoNone: '无', infoLoading: '加载中…',
+      info: '信息', infoNote: '注释', infoSource: '来源', infoCreated: '创建时间', infoNone: '无', infoLoading: '加载中…',
       loadFailed: '加载失败：{error}', connectedChanged: '已连接 · 远程有变更',
       connected: '已连接', disconnected: '未连接', statusUnknown: '连接状态未知', vault: 'Eagle 资源库',
       items: '素材', foldersLabel: '文件夹', tags: '标签',
@@ -88,7 +88,7 @@
       library: 'Library', folders: 'Folders', search: 'Search', status: 'Connection',
       tabLibrary: 'Library', tabFolders: 'Folders', tabSearch: 'Search',
       close: 'Close', share: 'Share', back: 'Back', download: 'Download', saveAlbum: 'Save to Photos',
-      info: 'Info', infoNote: 'Notes', infoSource: 'Source', infoNone: 'None', infoLoading: 'Loading…',
+      info: 'Info', infoNote: 'Notes', infoSource: 'Source', infoCreated: 'Created', infoNone: 'None', infoLoading: 'Loading…',
       loadFailed: 'Could not load: {error}', connectedChanged: 'Connected · Remote changes',
       connected: 'Connected', disconnected: 'Disconnected', statusUnknown: 'Connection unknown', vault: 'Eagle Vault',
       items: 'Items', foldersLabel: 'Folders', tags: 'Tags',
@@ -451,7 +451,13 @@
     tree() { return API.json('/api/tree'); },
     folderItems(id, offset) { return API.json('/api/folders/' + encodeURIComponent(id) + '/items?offset=' + (offset || 0) + '&limit=120' + listQuery()); },
     recent() { return API.json('/api/items?sort=mtime&dir=desc&limit=24'); },
-    search(q, offset, signal) { return API.json('/api/search?q=' + encodeURIComponent(q) + '&offset=' + (offset || 0) + '&limit=120' + listQuery(), signal ? { signal: signal } : undefined); },
+    search(q, offset, signal) {
+      // 「#タグ名」はそのタグが付いた絵だけ（完全一致）。それ以外は名前・タグ・メモの部分一致
+      const path = q.charAt(0) === '#' && q.length > 1
+        ? '/api/tags/' + encodeURIComponent(q.slice(1)) + '/items?offset='
+        : '/api/search?q=' + encodeURIComponent(q) + '&offset=';
+      return API.json(path + (offset || 0) + '&limit=120' + listQuery(), signal ? { signal: signal } : undefined);
+    },
     async libraries() {
       const res = await fetch('/api/libraries', { credentials: 'same-origin', cache: 'no-store' });
       if (res.status === 401) { location.href = '/login'; throw new Error('unauthorized'); }
@@ -866,8 +872,8 @@
     document.getElementById('searchMas').addEventListener('click', e => {
       const chip = e.target.closest('[data-tag]');
       if (!chip) return;
-      input.value = chip.dataset.tag;
-      S.searchQuery = chip.dataset.tag;
+      input.value = '#' + chip.dataset.tag;
+      S.searchQuery = '#' + chip.dataset.tag;
       doSearch(true);
     });
     if (S.searchQuery) doSearch(true);
@@ -1181,7 +1187,7 @@
     pvOriginal.setAttribute('aria-label', text);
     pvOriginal.classList.toggle('shown', shown);
   }
-  // ---------- プレビューの情報（ⓘ のボタンで開け閉めする。ファイル名・寸法とサイズ・タグ・フォルダ・メモ・出典）----------
+  // ---------- プレビューの情報（ⓘ のボタンで開け閉めする。ファイル名・寸法とサイズ・作成日時・タグ・フォルダ・メモ・出典。タグとフォルダは押せる）----------
   // 一覧の項目にはメモとフォルダの名前がないので、開いたときに /api/items/resolve で取る（ライブラリ・項目ごとに覚えておく）
   const infoCache = new Map();
   try { S.preview.info = localStorage.getItem('eagle-viewer-pv-info') === '1'; } catch (e) {}
@@ -1191,14 +1197,19 @@
   function infoHtml(it, detail) {
     const none = '<span class="none">' + esc(tr('infoNone')) + '</span>';
     const loading = '<span class="none">' + esc(tr('infoLoading')) + '</span>';
-    const tags = (it.tags || []).length ? '<div class="chips">' + it.tags.map(t => '<span class="chip">' + esc(t) + '</span>').join('') + '</div>' : none;
+    const tags = (it.tags || []).length ? '<div class="chips">' + it.tags.map(t => '<button type="button" class="chip" data-info-tag="' + esc(t) + '">#' + esc(t) + '</button>').join('') + '</div>' : none;
     let folders = loading, note = loading;
     if (detail) {
       const paths = detail.folderPaths || [];
-      folders = paths.length ? paths.map(p => '<div class="path">' + esc(p) + '</div>').join('') : none;
+      // folderPaths は it.folders と同じ順（同じ道のりは1つにまとめる）。数が合うときだけ押してフォルダへ飛べる
+      const ids = (it.folders || []).length === paths.length ? it.folders : [];
+      folders = paths.length ? paths.map((p, i) => ids[i]
+        ? '<button type="button" class="path" data-info-fid="' + esc(ids[i]) + '">' + folderSVG + '<span>' + esc(p) + '</span></button>'
+        : '<div class="path">' + esc(p) + '</div>').join('') : none;
       note = detail.annotation ? '<div class="note">' + esc(detail.annotation) + '</div>' : none;
     }
-    let html = infoRow(tr('tags'), tags) + infoRow(tr('foldersLabel'), folders) + infoRow(tr('infoNote'), note);
+    const created = it.btime ? esc(new Date(it.btime).toLocaleString(DATE_LOCALE[lang] || 'ja-JP', { hour12: false })) : none;
+    let html = infoRow(tr('infoCreated'), created) + infoRow(tr('tags'), tags) + infoRow(tr('foldersLabel'), folders) + infoRow(tr('infoNote'), note);
     if (it.url) {
       const safe = /^https?:\/\//i.test(it.url);
       html += infoRow(tr('infoSource'), safe ? '<a href="' + esc(it.url) + '" target="_blank" rel="noopener">' + esc(it.url) + '</a>' : esc(it.url));
@@ -1225,6 +1236,34 @@
         if (S.preview.open && S.preview.info && token === S.preview.token) pvInfoPanel.innerHTML = infoHtml(it, { folderPaths: [], annotation: '' });
       });
   }
+  // 情報のタグ → 「#タグ」で検索、フォルダ → そのフォルダを開く（木から親のつながりを探して folderStack を作る）
+  function folderChain(nodes, id, chain) {
+    for (const n of nodes || []) {
+      const next = chain.concat({ id: n.id, name: n.name });
+      if (n.id === id) return next;
+      const hit = folderChain(n.children, id, next);
+      if (hit) return hit;
+    }
+    return null;
+  }
+  pvInfoPanel.addEventListener('click', async e => {
+    const tagBtn = e.target.closest('[data-info-tag]');
+    const folderBtn = e.target.closest('[data-info-fid]');
+    if (!tagBtn && !folderBtn) return;
+    e.stopPropagation();
+    if (tagBtn) {
+      closePreview();
+      S.searchQuery = '#' + tagBtn.dataset.infoTag;
+      switchTab('search');
+      return;
+    }
+    let chain = null;
+    try { chain = folderChain((await API.tree()).folders, folderBtn.dataset.infoFid, []); } catch (err) {}
+    if (!chain) { toast(tr('loadFailed', { error: 'folder' })); return; }
+    closePreview();
+    S.folderStack = chain;
+    switchTab('folders');
+  });
   pvInfo.onclick = () => {
     S.preview.info = !S.preview.info;
     try { localStorage.setItem('eagle-viewer-pv-info', S.preview.info ? '1' : '0'); } catch (e) {}

@@ -168,6 +168,7 @@ function addPreviewInfoHud(overlay, item) {
   if (item.duration) meta.push(pill(escapeHtml(formatMediaDuration(item.duration))));
   if (item.width && item.height) meta.push(pill(escapeHtml(item.width + ' × ' + item.height)));
   if (item.size) meta.push(pill(escapeHtml(formatSize(item.size))));
+  if (item.btime) meta.push(pill('<span title="作成日時">作成 ' + escapeHtml(formatDate(item.btime)) + '</span>'));
   var folderLabel = '未分類';
   var folderId = '';
   if (item.folderPaths && item.folderPaths.length) {
