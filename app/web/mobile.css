@@ -1124,3 +1124,20 @@ button, a {
 .pv-info .note { white-space:pre-wrap; word-break:break-word; }
 .pv-info .none { color:rgba(255,255,255,.45); }
 .pv-info a { color:#9cc7ff; word-break:break-all; }
+
+/* ===== プレビューの上のボタン（閉じる・前後・共有）を、画面の一番下へ（11/21、親指で押しやすく）=====
+   並びは 絵 → 星・下のボタン → 閉じる・前後・共有。上のすき間は安全領域（ノッチ）だけ残す */
+.overlay { padding-top:env(safe-area-inset-top); }
+.pv-top {
+  order:3;
+  padding:6px 16px calc(env(safe-area-inset-bottom) + 12px);
+  background:rgba(13,12,11,.88);
+}
+.pv-bottom { order:2; padding-bottom:4px; background:linear-gradient(transparent,rgba(13,12,11,.88)); }
+.pwa-standalone .pv-bottom { padding-bottom:4px; }
+.pwa-standalone .pv-top { padding-bottom:calc(max(env(safe-area-inset-bottom), 20px) + 8px); }
+@media (display-mode: standalone), (display-mode: fullscreen) {
+  .pv-bottom { padding-bottom:4px; }
+  .pv-top { padding-bottom:calc(max(env(safe-area-inset-bottom), 20px) + 8px); }
+}
+.overlay.immersive .pv-top { top:auto; bottom:0; }
