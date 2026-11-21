@@ -1141,3 +1141,16 @@ button, a {
   .pv-top { padding-bottom:calc(max(env(safe-area-inset-bottom), 20px) + 8px); }
 }
 .overlay.immersive .pv-top { top:auto; bottom:0; }
+
+/* ===== 星の行を絵の上に重ねる（11/21、絵の表示範囲を広げる）=====
+   下のボタンの行のすぐ上、左寄せの半透明の帯。ⓘ の情報欄はその上に出す */
+.pv-stars {
+  position:absolute; left:12px; bottom:calc(100% + 6px); z-index:5;
+  margin:0; padding:4px 10px; border-radius:12px;
+  background:rgba(13,12,11,.55);
+  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+}
+.pv-stars[hidden] { display:none; }
+.pv-stars:not([hidden]) ~ .pv-actions { margin-top:0; }
+.pv-bottom { padding-top:8px; }
+.overlay.info-open .pv-sheet { bottom:calc(100% + 52px); }
