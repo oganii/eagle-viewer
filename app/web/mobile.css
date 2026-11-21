@@ -1154,3 +1154,7 @@ button, a {
 .pv-stars:not([hidden]) ~ .pv-actions { margin-top:0; }
 .pv-bottom { padding-top:8px; }
 .overlay.info-open .pv-sheet { bottom:calc(100% + 52px); }
+/* 星の帯の背景は透明（11/21）。白い絵の上でも見えるように、星と文字に影を付ける */
+.pv-stars { background:transparent; backdrop-filter:none; -webkit-backdrop-filter:none; padding:4px 2px; }
+.pv-stars, .pv-stars .pv-star, .pv-star-none { text-shadow:0 0 3px rgba(0,0,0,.9), 0 1px 2px rgba(0,0,0,.8); }
+.pv-stars .pv-star:not(.on) { color:rgba(255,255,255,.85); }
